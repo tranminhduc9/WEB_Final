@@ -1,0 +1,113 @@
+/* Main Header Styling */
+.site-header {
+    background-color: #ffffff;
+    padding: 0px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Logo */
+.header-logo img {
+    height: 70px;
+    display: block;
+}
+
+/* Search Bar */
+.header-search {
+    position: relative;
+    flex-grow: 0;
+    margin: 0 10px;
+    max-width: 400px;
+}
+
+.header-search .search-input {
+    width: 100%;
+    padding: 14px 50px 14px 25px;
+    border-radius: 30px;
+    border: 1px solid #e0e0e0;
+    background-color: #f5f5f5;
+    font-size: 16px;
+    color: #333;
+}
+
+.header-search .search-input:focus {
+    outline: none;
+    border-color: #c0c0c0;
+    background-color: #ffffff;
+}
+
+.header-search .search-input::placeholder {
+    color: #999;
+}
+
+.header-search .search-icon {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    color: #555;
+}
+
+/* Navigation Links */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 35px; /* Space between links */
+}
+
+.header-nav .nav-link {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.header-nav .nav-link:hover {
+    color: #000;
+}
+
+/* Login Button */
+.header-nav .btn-login {
+    background-color: #f7931e;
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.header-nav .btn-login:hover {
+    background-color: #e6830d;
+}
+
+@media (max-width: 768px) {
+    .header-search {
+        max-width: 300px; /* Giảm chiều rộng tối đa */
+        margin: 0 20px;   /* Giảm margin */
+    }
+}
+
+@media (max-width: 480px) {
+    .header-search {
+        max-width: 200px; /* Thu nhỏ hơn nữa */
+        margin: 0 10px;
+    }
+    
+    .header-nav .nav-link {
+        display: none; /* Ẩn các link navigation */
+    }
+}
+.header-search .search-icon:hover {
+    color: #007bff;
+    cursor: pointer;
+    transform: translateY(-50%) scale(1.1);
+}
