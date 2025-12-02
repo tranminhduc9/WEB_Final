@@ -2,6 +2,8 @@ import '../../css/RegisterPage.css';
 import logo from '../assets/images/logo.png';
 import image_register from '../assets/images/login-register-image.png';
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+
 
 export default function Register() {
     const [username, setUsername] = useState('');
@@ -42,7 +44,7 @@ export default function Register() {
                         {error && <div className="error-message">{error}</div>}
                         <button type="submit" className="register-button">Đăng ký</button>
                         <div className="forgot-password">
-                            <a href="/login">Đã có tài khoản? Đăng nhập</a>
+                            <Link to="/login">Đã có tài khoản? Đăng nhập</Link>
                         </div>
                     </form>
                     
