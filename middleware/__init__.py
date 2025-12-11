@@ -8,10 +8,18 @@ security, logging, caching, and other cross-cutting concerns.
 __version__ = "1.0.0"
 __author__ = "WEB Final Team"
 
-from .config import MiddlewareConfig
-from .utils import MiddlewareChain
+# Initialize __all__ list
+__all__ = []
 
-__all__ = [
-    "MiddlewareConfig",
-    "MiddlewareChain",
-]
+# Try to import available modules
+try:
+    from .config.settings import MiddlewareSettings
+    __all__.append("MiddlewareSettings")
+except ImportError:
+    pass
+
+try:
+    from .utils import MiddlewareChain
+    __all__.append("MiddlewareChain")
+except ImportError:
+    pass

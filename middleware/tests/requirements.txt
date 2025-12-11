@@ -1,0 +1,35 @@
+# Test requirements cho WEB Final Middleware v2.0
+
+# Core testing framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.10.0
+
+# Async support
+asyncio-mqtt>=0.13.0
+
+# FastAPI testing dependencies
+fastapi>=0.104.0
+starlette>=0.27.0
+
+# JSON Schema validation
+pydantic>=2.0.0
+
+# Redis (optional, for integration tests)
+redis>=5.0.0
+
+# Performance testing
+pytest-benchmark>=4.0.0
+
+# HTTP testing
+httpx>=0.25.0
+
+# Time manipulation
+freezegun>=1.2.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Logging
+structlog>=23.0.0
