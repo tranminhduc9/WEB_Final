@@ -2,10 +2,16 @@
 Configuration package for middleware components.
 """
 
-from .settings import MiddlewareSettings
-from .middleware_config import MiddlewareConfig
+__all__ = []
 
-__all__ = [
-    "MiddlewareSettings",
-    "MiddlewareConfig",
-]
+try:
+    from .settings import MiddlewareSettings
+    __all__.append("MiddlewareSettings")
+except ImportError:
+    pass
+
+try:
+    from .middleware_config import MiddlewareConfig
+    __all__.append("MiddlewareConfig")
+except ImportError:
+    pass
