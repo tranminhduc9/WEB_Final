@@ -47,8 +47,7 @@ export default function NearbyLocations() {
     ];
     return (
         <div className="nearby-locations-container">
-            <h2 className="nearby-locations-title :: location-list-title">Địa điểm lân cận</h2>
-            <div className="scroll-container">
+            <h2 className="nearby-locations-title location-list-title">Địa điểm lân cận</h2>            <div className="scroll-container">
                 {locations.map((location, index) => (
                     <LocationCard
                         key={index}

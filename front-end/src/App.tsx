@@ -1,6 +1,7 @@
 import Header from './components/Header';
 import homePhoto from './assets/images/home_photo_1.png';
 import FeaturedPlaces from './components/FeaturedPlaces'
+import Footer from './components/Footer'
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,7 +22,7 @@ export default function App() {
           
         </section>
         <FeaturedPlaces /> {/* Thêm dòng này */}
-        
+        <Footer /> {/* Thêm dòng này */}
       </main>
       
     </div>
