@@ -32,7 +32,8 @@ export default function LocationCard({
           </div>
         </div>
         <div className="place-rating">
-          ⭐ {rating} – {reviewCount} reviews
+          <span className="rating-value">⭐ {rating}</span>
+          <span className="review-count"> – {reviewCount} reviews</span>
         </div>
       </div>
     </div>

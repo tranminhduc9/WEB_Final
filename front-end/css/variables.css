@@ -1,0 +1,17 @@
+/* src/styles/variables.css */
+:root {
+    /* Màu sắc */
+    --primary-color: #ff9f1c;   /* Màu cam chủ đạo */
+    --primary-hover: #e08c19;   /* Màu cam khi hover */
+    --text-main: #333333;       /* Chữ đen chính */
+    --text-gray: #666666;       /* Chữ xám phụ */
+    --text-light: #999999;      /* Chữ xám nhạt */
+    --bg-gray: #f2f4f5;         /* Nền xám (dùng cho Badge, Input) */
+    --white: #ffffff;
+    
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 99px;        /* Bo tròn viên thuốc */
+  }

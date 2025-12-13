@@ -15,6 +15,14 @@ export default function Login() {
     // Fake login demo
     if (username === 'test@demo.com' && password === '123456') {
       localStorage.setItem('token', 'demo-token');
+      // Lưu thông tin user
+      localStorage.setItem('user', JSON.stringify({
+        name: 'Test User',
+        email: 'test@demo.com',
+        avatar: null
+      }));
+      // Dispatch event để Header cập nhật
+      window.dispatchEvent(new Event('auth-change'));
       window.location.href = '/';
     } else {
       setError('Email hoặc mật khẩu không đúng');
