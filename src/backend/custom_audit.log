@@ -1,0 +1,4 @@
+2025-12-14 21:43:09,353 - middleware.audit_log - WARNING - [data_delete] Deleted resource | User: user123
+2025-12-14 21:43:20,100 - middleware.audit_log - WARNING - [data_delete] Deleted resource | User: user123
+2025-12-14 21:44:18,167 - middleware.audit_log - WARNING - [data_delete] Deleted resource | User: user123
+2025-12-14 21:58:51,793 - middleware.audit_log - WARNING - [data_delete] Deleted resource | User: user123
