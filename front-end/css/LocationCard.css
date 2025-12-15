@@ -10,6 +10,8 @@
     overflow-x: auto;
     scroll-behavior: smooth;
     padding-bottom: 10px;
+    scrollbar-width: none; /* Firefox: ẩn thanh scroll, vẫn cuộn được */
+    -ms-overflow-style: none; /* IE/Edge cũ */
 }
 
 .location-list-title{
@@ -22,15 +24,7 @@
 }
 
 .scroll-container::-webkit-scrollbar{
-    height: 8px;
-}
-
-.scroll-container::-webkit-scrollbar-track{
-    background: #f1f1f1;
-}
-
-.scroll-container::-webkit-scrollbar-thumb{
-    background: #888;
+    display: none; /* Chrome/Safari: ẩn thanh scroll, vẫn cuộn được */
 }
 
 /* Card Container - từ Figma Rectangle 1532578303 */
