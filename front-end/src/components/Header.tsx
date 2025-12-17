@@ -136,7 +136,7 @@ function Header() {
       <nav className="header-nav">
         <a href="#" className="nav-link">Blog trải nghiệm</a>
         <a href="#" className="nav-link">Chatbot thông minh</a>
-        <a href="#featured-places" className="nav-link">Điểm đến phổ biến</a>
+        <Link to="/trend-places" className="nav-link">Điểm đến phổ biến</Link>
         
         {isLoggedIn ? (
           // User Menu khi đã đăng nhập

@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client'
 import Login from './pages/Login.tsx'
 import Register from './pages/Register.tsx'
 import SearchResultsPage from './pages/SearchResultsPage.tsx'
+import TrendPlacesPage from './pages/TrendPlacesPage.tsx'
 import './index.css'
 import App from './App.tsx'
 
@@ -12,6 +13,7 @@ const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/register', element: <Register /> },
   { path: '/search', element: <SearchResultsPage /> },
+  { path: '/trend-places', element: <TrendPlacesPage /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
