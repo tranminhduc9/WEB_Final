@@ -13,6 +13,7 @@ const BlogPage: React.FC = () => {
   // Dữ liệu mẫu blog posts
   const blogPosts = [
     {
+      id: 1,
       avatarSrc: 'https://i.pravatar.cc/88?img=1',
       username: 'user_name',
       timeAgo: '20 giờ',
@@ -25,6 +26,7 @@ const BlogPage: React.FC = () => {
       description: 'Hồ Hoàn Kiếm còn được gọi là Hồ Gươm là một hồ nước ngọt tự nhiên nằm ở phường Hoàn Kiếm,'
     },
     {
+      id: 2,
       avatarSrc: 'https://i.pravatar.cc/88?img=2',
       username: 'user_name',
       timeAgo: '20 giờ',
@@ -37,6 +39,7 @@ const BlogPage: React.FC = () => {
       description: 'Hồ Hoàn Kiếm còn được gọi là Hồ Gươm là một hồ nước ngọt tự nhiên nằm ở phường Hoàn Kiếm,'
     },
     {
+      id: 3,
       avatarSrc: 'https://i.pravatar.cc/88?img=3',
       username: 'user_name',
       timeAgo: '20 giờ',
@@ -86,9 +89,10 @@ const BlogPage: React.FC = () => {
         <section className="blog-page__newfeed-section">
           <h2 className="blog-page__section-title">Newfeed</h2>
           <div className="blog-page__posts">
-            {blogPosts.map((post, index) => (
+            {blogPosts.map((post) => (
               <BlogCard
-                key={index}
+                key={post.id}
+                id={post.id}
                 avatarSrc={post.avatarSrc}
                 username={post.username}
                 timeAgo={post.timeAgo}

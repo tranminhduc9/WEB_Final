@@ -1,8 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router';
 import { Icons } from '../constants';
 import '../../css/BlogCard.css';
 
 interface BlogCardProps {
+  id: number; // Thêm id để link đến trang chi tiết
   avatarSrc: string;
   username: string;
   timeAgo: string;
@@ -16,6 +18,7 @@ interface BlogCardProps {
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({
+  id,
   avatarSrc,
   username,
   timeAgo,
@@ -27,8 +30,14 @@ const BlogCard: React.FC<BlogCardProps> = ({
   commentCount,
   description,
 }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/blog/${id}`);
+  };
+
   return (
-    <div className="blog-card">
+    <div className="blog-card" onClick={handleClick} style={{ cursor: 'pointer' }}>
       {/* Header */}
       <div className="blog-card__header">
         <div className="blog-card__user">
@@ -66,7 +75,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
 
       {/* Description */}
       <p className="blog-card__description">
-        {description} <a href="#" className="blog-card__link">xem toàn bộ bài viết...</a>
+        {description} <span className="blog-card__link">xem toàn bộ bài viết...</span>
       </p>
     </div>
   );
