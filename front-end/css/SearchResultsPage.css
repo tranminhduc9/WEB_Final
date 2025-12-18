@@ -1,18 +1,18 @@
 .search-page {
-  background-color: #fff;
-  min-height: 100vh;
+    background-color: #fff;
+    min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   padding: 16px 0 16px; /* khoảng cách trên/dưới cân nhau */
-}
-
-.search-page__container {
+  }
+  
+  .search-page__container {
   width: 100%;
   margin: 0;
   padding: 0 24px 16px;
-}
-
-/* --- Section Styling --- */
-.search-section {
+  }
+  
+  /* --- Section Styling --- */
+  .search-section {
   margin-bottom: 32px;
 }
 
@@ -21,13 +21,13 @@
 .search-page .location-section {
   margin: 16px 0 16px; /* trên/dưới đều nhau */
   padding-left: 0; /* bỏ padding-left 20px từ .location-section mặc định để canh đều với container */
-}
-
-.search-section__header {
+  }
+  
+  .search-section__header {
   margin-bottom: 16px;
-}
-
-.search-section__title {
+  }
+  
+  .search-section__title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -47,25 +47,25 @@
   background-color: #FF6F00;
   border-radius: 4px;
   margin-right: 8px;
-}
-
-.icon-location {
-  font-size: 20px;
+  }
+  
+  .icon-location {
+    font-size: 20px;
   margin-left: 4px;
-  vertical-align: middle;
-}
-
-/* --- Grid System --- */
-.search-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
-}
-
-/* Card size giống layout mẫu */
-/* --- Responsive --- */
-@media (max-width: 1200px) {
+    vertical-align: middle;
+  }
+  
+  /* --- Grid System --- */
   .search-grid {
+    display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+  }
+  
+/* Card size giống layout mẫu */
+  /* --- Responsive --- */
+@media (max-width: 1200px) {
+    .search-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -77,19 +77,19 @@
 
   .search-section__title {
     font-size: 22px;
+    }
   }
-}
-
+  
 @media (max-width: 600px) {
-  .search-grid {
+    .search-grid {
     grid-template-columns: 1fr;
   }
 
   .search-page__container {
     padding: 20px 16px 40px;
+    }
+    
+    .search-section__title {
+      font-size: 20px;
+    }
   }
-
-  .search-section__title {
-    font-size: 20px;
-  }
-}

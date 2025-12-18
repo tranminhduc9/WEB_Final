@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icons } from '../constants';
 import '../../css/PostCard.css';
 
 interface PostCardProps {
@@ -39,11 +40,11 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Like và Comment */}
         <div className="post-card__actions">
           <div className="post-card__action">
-            <span className="post-card__icon post-card__icon--love">❤️</span>
+            <Icons.Heart className="post-card__icon post-card__icon--love" />
             <span className="post-card__count">{likeCount}</span>
           </div>
           <div className="post-card__action">
-            <span className="post-card__icon post-card__icon--comment">💬</span>
+            <Icons.Comment className="post-card__icon post-card__icon--comment" />
             <span className="post-card__count">{commentCount}</span>
           </div>
         </div>

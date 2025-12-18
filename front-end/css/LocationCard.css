@@ -88,6 +88,23 @@
     color: #000000; /* Từ Figma */
 }
 
+/* Address với icon */
+.place-address {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.place-address-icon {
+    flex-shrink: 0;
+}
+
+.place-address-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: #000000;
+}
+
 /* Tags Container */
 .tags {
     display: flex;

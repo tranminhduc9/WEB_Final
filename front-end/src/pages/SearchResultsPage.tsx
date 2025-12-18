@@ -64,7 +64,7 @@ const SearchResultsPage: React.FC = () => {
                 Kết quả tìm kiếm cho: "{query}"
               </h2>
             </div>
-
+            
             <div className="scroll-container">
               {featuredLocations.map((item, index) => (
                 <LocationCard
@@ -86,7 +86,7 @@ const SearchResultsPage: React.FC = () => {
                 Địa điểm lân cận <span className="icon-location">📍</span>
               </h2>
             </div>
-
+            
             <div className="scroll-container">
               {featuredLocations.map((item, index) => (
                 <LocationCard
@@ -108,7 +108,7 @@ const SearchResultsPage: React.FC = () => {
                 Có thể bạn sẽ thích <span className="icon-location">📍</span>
               </h2>
             </div>
-
+            
             <div className="scroll-container">
               {featuredLocations.map((item, index) => (
                 <LocationCard
