@@ -163,3 +163,5 @@ const TrendPlacesPage: React.FC = () => {
 
 export default TrendPlacesPage;
 
+
+
