@@ -1,0 +1,95 @@
+.search-page {
+    background-color: #fff;
+    min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 16px 0 16px; /* khoảng cách trên/dưới cân nhau */
+  }
+  
+  .search-page__container {
+  width: 100%;
+  margin: 0;
+  padding: 0 24px 16px;
+  }
+  
+  /* --- Section Styling --- */
+  .search-section {
+  margin-bottom: 32px;
+}
+
+/* Tinh chỉnh riêng cho các section dùng LocationCard trên trang search
+   để khoảng cách với lề trên/dưới đồng đều và khớp layout Figma */
+.search-page .location-section {
+  margin: 16px 0 16px; /* trên/dưới đều nhau */
+  padding-left: 0; /* bỏ padding-left 20px từ .location-section mặc định để canh đều với container */
+  }
+  
+  .search-section__header {
+  margin-bottom: 16px;
+  }
+  
+  .search-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 32px;
+  font-weight: 600;
+  color: #1E1E1E;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.search-section__title::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 2.4rem;
+  background-color: #FF6F00;
+  border-radius: 4px;
+  margin-right: 8px;
+  }
+  
+  .icon-location {
+    font-size: 20px;
+  margin-left: 4px;
+    vertical-align: middle;
+  }
+  
+  /* --- Grid System --- */
+  .search-grid {
+    display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+  }
+  
+/* Card size giống layout mẫu */
+  /* --- Responsive --- */
+@media (max-width: 1200px) {
+    .search-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .search-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .search-section__title {
+    font-size: 22px;
+    }
+  }
+  
+@media (max-width: 600px) {
+    .search-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-page__container {
+    padding: 20px 16px 40px;
+    }
+    
+    .search-section__title {
+      font-size: 20px;
+    }
+  }

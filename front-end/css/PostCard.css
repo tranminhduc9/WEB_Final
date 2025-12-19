@@ -1,0 +1,184 @@
+/* PostCard Component - từ Figma Group 7, Group 8 */
+/* 
+ * Tính toán dựa trên LocationCard:
+ * - LocationCard: 350px x 500px (tỉ lệ 0.7:1, dọc)
+ * - PostCard: 480px x 197px (tỉ lệ 2.44:1, ngang)
+ * - PostCard width = 1.37 x LocationCard width
+ * - PostCard height = 0.4 x LocationCard height
+ * 
+ * Container Group 14: 1221px x 332px
+ * Mỗi card: 39.31% width (480px), 59.28% height (197px)
+ * Gap: 6.18% = 75px
+ */
+
+.post-card {
+  display: flex;
+  background: #D9D9D9; /* từ Figma Rectangle 1532578301 */
+  border-radius: 10px; /* từ Figma */
+  overflow: hidden;
+  width: 560px; /* 39.31% của 1221px, hoặc 1.37 x 350px LocationCard */
+  height: 300px; /* 59.28% của 332px, hoặc 0.4 x 500px LocationCard */
+  flex: 0 0 auto;
+  transition: transform 0.3s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Ảnh bên trái - từ Figma Rectangle 1532578302 */
+/* Image chiếm 55% width của card (21.73% / 39.31% = 55.3%) */
+.post-card__image {
+  flex: 0 0 55%;
+  width: 55%;
+  overflow: hidden;
+}
+
+.post-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px; /* từ Figma */
+}
+
+/* Nội dung bên phải - chiếm 45% width */
+.post-card__content {
+  flex: 0 0 45%;
+  width: 45%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px 12px; /* tăng padding-top để đẩy content xuống */
+  justify-content: flex-start;
+}
+
+/* Thông tin tác giả - từ Figma "Trần Minh Đức 36 phút trước" */
+/* top: 30.71% của card */
+.post-card__author {
+  display: flex;
+  flex-direction: column;
+  gap: 0; /* name và time sát nhau theo Figma */
+}
+
+.post-card__author-name {
+  font-family: 'Roboto', sans-serif; /* từ Figma */
+  font-style: normal;
+  font-weight: 400; /* từ Figma */
+  font-size: 16px; /* từ Figma */
+  line-height: 19px; /* từ Figma */
+  color: #000000; /* từ Figma */
+}
+
+.post-card__time {
+  font-family: 'Roboto', sans-serif; /* từ Figma */
+  font-style: normal;
+  font-weight: 400; /* từ Figma */
+  font-size: 16px; /* từ Figma - giống author name */
+  line-height: 19px; /* từ Figma */
+  color: #000000; /* từ Figma - giống author name */
+}
+
+/* Nội dung bài viết - từ Figma "Thấy Hà Nội okee phết!!" */
+/* top: 43.21% - gap từ author: 12.5% của card height (~25px) */
+.post-card__text {
+  font-family: 'Roboto', sans-serif; /* từ Figma */
+  font-style: normal;
+  font-weight: 400; /* từ Figma */
+  font-size: 16px; /* từ Figma */
+  line-height: 19px; /* từ Figma */
+  color: #020202; /* từ Figma */
+  margin-top: 12.5%; /* 12.5% gap từ author theo Figma */
+  margin-bottom: 0;
+}
+
+/* Like và Comment actions */
+/* top: 75.36% - gap từ content: 32.15% của card height */
+.post-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto; /* đẩy xuống cuối */
+}
+
+.post-card__action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.post-card__icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-card__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.post-card__icon--love {
+  color: #000000;
+}
+
+.post-card__icon--love svg {
+  fill: #000000;
+  stroke: #000000;
+}
+
+.post-card__icon--comment {
+  color: #000000;
+}
+
+.post-card__icon--comment svg {
+  fill: none;
+  stroke: #000000;
+}
+
+/* Số lượng like/comment - từ Figma "36" */
+.post-card__count {
+  font-family: 'Inter', sans-serif; /* từ Figma */
+  font-style: normal;
+  font-weight: 400; /* từ Figma */
+  font-size: 14px; /* từ Figma */
+  line-height: 17px; /* từ Figma */
+  color: #000000; /* từ Figma */
+}
+
+/* Responsive - giữ tỉ lệ tương đối với LocationCard */
+@media (max-width: 1200px) {
+  .post-card {
+    width: 420px; /* 1.2 x 350px */
+    height: 172px; /* giữ tỉ lệ 2.44:1 */
+  }
+}
+
+@media (max-width: 900px) {
+  .post-card {
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .post-card {
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+  }
+
+  .post-card__image {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 160px;
+  }
+
+  .post-card__content {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 12px 16px;
+  }
+}

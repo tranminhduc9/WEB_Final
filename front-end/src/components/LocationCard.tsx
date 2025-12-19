@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icons } from '../constants';
 import '../../css/LocationCard.css';
 
 interface LocationCardProps {
@@ -24,7 +25,10 @@ export default function LocationCard({
       <div className="place-info">
         <div className="place-info-top">
           <h3>{title}</h3>
-          <p>{address}</p>
+          <p className="place-address">
+            <Icons.Location className="place-address-icon" />
+            {address}
+          </p>
           <div className="tags">
             {tags.map((tag, index) => (
               <span key={index} className="tag">{tag}</span>
