@@ -1,9 +1,9 @@
 import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import LocationCard from '../components/LocationCard';
-import '../../css/TrendPlacesPage.css';
-import '../../css/LocationCard.css';
+import Header from '../../components/client/Header';
+import Footer from '../../components/client/Footer';
+import LocationCard from '../../components/common/LocationCard';
+import '../../assets/styles/pages/TrendPlacesPage.css';
+import '../../assets/styles/components/LocationCard.css';
 
 const TrendPlacesPage: React.FC = () => {
   // Dữ liệu mẫu cho địa điểm trending

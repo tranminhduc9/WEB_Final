@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import logo from '../assets/images/logo.png';
-import image_login from '../assets/images/login-register-image.png';
-import '../../css/LoginPage.css';
+import logo from '../../assets/images/logo.png';
+import image_login from '../../assets/images/login-register-image.png';
+import '../../assets/styles/pages/LoginPage.css';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

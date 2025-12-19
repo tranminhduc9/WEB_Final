@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Icons } from '../constants';
-import '../../css/CreatePostModal.css';
+import { Icons } from '../../config/constants';
+import '../../assets/styles/components/CreatePostModal.css';
 
 interface CreatePostModalProps {
   isOpen: boolean;

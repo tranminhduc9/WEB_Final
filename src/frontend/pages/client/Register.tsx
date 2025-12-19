@@ -1,6 +1,6 @@
-import '../../css/RegisterPage.css';
-import logo from '../assets/images/logo.png';
-import image_register from '../assets/images/login-register-image.png';
+import '../../assets/styles/pages/RegisterPage.css';
+import logo from '../../assets/images/logo.png';
+import image_register from '../../assets/images/login-register-image.png';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 

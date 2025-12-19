@@ -1,8 +1,8 @@
-import Header from './components/Header';
+import Header from './components/client/Header';
 import homePhoto from './assets/images/home_photo_1.png';
-import FeaturedPlaces from './components/FeaturedPlaces'
-import Footer from './components/Footer'
-import PostCard from './components/PostCard'
+import FeaturedPlaces from './components/client/FeaturedPlaces'
+import Footer from './components/client/Footer'
+import PostCard from './components/client/PostCard'
 import './App.css'
 
 export default function App() {

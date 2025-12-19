@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Icons } from '../constants';
-import logo from '../assets/images/logo.png';
-import chatbotIcon from '../assets/images/chatbot.png';
-import unionBg from '../assets/images/Union.png';
-import '../../css/Chatbot.css';
+import { Icons } from '../../config/constants';
+import logo from '../../assets/images/logo.png';
+import chatbotIcon from '../../assets/images/chatbot.png';
+import unionBg from '../../assets/images/Union.png';
+import '../../assets/styles/components/Chatbot.css';
 
 interface Message {
   id: number;

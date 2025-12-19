@@ -1,9 +1,9 @@
-import React from 'react';
-import LocationCard from './LocationCard';
-import '../../css/NearbyLocations.css';
-import '../../css/LocationCard.css';
-export default function NearbyLocations() {
-    const locations = [
+import '../../assets/styles/components/FeaturedPlaces.css';
+import LocationCard from '../common/LocationCard';
+
+function FeaturedPlaces() {
+    // Dữ liệu mẫu cho các địa điểm
+    const featuredLocations = [
         {
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Hồ Gươm - Quận Hoàn Kiếm',
@@ -43,12 +43,15 @@ export default function NearbyLocations() {
             tags: ['Lịch sử', 'Tham quan'],
             rating: 4.7,
             reviewCount: '2.8K+'
-        },
+        }
     ];
+
     return (
-        <div className="nearby-locations-container">
-            <h2 className="nearby-locations-title location-list-title">Địa điểm lân cận</h2>            <div className="scroll-container">
-                {locations.map((location, index) => (
+        <div id="featured-places" className="location-section">
+            <h3 className="featured-places-title">Các đặc điểm nổi bật</h3>
+            <p className="featured-places-description">Cùng khám phá các đặc điểm, di tích để hiểu thêm về Hà Nội nghìn năm văn hiến nhé!</p>
+            <div className="scroll-container">
+                {featuredLocations.map((location, index) => (
                     <LocationCard
                         key={index}
                         imageSrc={location.imageSrc}
@@ -61,5 +64,6 @@ export default function NearbyLocations() {
                 ))}
             </div>
         </div>
-    );
+    )
 }
+export default FeaturedPlaces;

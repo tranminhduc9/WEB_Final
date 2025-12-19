@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import BlogCard from '../components/BlogCard';
-import CreatePostModal from '../components/CreatePostModal';
-import '../../css/BlogPage.css';
+import Header from '../../components/client/Header';
+import Footer from '../../components/client/Footer';
+import BlogCard from '../../components/client/BlogCard';
+import CreatePostModal from '../../components/client/CreatePostModal';
+import '../../assets/styles/pages/BlogPage.css';
 
 const BlogPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);

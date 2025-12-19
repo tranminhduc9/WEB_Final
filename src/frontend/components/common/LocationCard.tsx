@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icons } from '../constants';
-import '../../css/LocationCard.css';
+import { Icons } from '../../config/constants';
+import '../../assets/styles/components/LocationCard.css';
 
 interface LocationCardProps {
   imageSrc: string;

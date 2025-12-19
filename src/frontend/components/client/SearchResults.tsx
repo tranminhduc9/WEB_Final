@@ -1,7 +1,7 @@
 import React from 'react';
-import LocationCard from './LocationCard';
-import '../../css/SearchResults.css';
-import '../../css/LocationCard.css';
+import LocationCard from '../common/LocationCard';
+import '../../assets/styles/components/SearchResults.css';
+import '../../assets/styles/components/LocationCard.css';
 
 interface SearchResultsProps {
   searchQuery?: string;

@@ -1,9 +1,9 @@
 import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import LocationCard from '../components/LocationCard';
-import PostCard from '../components/PostCard';
-import '../../css/UserProfilePage.css';
+import Header from '../../components/client/Header';
+import Footer from '../../components/client/Footer';
+import LocationCard from '../../components/common/LocationCard';
+import PostCard from '../../components/client/PostCard';
+import '../../assets/styles/pages/UserProfilePage.css';
 
 const UserProfilePage: React.FC = () => {
   // Dữ liệu mẫu địa điểm yêu thích

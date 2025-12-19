@@ -1,7 +1,7 @@
 import React from 'react';
-import { Icons } from '../constants'; // Đảm bảo trong constants các icon là React Component
-import '../../css/Footer.css';
-import logo from '../assets/images/logo.png';
+import { Icons } from '../../config/constants';
+import '../../assets/styles/components/Footer.css';
+import logo from '../../assets/images/logo.png';
 
 // Nếu Footer sau này có nhận props (ví dụ màu nền), bạn khai báo interface ở đây
 // interface FooterProps {

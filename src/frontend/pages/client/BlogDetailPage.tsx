@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { Icons } from '../constants';
-import '../../css/BlogDetailPage.css';
+import Header from '../../components/client/Header';
+import Footer from '../../components/client/Footer';
+import { Icons } from '../../config/constants';
+import '../../assets/styles/pages/BlogDetailPage.css';
 
 // Placeholder image URL
 const placeholderImage = 'https://images.unsplash.com/photo-1599708153386-62bf3f035e78?w=600&h=400&fit=crop';

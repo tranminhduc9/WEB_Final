@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icons } from '../constants';
-import '../../css/PostCard.css';
+import { Icons } from '../../config/constants';
+import '../../assets/styles/components/PostCard.css';
 
 interface PostCardProps {
   imageSrc: string;

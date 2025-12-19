@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
-import { Icons } from '../constants';
-import '../../css/BlogCard.css';
+import { Icons } from '../../config/constants';
+import '../../assets/styles/components/BlogCard.css';
 
 interface BlogCardProps {
   id: number; // Thêm id để link đến trang chi tiết

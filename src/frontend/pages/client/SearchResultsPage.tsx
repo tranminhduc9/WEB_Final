@@ -1,9 +1,9 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import LocationCard from '../components/LocationCard';
-import '../../css/SearchResultsPage.css';
+import Header from '../../components/client/Header';
+import Footer from '../../components/client/Footer';
+import LocationCard from '../../components/common/LocationCard';
+import '../../assets/styles/pages/SearchResultsPage.css';
 
 const SearchResultsPage: React.FC = () => {
   const [searchParams] = useSearchParams();

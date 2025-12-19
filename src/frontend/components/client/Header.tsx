@@ -1,10 +1,10 @@
 import Container from './Container';
-import logo from  '../assets/images/logo.png'
-import '../../css/Header.css'; // Import tệp CSS vừa tạo
+import logo from '../../assets/images/logo.png'
+import '../../assets/styles/components/Header.css';
 import { Link, useNavigate } from 'react-router-dom'
 import FeaturedPlaces from './FeaturedPlaces';
 import { useState, useEffect } from 'react';
-import { Icons } from '../constants';
+import { Icons } from '../../config/constants';
 
 // Functional component Header
 function Header() {
