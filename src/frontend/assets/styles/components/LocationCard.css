@@ -1,20 +1,22 @@
-.location-section{
+.location-section {
     margin: 30px 0;
     padding-left: 20px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.scroll-container{
+.scroll-container {
     display: flex;
     gap: 20px;
     overflow-x: auto;
     scroll-behavior: smooth;
     padding-bottom: 10px;
-    scrollbar-width: none; /* Firefox: ẩn thanh scroll, vẫn cuộn được */
-    -ms-overflow-style: none; /* IE/Edge cũ */
+    scrollbar-width: none;
+    /* Firefox: ẩn thanh scroll, vẫn cuộn được */
+    -ms-overflow-style: none;
+    /* IE/Edge cũ */
 }
 
-.location-list-title{
+.location-list-title {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -23,18 +25,21 @@
     color: #333;
 }
 
-.scroll-container::-webkit-scrollbar{
-    display: none; /* Chrome/Safari: ẩn thanh scroll, vẫn cuộn được */
+.scroll-container::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari: ẩn thanh scroll, vẫn cuộn được */
 }
 
 /* Card Container - từ Figma Rectangle 1532578303 */
-.place-card{
+.place-card {
     width: 350px;
     height: 500px;
     flex: 0 0 auto;
-    border-radius: 20px; /* Từ Figma: border-radius: 20px */
+    border-radius: 20px;
+    /* Từ Figma: border-radius: 20px */
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.1);
-    background: #F6F5F5; /* Từ Figma */
+    background: #F6F5F5;
+    /* Từ Figma */
     overflow: hidden;
     transition: transform 0.3s ease;
     display: flex;
@@ -50,7 +55,8 @@
     width: 100%;
     height: 350px;
     object-fit: cover;
-    border-radius: 10px; /* Từ Figma: border-radius: 10px */
+    border-radius: 10px;
+    /* Từ Figma: border-radius: 10px */
 }
 
 /* Info Container */
@@ -69,23 +75,33 @@
 /* Title - từ Figma "Hồ Gươm - Quận Hoàn Kiếm" */
 .place-info h3 {
     margin: 0 0 8px 0;
-    font-family: 'Roboto', sans-serif; /* Từ Figma */
+    font-family: 'Roboto', sans-serif;
+    /* Từ Figma */
     font-style: normal;
-    font-weight: 700; /* Từ Figma */
-    font-size: 24px; /* Từ Figma */
-    line-height: 28px; /* Từ Figma */
-    color: #000000; /* Từ Figma */
+    font-weight: 700;
+    /* Từ Figma */
+    font-size: 24px;
+    /* Từ Figma */
+    line-height: 28px;
+    /* Từ Figma */
+    color: #000000;
+    /* Từ Figma */
 }
 
 /* Address - từ Figma "Phường Hoàn Kiếm - Thành phố Hà Nội" */
 .place-info p {
     margin: 0 0 8px 0;
-    font-family: 'Roboto', sans-serif; /* Từ Figma */
+    font-family: 'Roboto', sans-serif;
+    /* Từ Figma */
     font-style: normal;
-    font-weight: 400; /* Từ Figma */
-    font-size: 16px; /* Từ Figma */
-    line-height: 19px; /* Từ Figma */
-    color: #000000; /* Từ Figma */
+    font-weight: 400;
+    /* Từ Figma */
+    font-size: 16px;
+    /* Từ Figma */
+    line-height: 19px;
+    /* Từ Figma */
+    color: #000000;
+    /* Từ Figma */
 }
 
 /* Address với icon */
@@ -115,14 +131,21 @@
 
 /* Tag - từ Figma Group 38 và Group 40 */
 .tag {
-    background: #D9D9D9; /* Từ Figma Rectangle 1532578320 và 1532578321 */
-    font-family: 'Inter', sans-serif; /* Từ Figma */
+    background: #D9D9D9;
+    /* Từ Figma Rectangle 1532578320 và 1532578321 */
+    font-family: 'Inter', sans-serif;
+    /* Từ Figma */
     font-style: normal;
-    font-weight: 400; /* Từ Figma */
-    font-size: 16px; /* Từ Figma */
-    line-height: 19px; /* Từ Figma */
-    text-align: center; /* Từ Figma */
-    color: rgba(62, 60, 60, 0.8); /* Từ Figma */
+    font-weight: 400;
+    /* Từ Figma */
+    font-size: 16px;
+    /* Từ Figma */
+    line-height: 19px;
+    /* Từ Figma */
+    text-align: center;
+    /* Từ Figma */
+    color: rgba(62, 60, 60, 0.8);
+    /* Từ Figma */
     padding: 4px 12px;
     border-radius: 4px;
     white-space: nowrap;
@@ -131,17 +154,34 @@
 /* Rating - từ Figma "⭐ 4,5 (360) ~ 3,6K + reviews" */
 .place-rating {
     margin-top: auto;
-    font-family: 'Roboto', sans-serif; /* Từ Figma */
+    font-family: 'Roboto', sans-serif;
+    /* Từ Figma */
     font-style: normal;
-    font-weight: 400; /* Từ Figma */
-    font-size: 16px; /* Từ Figma */
-    line-height: 19px; /* Từ Figma */
+    font-weight: 400;
+    /* Từ Figma */
+    font-size: 16px;
+    /* Từ Figma */
+    line-height: 19px;
+    /* Từ Figma */
 }
 
 .rating-value {
-    color: #F88622; /* Giữ màu cam cho rating */
+    color: #F88622;
+    /* Giữ màu cam cho rating */
 }
 
 .review-count {
-    color: #000000; /* Màu đen cho reviewCount */
+    color: #000000;
+    /* Màu đen cho reviewCount */
+}
+
+/* Link Styles */
+.place-card--link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.place-card--link:hover {
+    text-decoration: none;
 }

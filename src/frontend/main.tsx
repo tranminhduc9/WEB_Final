@@ -16,6 +16,7 @@ import TrendPlacesPage from './pages/client/TrendPlacesPage'
 import UserProfilePage from './pages/client/UserProfilePage'
 import BlogPage from './pages/client/BlogPage'
 import BlogDetailPage from './pages/client/BlogDetailPage'
+import LocationInfoPage from './pages/client/LocationInfoPage'
 
 // Components
 import Chatbot from './components/client/Chatbot'
@@ -31,28 +32,29 @@ const router = createBrowserRouter([
   { path: '/trend-places', element: <TrendPlacesPage /> },
   { path: '/blogs', element: <BlogPage /> },
   { path: '/blog/:id', element: <BlogDetailPage /> },
-  
+  { path: '/location/:id', element: <LocationInfoPage /> },
+
   // Auth routes (redirect if already logged in)
-  { 
-    path: '/login', 
+  {
+    path: '/login',
     element: (
       <PublicRoute>
         <Login />
       </PublicRoute>
     )
   },
-  { 
-    path: '/register', 
+  {
+    path: '/register',
     element: (
       <PublicRoute>
         <Register />
       </PublicRoute>
     )
   },
-  
+
   // Protected routes (require authentication)
-  { 
-    path: '/profile', 
+  {
+    path: '/profile',
     element: (
       <ProtectedRoute>
         <UserProfilePage />

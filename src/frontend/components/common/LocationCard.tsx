@@ -1,8 +1,9 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { Icons } from '../../config/constants';
 import '../../assets/styles/components/LocationCard.css';
 
 interface LocationCardProps {
+  id?: string;
   imageSrc: string;
   title: string;
   address: string;
@@ -12,6 +13,7 @@ interface LocationCardProps {
 }
 
 export default function LocationCard({
+  id,
   imageSrc,
   title,
   address,
@@ -19,8 +21,8 @@ export default function LocationCard({
   rating,
   reviewCount,
 }: LocationCardProps) {
-  return (
-    <div className="place-card">
+  const cardContent = (
+    <>
       <img src={imageSrc} alt={title} />
       <div className="place-info">
         <div className="place-info-top">
@@ -40,6 +42,20 @@ export default function LocationCard({
           <span className="review-count"> – {reviewCount} reviews</span>
         </div>
       </div>
+    </>
+  );
+
+  if (id) {
+    return (
+      <Link to={`/location/${id}`} className="place-card place-card--link">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="place-card">
+      {cardContent}
     </div>
   );
 }

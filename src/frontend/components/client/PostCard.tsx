@@ -1,8 +1,9 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { Icons } from '../../config/constants';
 import '../../assets/styles/components/PostCard.css';
 
 interface PostCardProps {
+  id?: string | number;
   imageSrc: string;
   authorName: string;
   timeAgo: string;
@@ -12,6 +13,7 @@ interface PostCardProps {
 }
 
 const PostCard: React.FC<PostCardProps> = ({
+  id,
   imageSrc,
   authorName,
   timeAgo,
@@ -19,8 +21,8 @@ const PostCard: React.FC<PostCardProps> = ({
   likeCount,
   commentCount
 }) => {
-  return (
-    <div className="post-card">
+  const cardContent = (
+    <>
       {/* Ảnh bên trái */}
       <div className="post-card__image">
         <img src={imageSrc} alt={authorName} />
@@ -49,9 +51,22 @@ const PostCard: React.FC<PostCardProps> = ({
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (id) {
+    return (
+      <Link to={`/blog/${id}`} className="post-card post-card--link">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="post-card">
+      {cardContent}
     </div>
   );
 };
 
 export default PostCard;
-

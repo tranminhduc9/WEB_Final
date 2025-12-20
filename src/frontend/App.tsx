@@ -9,6 +9,7 @@ export default function App() {
   // Dữ liệu mẫu cho bài viết nổi bật
   const featuredPosts = [
     {
+      id: '1',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       authorName: 'Trần Minh Đức',
       timeAgo: '36 phút trước',
@@ -17,6 +18,7 @@ export default function App() {
       commentCount: 36
     },
     {
+      id: '2',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       authorName: 'Trần Minh Đức',
       timeAgo: '36 phút trước',
@@ -32,9 +34,9 @@ export default function App() {
       <main className="flex-1">
         {/* Hero Section với hình ảnh */}
         <section className="relative h-96 bg-gray-100 w-screen -mx-4">
-          <img 
+          <img
             src={homePhoto}
-            alt="Du lịch Hà Nội" 
+            alt="Du lịch Hà Nội"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
@@ -49,9 +51,10 @@ export default function App() {
           <h3 className="featured-posts-title">Bài viết nổi bật</h3>
           <p className="featured-posts-subtitle">Đố anh biết em đang nghĩ gì??</p>
           <div className="featured-posts-grid">
-            {featuredPosts.map((post, index) => (
+            {featuredPosts.map((post) => (
               <PostCard
-                key={index}
+                key={post.id}
+                id={post.id}
                 imageSrc={post.imageSrc}
                 authorName={post.authorName}
                 timeAgo={post.timeAgo}

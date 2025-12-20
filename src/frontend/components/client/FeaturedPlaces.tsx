@@ -5,6 +5,7 @@ function FeaturedPlaces() {
     // Dữ liệu mẫu cho các địa điểm
     const featuredLocations = [
         {
+            id: '1',
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Hồ Gươm - Quận Hoàn Kiếm',
             address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -13,6 +14,7 @@ function FeaturedPlaces() {
             reviewCount: '360'
         },
         {
+            id: '2',
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Phố Cổ Hà Nội',
             address: 'Phường Hàng Bồ - Quận Hoàn Kiếm',
@@ -21,6 +23,7 @@ function FeaturedPlaces() {
             reviewCount: '1.2K+'
         },
         {
+            id: '3',
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Văn Miếu - Quốc Tử Giám',
             address: 'Phường Văn Miếu - Quận Đống Đa',
@@ -29,6 +32,7 @@ function FeaturedPlaces() {
             reviewCount: '5.0K+'
         },
         {
+            id: '4',
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Chùa Một Cột',
             address: 'Phường Đội Cấn - Quận Ba Đình',
@@ -37,6 +41,7 @@ function FeaturedPlaces() {
             reviewCount: '890'
         },
         {
+            id: '5',
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Lăng Chủ tịch Hồ Chí Minh',
             address: 'Phường Điện Biên - Quận Ba Đình',
@@ -51,9 +56,10 @@ function FeaturedPlaces() {
             <h3 className="featured-places-title">Các đặc điểm nổi bật</h3>
             <p className="featured-places-description">Cùng khám phá các đặc điểm, di tích để hiểu thêm về Hà Nội nghìn năm văn hiến nhé!</p>
             <div className="scroll-container">
-                {featuredLocations.map((location, index) => (
+                {featuredLocations.map((location) => (
                     <LocationCard
-                        key={index}
+                        key={location.id}
+                        id={location.id}
                         imageSrc={location.imageSrc}
                         title={location.title}
                         address={location.address}

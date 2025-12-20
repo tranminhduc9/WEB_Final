@@ -13,11 +13,15 @@
 
 .post-card {
   display: flex;
-  background: #D9D9D9; /* từ Figma Rectangle 1532578301 */
-  border-radius: 10px; /* từ Figma */
+  background: #D9D9D9;
+  /* từ Figma Rectangle 1532578301 */
+  border-radius: 10px;
+  /* từ Figma */
   overflow: hidden;
-  width: 560px; /* 39.31% của 1221px, hoặc 1.37 x 350px LocationCard */
-  height: 300px; /* 59.28% của 332px, hoặc 0.4 x 500px LocationCard */
+  width: 560px;
+  /* 39.31% của 1221px, hoặc 1.37 x 350px LocationCard */
+  height: 300px;
+  /* 59.28% của 332px, hoặc 0.4 x 500px LocationCard */
   flex: 0 0 auto;
   transition: transform 0.3s ease;
 }
@@ -38,7 +42,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px; /* từ Figma */
+  border-radius: 10px;
+  /* từ Figma */
 }
 
 /* Nội dung bên phải - chiếm 45% width */
@@ -47,7 +52,8 @@
   width: 45%;
   display: flex;
   flex-direction: column;
-  padding: 20px 16px 12px; /* tăng padding-top để đẩy content xuống */
+  padding: 20px 16px 12px;
+  /* tăng padding-top để đẩy content xuống */
   justify-content: flex-start;
 }
 
@@ -56,37 +62,54 @@
 .post-card__author {
   display: flex;
   flex-direction: column;
-  gap: 0; /* name và time sát nhau theo Figma */
+  gap: 0;
+  /* name và time sát nhau theo Figma */
 }
 
 .post-card__author-name {
-  font-family: 'Roboto', sans-serif; /* từ Figma */
+  font-family: 'Roboto', sans-serif;
+  /* từ Figma */
   font-style: normal;
-  font-weight: 400; /* từ Figma */
-  font-size: 16px; /* từ Figma */
-  line-height: 19px; /* từ Figma */
-  color: #000000; /* từ Figma */
+  font-weight: 400;
+  /* từ Figma */
+  font-size: 16px;
+  /* từ Figma */
+  line-height: 19px;
+  /* từ Figma */
+  color: #000000;
+  /* từ Figma */
 }
 
 .post-card__time {
-  font-family: 'Roboto', sans-serif; /* từ Figma */
+  font-family: 'Roboto', sans-serif;
+  /* từ Figma */
   font-style: normal;
-  font-weight: 400; /* từ Figma */
-  font-size: 16px; /* từ Figma - giống author name */
-  line-height: 19px; /* từ Figma */
-  color: #000000; /* từ Figma - giống author name */
+  font-weight: 400;
+  /* từ Figma */
+  font-size: 16px;
+  /* từ Figma - giống author name */
+  line-height: 19px;
+  /* từ Figma */
+  color: #000000;
+  /* từ Figma - giống author name */
 }
 
 /* Nội dung bài viết - từ Figma "Thấy Hà Nội okee phết!!" */
 /* top: 43.21% - gap từ author: 12.5% của card height (~25px) */
 .post-card__text {
-  font-family: 'Roboto', sans-serif; /* từ Figma */
+  font-family: 'Roboto', sans-serif;
+  /* từ Figma */
   font-style: normal;
-  font-weight: 400; /* từ Figma */
-  font-size: 16px; /* từ Figma */
-  line-height: 19px; /* từ Figma */
-  color: #020202; /* từ Figma */
-  margin-top: 12.5%; /* 12.5% gap từ author theo Figma */
+  font-weight: 400;
+  /* từ Figma */
+  font-size: 16px;
+  /* từ Figma */
+  line-height: 19px;
+  /* từ Figma */
+  color: #020202;
+  /* từ Figma */
+  margin-top: 12.5%;
+  /* 12.5% gap từ author theo Figma */
   margin-bottom: 0;
 }
 
@@ -96,7 +119,8 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: auto; /* đẩy xuống cuối */
+  margin-top: auto;
+  /* đẩy xuống cuối */
 }
 
 .post-card__action {
@@ -138,19 +162,37 @@
 
 /* Số lượng like/comment - từ Figma "36" */
 .post-card__count {
-  font-family: 'Inter', sans-serif; /* từ Figma */
+  font-family: 'Inter', sans-serif;
+  /* từ Figma */
   font-style: normal;
-  font-weight: 400; /* từ Figma */
-  font-size: 14px; /* từ Figma */
-  line-height: 17px; /* từ Figma */
-  color: #000000; /* từ Figma */
+  font-weight: 400;
+  /* từ Figma */
+  font-size: 14px;
+  /* từ Figma */
+  line-height: 17px;
+  /* từ Figma */
+  color: #000000;
+  /* từ Figma */
+}
+
+/* Link Styles */
+.post-card--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.post-card--link:hover {
+  text-decoration: none;
 }
 
 /* Responsive - giữ tỉ lệ tương đối với LocationCard */
 @media (max-width: 1200px) {
   .post-card {
-    width: 420px; /* 1.2 x 350px */
-    height: 172px; /* giữ tỉ lệ 2.44:1 */
+    width: 420px;
+    /* 1.2 x 350px */
+    height: 172px;
+    /* giữ tỉ lệ 2.44:1 */
   }
 }
 
