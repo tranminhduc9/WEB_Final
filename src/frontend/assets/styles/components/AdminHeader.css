@@ -1,0 +1,214 @@
+/* Admin Header Styling - Tương tự Header.css của user */
+.admin-header {
+    background-color: #ffffff;
+    padding: 0 40px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    height: 70px;
+}
+
+/* Logo */
+.admin-header__logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.admin-header__logo a {
+    display: block;
+    text-decoration: none;
+}
+
+.admin-header__logo img {
+    height: 70px;
+    display: block;
+}
+
+/* Navigation */
+.admin-header__nav {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    flex: 1;
+    justify-content: center;
+}
+
+.admin-nav-link {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    font-size: 16px;
+    white-space: nowrap;
+    transition: color 0.2s;
+    position: relative;
+    padding: 8px 0;
+}
+
+.admin-nav-link:hover {
+    color: #f7931e;
+}
+
+.admin-nav-link.active {
+    color: #f7931e;
+}
+
+.admin-nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #f7931e;
+    border-radius: 1px;
+}
+
+/* User Menu Container */
+.admin-user-menu-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.admin-user-menu-trigger {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.admin-user-menu-trigger:hover {
+    background-color: #f5f5f5;
+}
+
+.admin-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #D9D9D9;
+}
+
+.admin-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f7931e;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* User Menu Dropdown */
+.admin-user-menu-dropdown {
+    box-sizing: border-box;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 153px;
+    background: #FFFFFF;
+    border: 1px solid #000000;
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-user-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 16px;
+    text-align: center;
+    text-decoration: none;
+    color: #000000;
+    font-size: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-sizing: border-box;
+}
+
+.admin-user-menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+.admin-user-menu-divider {
+    height: 1px;
+    background-color: #000000;
+    width: 100%;
+    margin: 0;
+}
+
+.admin-logout-btn {
+    color: #000000;
+    font-weight: 500;
+}
+
+.admin-logout-btn:hover {
+    background-color: #f5f5f5;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .admin-header {
+        padding: 0 20px;
+    }
+
+    .admin-header__nav {
+        gap: 24px;
+    }
+
+    .admin-nav-link {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 992px) {
+    .admin-header__nav {
+        gap: 16px;
+    }
+
+    .admin-nav-link {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 16px;
+    }
+
+    .admin-header__nav {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+        gap: 16px;
+        padding: 10px 0;
+    }
+
+    .admin-user-menu-dropdown {
+        right: 0;
+    }
+}
