@@ -11,7 +11,7 @@ export const Icons = {
       <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   ),
-  
+
   Instagram: ({ className }: IconProps = {}): React.ReactElement => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -19,14 +19,14 @@ export const Icons = {
       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
     </svg>
   ),
-  
+
   Youtube: ({ className }: IconProps = {}): React.ReactElement => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
       <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
     </svg>
   ),
-  
+
   Search: ({ className }: IconProps = {}): React.ReactElement => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8"></circle>
@@ -83,6 +83,15 @@ export const Icons = {
       <polyline points="21 15 16 10 5 21"></polyline>
       <line x1="18" y1="5" x2="18" y2="11"></line>
       <line x1="15" y1="8" x2="21" y2="8"></line>
+    </svg>
+  ),
+
+  Graph: ({ className }: IconProps = {}): React.ReactElement => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v18h18"></path>
+      <path d="M18 17V9"></path>
+      <path d="M13 17V5"></path>
+      <path d="M8 17v-3"></path>
     </svg>
   ),
 };

@@ -17,6 +17,7 @@ import UserProfilePage from './pages/client/UserProfilePage'
 import BlogPage from './pages/client/BlogPage'
 import BlogDetailPage from './pages/client/BlogDetailPage'
 import LocationInfoPage from './pages/client/LocationInfoPage'
+import AdminHomePage from './pages/admin/AdminHomePage'
 
 // Components
 import Chatbot from './components/client/Chatbot'
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
+
+  // Admin routes
+  { path: '/admin', element: <AdminHomePage /> },
+  { path: '/admin/statistics', element: <AdminHomePage /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
