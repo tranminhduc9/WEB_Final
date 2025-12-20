@@ -1,31 +1,71 @@
 import { StrictMode } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import ReactDOM from 'react-dom/client'
-import Login from './pages/client/Login.tsx'
-import Register from './pages/client/Register.tsx'
-import SearchResultsPage from './pages/client/SearchResultsPage.tsx'
-import TrendPlacesPage from './pages/client/TrendPlacesPage.tsx'
-import UserProfilePage from './pages/client/UserProfilePage.tsx'
-import BlogPage from './pages/client/BlogPage.tsx'
-import BlogDetailPage from './pages/client/BlogDetailPage.tsx'
-import Chatbot from './components/client/Chatbot.tsx'
+
+// Contexts
+import { AuthProvider } from './contexts'
+
+// Route Guards
+import { ProtectedRoute, PublicRoute } from './routes'
+
+// Pages
+import Login from './pages/client/Login'
+import Register from './pages/client/Register'
+import SearchResultsPage from './pages/client/SearchResultsPage'
+import TrendPlacesPage from './pages/client/TrendPlacesPage'
+import UserProfilePage from './pages/client/UserProfilePage'
+import BlogPage from './pages/client/BlogPage'
+import BlogDetailPage from './pages/client/BlogDetailPage'
+
+// Components
+import Chatbot from './components/client/Chatbot'
+
+// Styles
 import './index.css'
-import App from './App.tsx'
+import App from './App'
 
 const router = createBrowserRouter([
+  // Public routes
   { path: '/', element: <App /> },
-  { path: '/login', element: <Login /> },
-  { path: '/register', element: <Register /> },
   { path: '/search', element: <SearchResultsPage /> },
   { path: '/trend-places', element: <TrendPlacesPage /> },
-  { path: '/profile', element: <UserProfilePage /> },
   { path: '/blogs', element: <BlogPage /> },
   { path: '/blog/:id', element: <BlogDetailPage /> },
+  
+  // Auth routes (redirect if already logged in)
+  { 
+    path: '/login', 
+    element: (
+      <PublicRoute>
+        <Login />
+      </PublicRoute>
+    )
+  },
+  { 
+    path: '/register', 
+    element: (
+      <PublicRoute>
+        <Register />
+      </PublicRoute>
+    )
+  },
+  
+  // Protected routes (require authentication)
+  { 
+    path: '/profile', 
+    element: (
+      <ProtectedRoute>
+        <UserProfilePage />
+      </ProtectedRoute>
+    )
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
-    <Chatbot />
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <Chatbot />
+    </AuthProvider>
   </StrictMode>
 );

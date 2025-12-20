@@ -34,6 +34,7 @@
   background: #f6f5f5;
   overflow: hidden;
   flex-shrink: 0;
+  position: relative;
 }
 
 .profile-avatar img {
@@ -377,4 +378,64 @@
     gap: 16px;
     padding-right: 12px;
   }
+}
+
+/* ==================== */
+/* Avatar Placeholder & Overlay */
+/* ==================== */
+.avatar-placeholder-large {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+  color: white;
+  font-size: 72px;
+  font-weight: 700;
+  border-radius: 90px;
+}
+
+.avatar-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 0 0 90px 90px;
+}
+
+.avatar-overlay span {
+  font-size: 20px;
+}
+
+.profile-avatar:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-uploading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 90px;
+  color: white;
+  font-size: 14px;
+}
+
+.profile-email {
+  margin: 0;
+  font-size: 16px;
+  color: #666;
 }

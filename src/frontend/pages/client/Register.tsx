@@ -1,56 +1,245 @@
-import '../../assets/styles/pages/RegisterPage.css';
-import logo from '../../assets/images/logo.png';
-import image_register from '../../assets/images/login-register-image.png';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import { useAuthContext } from '../../contexts';
+import logo from '../../assets/images/logo.png';
+import image_register from '../../assets/images/login-register-image.png';
+import '../../assets/styles/pages/RegisterPage.css';
 
 export default function Register() {
-    const [username, setUsername] = useState('');
-    const [fullname, setFullname] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [localError, setLocalError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  
+  const { register, error, clearError, isLoading } = useAuthContext();
+  const navigate = useNavigate();
 
-    const onSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        if (!username || !password) return setError('Vui lòng nhập đủ thông tin');
-    };
+  const validateForm = (): string | null => {
+    // Required fields
+    if (!email.trim()) {
+      return 'Vui lòng nhập email';
+    }
+    if (!name.trim()) {
+      return 'Vui lòng nhập họ và tên';
+    }
+    if (!password) {
+      return 'Vui lòng nhập mật khẩu';
+    }
+    if (!confirmPassword) {
+      return 'Vui lòng xác nhận mật khẩu';
+    }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Email không hợp lệ';
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+
+    // Password match
+    if (password !== confirmPassword) {
+      return 'Mật khẩu xác nhận không khớp';
+    }
+
+    // Phone validation (optional but if provided, must be valid)
+    if (phone) {
+      const phoneRegex = /^[0-9]{10,11}$/;
+      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+        return 'Số điện thoại không hợp lệ (10-11 số)';
+      }
+    }
+
+    return null;
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearError();
+    setLocalError('');
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setLocalError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      await register({
+        email: email.trim(),
+        password,
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+      });
+      
+      setSuccess(true);
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        navigate('/login', { 
+          state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' }
+        });
+      }, 2000);
+    } catch (err) {
+      // Error đã được xử lý trong AuthContext
+      console.error('Register failed:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const displayError = localError || error;
+
+  if (success) {
     return (
-        <div className="register-container">
-            <div className="register-form-section">
-                <div className="form-wrapper">
-                    <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
-                    <img src={logo} alt="register" className="logo" />
-                    <form onSubmit={onSubmit}>
-                        <div className="input-group subheading">
-                            <label htmlFor="username">Tên đăng nhập</label>
-                            <input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                        </div>
-                        <div className="input-group subheading">
-                            <label htmlFor="fullname">Họ và tên</label>
-                            <input type="text" id="fullname" value={fullname} onChange={(e) => setFullname(e.target.value)} />
-                        </div>
-                        <div className="input-group subheading">
-                            <label htmlFor="password">Mật khẩu</label>
-                            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                        </div>
-                        <div className="input-group subheading">
-                            <label htmlFor="confirm-password">Xác nhận mật khẩu</label>
-                            <input type="password" id="confirm-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-                        </div>
-                        {error && <div className="error-message">{error}</div>}
-                        <button type="submit" className="register-button">Đăng ký</button>
-                        <div className="forgot-password">
-                            <Link to="/login">Đã có tài khoản? Đăng nhập</Link>
-                        </div>
-                    </form>
-                    
-                </div>
-            </div>
-            <div className="register-image-section" style={{ backgroundImage: `url(${image_register})` }}></div>
+      <div className="register-container">
+        <div className="register-form-section">
+          <div className="form-wrapper" style={{ textAlign: 'center' }}>
+            <h2>ĐĂNG KÝ THÀNH CÔNG!</h2>
+            <img src={logo} alt="register" className="logo" />
+            <p style={{ marginTop: '1rem', color: '#4CAF50' }}>
+              Tài khoản của bạn đã được tạo thành công.
+            </p>
+            <p style={{ marginTop: '0.5rem' }}>
+              Đang chuyển hướng đến trang đăng nhập...
+            </p>
+          </div>
         </div>
+        <div className="register-image-section" style={{ backgroundImage: `url(${image_register})` }}></div>
+      </div>
     );
+  }
+
+  return (
+    <div className="register-container">
+      <div className="register-form-section">
+        <div className="form-wrapper">
+          <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
+          <img src={logo} alt="register" className="logo" />
+          
+          <form onSubmit={onSubmit}>
+            <div className="input-group subheading">
+              <label htmlFor="email">Email *</label>
+              <input 
+                type="email" 
+                id="email" 
+                value={email} 
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (displayError) {
+                    clearError();
+                    setLocalError('');
+                  }
+                }}
+                placeholder="example@email.com"
+                disabled={isLoading}
+                autoComplete="email"
+              />
+            </div>
+            
+            <div className="input-group subheading">
+              <label htmlFor="name">Họ và tên *</label>
+              <input 
+                type="text" 
+                id="name" 
+                value={name} 
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (displayError) {
+                    clearError();
+                    setLocalError('');
+                  }
+                }}
+                placeholder="Nguyễn Văn A"
+                disabled={isLoading}
+                autoComplete="name"
+              />
+            </div>
+            
+            <div className="input-group subheading">
+              <label htmlFor="phone">Số điện thoại</label>
+              <input 
+                type="tel" 
+                id="phone" 
+                value={phone} 
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (displayError) {
+                    clearError();
+                    setLocalError('');
+                  }
+                }}
+                placeholder="0901234567"
+                disabled={isLoading}
+                autoComplete="tel"
+              />
+            </div>
+            
+            <div className="input-group subheading">
+              <label htmlFor="password">Mật khẩu *</label>
+              <input 
+                type="password" 
+                id="password" 
+                value={password} 
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (displayError) {
+                    clearError();
+                    setLocalError('');
+                  }
+                }}
+                placeholder="Tối thiểu 6 ký tự"
+                disabled={isLoading}
+                autoComplete="new-password"
+              />
+            </div>
+            
+            <div className="input-group subheading">
+              <label htmlFor="confirm-password">Xác nhận mật khẩu *</label>
+              <input 
+                type="password" 
+                id="confirm-password" 
+                value={confirmPassword} 
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (displayError) {
+                    clearError();
+                    setLocalError('');
+                  }
+                }}
+                placeholder="Nhập lại mật khẩu"
+                disabled={isLoading}
+                autoComplete="new-password"
+              />
+            </div>
+            
+            {displayError && (
+              <div className="error-message">{displayError}</div>
+            )}
+            
+            <button 
+              type="submit" 
+              className="register-button"
+              disabled={isLoading || isSubmitting}
+            >
+              {isLoading || isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}
+            </button>
+            
+            <div className="forgot-password">
+              <Link to="/login">Đã có tài khoản? Đăng nhập</Link>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div className="register-image-section" style={{ backgroundImage: `url(${image_register})` }}></div>
+    </div>
+  );
 }

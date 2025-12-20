@@ -1,74 +1,17 @@
-import Container from './Container';
-import logo from '../../assets/images/logo.png'
-import '../../assets/styles/components/Header.css';
-import { Link, useNavigate } from 'react-router-dom'
-import FeaturedPlaces from './FeaturedPlaces';
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../contexts';
 import { Icons } from '../../config/constants';
+import logo from '../../assets/images/logo.png';
+import '../../assets/styles/components/Header.css';
 
-// Functional component Header
 function Header() {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Khởi tạo state từ localStorage ngay từ đầu
-  const getInitialAuthState = () => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token) {
-      let user = { name: 'User', email: '' };
-      if (userData) {
-        try {
-          user = JSON.parse(userData);
-        } catch (e) {
-          // Keep default user
-        }
-      }
-      return { isLoggedIn: true, user };
-    }
-    return { isLoggedIn: false, user: null };
-  };
-
-  const initialAuth = getInitialAuthState();
-  const [isLoggedIn, setIsLoggedIn] = useState(initialAuth.isLoggedIn);
-  const [user, setUser] = useState<any>(initialAuth.user);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  // Sử dụng AuthContext thay vì localStorage trực tiếp
+  const { user, isAuthenticated, logout, isLoading } = useAuthContext();
   const navigate = useNavigate();
-
-  // Kiểm tra trạng thái đăng nhập khi component mount và khi localStorage thay đổi
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user');
-      
-      if (token) {
-        setIsLoggedIn(true);
-        if (userData) {
-          try {
-            setUser(JSON.parse(userData));
-          } catch (e) {
-            setUser({ name: 'User', email: '' });
-          }
-        } else {
-          setUser({ name: 'User', email: '' });
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUser(null);
-      }
-    };
-
-    // Lắng nghe sự kiện storage để cập nhật khi login/logout từ tab khác
-    window.addEventListener('storage', checkAuth);
-    
-    // Custom event để cập nhật khi login trong cùng tab
-    window.addEventListener('auth-change', checkAuth);
-
-    return () => {
-      window.removeEventListener('storage', checkAuth);
-      window.removeEventListener('auth-change', checkAuth);
-    };
-  }, []);
 
   // Đóng menu khi click outside
   useEffect(() => {
@@ -89,17 +32,13 @@ function Header() {
   }, [showUserMenu]);
 
   // Xử lý đăng xuất
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setUser(null);
+  const handleLogout = async () => {
     setShowUserMenu(false);
+    await logout();
     navigate('/');
-    // Dispatch event để các component khác cập nhật
-    window.dispatchEvent(new Event('auth-change'));
   };
 
+  // Xử lý tìm kiếm
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -138,7 +77,12 @@ function Header() {
         <a href="#" className="nav-link">Chatbot thông minh</a>
         <Link to="/trend-places" className="nav-link">Điểm đến phổ biến</Link>
         
-        {isLoggedIn ? (
+        {isLoading ? (
+          // Loading state
+          <div className="nav-loading">
+            <span className="loading-spinner"></span>
+          </div>
+        ) : isAuthenticated && user ? (
           // User Menu khi đã đăng nhập
           <div className="user-menu-container">
             <div 
@@ -147,11 +91,11 @@ function Header() {
             >
               <div className="user-avatar-wrapper">
                 <div className="user-avatar">
-                  {user?.avatar ? (
+                  {user.avatar ? (
                     <img src={user.avatar} alt={user.name} />
                   ) : (
                     <div className="avatar-placeholder">
-                      {user?.name?.[0]?.toUpperCase() || 'U'}
+                      {user.name?.[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>
@@ -174,11 +118,27 @@ function Header() {
             
             {showUserMenu && (
               <div className="user-menu-dropdown">
-                <Link to="/profile" className="user-menu-item" onClick={() => setShowUserMenu(false)}>
+                <Link 
+                  to="/profile" 
+                  className="user-menu-item" 
+                  onClick={() => setShowUserMenu(false)}
+                >
                   Hồ sơ
                 </Link>
+                {user.role === 'admin' && (
+                  <Link 
+                    to="/admin" 
+                    className="user-menu-item" 
+                    onClick={() => setShowUserMenu(false)}
+                  >
+                    Quản trị
+                  </Link>
+                )}
                 <div className="user-menu-divider"></div>
-                <button className="user-menu-item logout-btn" onClick={handleLogout}>
+                <button 
+                  className="user-menu-item logout-btn" 
+                  onClick={handleLogout}
+                >
                   Đăng xuất
                 </button>
               </div>
