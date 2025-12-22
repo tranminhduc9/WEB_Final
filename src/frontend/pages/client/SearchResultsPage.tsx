@@ -12,6 +12,7 @@ const SearchResultsPage: React.FC = () => {
   // Dữ liệu và số lượng LocationCard giống hệt FeaturedPlaces.tsx
   const featuredLocations = [
     {
+      id: '1',
       imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -20,6 +21,7 @@ const SearchResultsPage: React.FC = () => {
       reviewCount: '360',
     },
     {
+      id: '2',
       imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
       title: 'Phố Cổ Hà Nội',
       address: 'Phường Hàng Bồ - Quận Hoàn Kiếm',
@@ -28,6 +30,7 @@ const SearchResultsPage: React.FC = () => {
       reviewCount: '1.2K+',
     },
     {
+      id: '3',
       imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
       title: 'Văn Miếu - Quốc Tử Giám',
       address: 'Phường Văn Miếu - Quận Đống Đa',
@@ -36,6 +39,7 @@ const SearchResultsPage: React.FC = () => {
       reviewCount: '5.0K+',
     },
     {
+      id: '4',
       imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
       title: 'Chùa Một Cột',
       address: 'Phường Đội Cấn - Quận Ba Đình',
@@ -44,6 +48,7 @@ const SearchResultsPage: React.FC = () => {
       reviewCount: '890',
     },
     {
+      id: '5',
       imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
       title: 'Lăng Chủ tịch Hồ Chí Minh',
       address: 'Phường Điện Biên - Quận Ba Đình',
@@ -64,11 +69,12 @@ const SearchResultsPage: React.FC = () => {
                 Kết quả tìm kiếm cho: "{query}"
               </h2>
             </div>
-            
+
             <div className="scroll-container">
               {featuredLocations.map((item, index) => (
                 <LocationCard
                   key={`result-${index}`}
+                  id={item.id}
                   imageSrc={item.imageSrc}
                   title={item.title}
                   address={item.address}
@@ -86,11 +92,12 @@ const SearchResultsPage: React.FC = () => {
                 Địa điểm lân cận <span className="icon-location">📍</span>
               </h2>
             </div>
-            
+
             <div className="scroll-container">
               {featuredLocations.map((item, index) => (
                 <LocationCard
                   key={`nearby-${index}`}
+                  id={item.id}
                   imageSrc={item.imageSrc}
                   title={item.title}
                   address={item.address}
@@ -108,11 +115,12 @@ const SearchResultsPage: React.FC = () => {
                 Có thể bạn sẽ thích <span className="icon-location">📍</span>
               </h2>
             </div>
-            
+
             <div className="scroll-container">
               {featuredLocations.map((item, index) => (
                 <LocationCard
                   key={`suggest-${index}`}
+                  id={item.id}
                   imageSrc={item.imageSrc}
                   title={item.title}
                   address={item.address}
