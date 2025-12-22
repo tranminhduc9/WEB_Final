@@ -1,0 +1,121 @@
+Mục tiêu: Xây dựng hệ thống PostgreSQL 17 và pgAdmin4 trên Docker, tự động khởi tạo dữ liệu từ file .sql, giải quyết xung đột cổng với Local Host.
+1. Kiến trúc Hệ thống (System Architecture)
+Chúng ta sẽ thiết kế mô hình Multi-Container Application gồm 2 dịch vụ chính chạy trong cùng một mạng ảo (Docker Network).
+Host Machine (Máy của bạn):
+Chứa Source Code và File init.sql.
+Cổng 5433 (Thay vì 5432): Để giao tiếp với Database Container.
+Cổng 5050: Để truy cập giao diện Web pgAdmin.
+Container 1: Database (travel-db)
+Base Image: postgres:17 (Tương thích với local của bạn).
+Chức năng: Chạy CSDL, tự động import file .sql khi khởi tạo lần đầu.
+Storage: Dùng Docker Volume để lưu dữ liệu lâu dài (Persistence).
+Container 2: Management (travel-pgadmin)
+Base Image: dpage/pgadmin4.
+Chức năng: Giao diện quản lý DB qua trình duyệt web.
+2. Cấu trúc Thư mục (Directory Structure)
+Để đảm bảo tính gọn gàng và dễ bảo trì, hãy tổ chức thư mục dự án như sau:
+
+Plaintext
+
+
+my-travel-project/
+├── database/                # Thư mục chứa cấu hình DB
+│   ├── Dockerfile           # File build image cho DB
+│   └── init.sql             # File dữ liệu nguồn của bạn (copy vào đây)
+├── docker-compose.yml       # File điều phối toàn bộ hệ thống
+└── .env                     # (Tùy chọn) Chứa biến môi trường bảo mật
+
+
+3. Chi tiết Triển khai (Implementation Details)
+3.1. Database Service (PostgreSQL)
+Chúng ta không dùng image gốc trực tiếp mà sẽ viết Dockerfile để "đóng gói" file init.sql vào trong image.
+Dockerfile Logic: Sử dụng tính năng docker-entrypoint-initdb.d của PostgreSQL. Bất kỳ file .sql nào nằm trong thư mục này sẽ được tự động thực thi khi container chạy lần đầu tiên trên một volume rỗng.
+Port Mapping: 5433:5432 (Host Port 5433 map vào Container Port 5432). Điều này giúp tránh xung đột với cổng 5432 đang chạy trên máy bạn.
+3.2. Management Service (pgAdmin)
+Sử dụng image chính chủ dpage/pgadmin4.
+Cần thiết lập Email/Password mặc định để đăng nhập vào giao diện web.
+4. Infrastructure as Code (Mã nguồn Hạ tầng)
+Dưới đây là nội dung chi tiết các file cần tạo. Bạn hãy copy chính xác.
+4.1. File database/Dockerfile
+
+Dockerfile
+
+
+# Sử dụng PostgreSQL 17 (phiên bản ổn định mới nhất, khớp với yêu cầu)
+FROM postgres:17
+
+# Thiết lập người duy trì (Optional)
+LABEL maintainer="devops-team"
+
+# Copy file init.sql từ máy thật vào thư mục khởi tạo đặc biệt của Container
+# Lưu ý: Chỉ chạy khi volume chưa có dữ liệu
+COPY init.sql /docker-entrypoint-initdb.d/
+
+# (Tùy chọn) Expose cổng 5432 (để document rõ ràng)
+EXPOSE 5432
+
+
+4.2. File docker-compose.yml
+
+YAML
+
+
+version: '3.8'
+
+services:
+  # --- Service 1: Database ---
+  db:
+    build: 
+      context: ./database  # Trỏ vào thư mục chứa Dockerfile và init.sql
+    container_name: travel_db_container
+    restart: always
+    environment:
+      # Cấu hình thông tin đăng nhập DB
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_DB: travel_db
+    ports:
+      # [QUAN TRỌNG] Map cổng 5433 của máy thật -> 5432 của Container
+      # Giúp không đụng độ với PostgreSQL Local (cổng 5432)
+      - "5433:5432"
+    volumes:
+      # Persist data: Dữ liệu sẽ không mất khi xóa container
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - travel_network
+    healthcheck:
+      # Kiểm tra sức khỏe DB, đảm bảo DB sẵn sàng trước khi các service khác gọi
+      test: ["CMD-SHELL", "pg_isready -U admin -d travel_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Service 2: pgAdmin ---
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: travel_pgadmin_container
+    restart: always
+    environment:
+      # Tài khoản dùng để đăng nhập vào TRANG WEB pgAdmin
+      PGADMIN_DEFAULT_EMAIL: admin@travel.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      # Truy cập web qua cổng 5050
+      - "5050:80"
+    networks:
+      - travel_network
+    depends_on:
+      db:
+        condition: service_healthy # Chỉ chạy khi DB đã khỏe mạnh
+
+# Định nghĩa Volume
+volumes:
+  pg_data:
+
+# Định nghĩa Network riêng biệt
+networks:
+  travel_network:
+    driver: bridge
+
+
+
