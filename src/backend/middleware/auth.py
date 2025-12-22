@@ -8,16 +8,12 @@ Logic giữ ổn định qua các phiên bản.
 
 import jwt
 import bcrypt
-import hashlib
-import time
-import re
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List
 from fastapi import Request, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import logging
 import os
-from collections import defaultdict, deque
 
 logger = logging.getLogger(__name__)
 
@@ -27,117 +23,7 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION = 3600  # 1 giờ
 REFRESH_TOKEN_EXPIRATION = 7 * 24 * 3600  # 7 ngày
 
-# Enhanced Security Configuration
-MAX_LOGIN_ATTEMPTS = 5
-ACCOUNT_LOCKOUT_DURATION = 900  # 15 minutes
-PASSWORD_MIN_LENGTH = 8
-PASSWORD_REQUIRE_UPPERCASE = True
-PASSWORD_REQUIRE_LOWERCASE = True
-PASSWORD_REQUIRE_DIGIT = True
-PASSWORD_REQUIRE_SPECIAL = True
-SESSION_TIMEOUT = 1800  # 30 minutes
-
-# Rate limiting configuration
-AUTH_RATE_LIMIT = 10  # requests per minute
-AUTH_RATE_WINDOW = 60  # seconds
-
 security = HTTPBearer()
-
-
-class FailedAttemptTracker:
-    """Track failed login attempts with memory storage"""
-
-    def __init__(self):
-        self.failed_attempts = defaultdict(list)
-        self.locked_accounts = {}
-
-    def add_failed_attempt(self, identifier: str, ip_address: str = None):
-        """Add a failed attempt"""
-        key = f"{identifier}:{ip_address}" if ip_address else identifier
-        self.failed_attempts[key].append(time.time())
-
-        # Clean old attempts (older than 1 hour)
-        cutoff = time.time() - 3600
-        self.failed_attempts[key] = [
-            attempt for attempt in self.failed_attempts[key]
-            if attempt > cutoff
-        ]
-
-    def get_failed_attempts(self, identifier: str, ip_address: str = None) -> int:
-        """Get number of failed attempts"""
-        key = f"{identifier}:{ip_address}" if ip_address else identifier
-        cutoff = time.time() - ACCOUNT_LOCKOUT_DURATION
-        return len([
-            attempt for attempt in self.failed_attempts[key]
-            if attempt > cutoff
-        ])
-
-    def is_account_locked(self, identifier: str) -> Tuple[bool, Optional[int]]:
-        """Check if account is locked and return remaining time"""
-        if identifier in self.locked_accounts:
-            lock_expiry = self.locked_accounts[identifier]
-            if time.time() < lock_expiry:
-                remaining = int(lock_expiry - time.time())
-                return True, remaining
-            else:
-                # Lock expired, remove it
-                del self.locked_accounts[identifier]
-        return False, None
-
-    def lock_account(self, identifier: str):
-        """Lock an account"""
-        self.locked_accounts[identifier] = time.time() + ACCOUNT_LOCKOUT_DURATION
-        logger.warning(f"Account {identifier} locked due to too many failed attempts")
-
-    def clear_failed_attempts(self, identifier: str, ip_address: str = None):
-        """Clear failed attempts after successful login"""
-        key = f"{identifier}:{ip_address}" if ip_address else identifier
-        if key in self.failed_attempts:
-            del self.failed_attempts[key]
-
-
-class PasswordValidator:
-    """Enhanced password validation"""
-
-    @staticmethod
-    def validate_password_strength(password: str) -> Tuple[bool, List[str]]:
-        """
-        Validate password strength
-
-        Returns:
-            Tuple[bool, List[str]]: (is_valid, list_of_errors)
-        """
-        errors = []
-
-        # Length check
-        if len(password) < PASSWORD_MIN_LENGTH:
-            errors.append(f"Password must be at least {PASSWORD_MIN_LENGTH} characters long")
-
-        # Uppercase check
-        if PASSWORD_REQUIRE_UPPERCASE and not re.search(r'[A-Z]', password):
-            errors.append("Password must contain at least one uppercase letter")
-
-        # Lowercase check
-        if PASSWORD_REQUIRE_LOWERCASE and not re.search(r'[a-z]', password):
-            errors.append("Password must contain at least one lowercase letter")
-
-        # Digit check
-        if PASSWORD_REQUIRE_DIGIT and not re.search(r'\d', password):
-            errors.append("Password must contain at least one digit")
-
-        # Special character check
-        if PASSWORD_REQUIRE_SPECIAL and not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            errors.append("Password must contain at least one special character")
-
-        # Common password check
-        common_passwords = [
-            'password', '123456', '123456789', 'qwerty', 'abc123',
-            'password123', 'admin', 'letmein', 'welcome', 'monkey'
-        ]
-        if password.lower() in common_passwords:
-            errors.append("Password is too common. Please choose a stronger password")
-
-        return len(errors) == 0, errors
 
 
 class JWTAuthMiddleware:
@@ -161,28 +47,18 @@ class JWTAuthMiddleware:
         """
         self.secret_key = secret_key or JWT_SECRET_KEY
         self.algorithm = algorithm
-        self.failed_tracker = FailedAttemptTracker()
-        self.rate_limiter = defaultdict(deque)  # Simple in-memory rate limiter
 
     def hash_password(self, password: str) -> str:
         """
-        Mã hóa mật khẩu người dùng với enhanced security
+        Mã hóa mật khẩu người dùng
 
         Args:
             password: Mật khẩu gốc
 
         Returns:
-            str: Mật khẩu đã mã hóa bằng bcrypt với increased rounds
+            str: Mật khẩu đã mã hóa bằng bcrypt
         """
-        # bcrypt has a 72-byte limit, truncate long passwords but maintain security
-        if len(password.encode('utf-8')) > 72:
-            # Use SHA-256 hash of long password, then take first 72 bytes
-            import hashlib
-            password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-            password = password_hash[:72]  # Take first 72 chars of hash
-
-        # Increased rounds for better security
-        salt = bcrypt.gensalt(rounds=12)
+        salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
     def verify_password(self, password: str, hashed_password: str) -> bool:
@@ -196,135 +72,7 @@ class JWTAuthMiddleware:
         Returns:
             bool: True nếu mật khẩu đúng
         """
-        # Apply same truncation logic as hash_password for consistency
-        if len(password.encode('utf-8')) > 72:
-            import hashlib
-            password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-            password = password_hash[:72]
-
         return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
-
-    async def check_rate_limit(self, identifier: str) -> bool:
-        """Check if identifier has exceeded rate limit"""
-        now = time.time()
-        cutoff = now - AUTH_RATE_WINDOW
-
-        # Clean old requests
-        while self.rate_limiter[identifier] and self.rate_limiter[identifier][0] < cutoff:
-            self.rate_limiter[identifier].popleft()
-
-        # Check if under limit
-        if len(self.rate_limiter[identifier]) >= AUTH_RATE_LIMIT:
-            return False
-
-        # Add current request
-        self.rate_limiter[identifier].append(now)
-        return True
-
-    async def authenticate_user(
-        self,
-        email: str,
-        password: str,
-        request: Request,
-        user_lookup_func: callable
-    ) -> Dict[str, Any]:
-        """
-        Enhanced user authentication with security checks
-
-        Args:
-            email: User email
-            password: User password
-            request: FastAPI request object
-            user_lookup_func: Function to lookup user and verify password
-
-        Returns:
-            Dict: Authentication result with tokens and user info
-
-        Raises:
-            HTTPException: For various authentication failures
-        """
-        ip_address = request.client.host if request.client else "unknown"
-
-        # Rate limiting check
-        if not await self.check_rate_limit(f"auth:{ip_address}"):
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Too many authentication attempts. Please try again later."
-            )
-
-        # Account lockout check
-        is_locked, remaining_time = self.failed_tracker.is_account_locked(email)
-        if is_locked:
-            raise HTTPException(
-                status_code=status.HTTP_423_LOCKED,
-                detail=f"Account locked due to too many failed attempts. Try again in {remaining_time} seconds."
-            )
-
-        try:
-            # Lookup user and verify password
-            user = await user_lookup_func(email, password)
-            if not user:
-                # Add failed attempt
-                self.failed_tracker.add_failed_attempt(email, ip_address)
-                failed_count = self.failed_tracker.get_failed_attempts(email, ip_address)
-
-                if failed_count >= MAX_LOGIN_ATTEMPTS:
-                    self.failed_tracker.lock_account(email)
-
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid email or password"
-                )
-
-            # Clear failed attempts on successful login
-            self.failed_tracker.clear_failed_attempts(email, ip_address)
-
-            # Create tokens
-            access_token = self.create_access_token(user)
-            refresh_token = self.create_refresh_token(user)
-
-            return {
-                "access_token": access_token,
-                "refresh_token": refresh_token,
-                "token_type": "bearer",
-                "expires_in": JWT_EXPIRATION,
-                "user": user
-            }
-
-        except Exception as e:
-            logger.error(f"Authentication error for {email}: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Authentication service unavailable"
-            )
-
-    async def refresh_access_token(self, refresh_token: str) -> Dict[str, Any]:
-        """Refresh access token using refresh token"""
-        try:
-            # Verify refresh token
-            payload = await self.verify_token(refresh_token, "refresh")
-
-            # Create new access token
-            user_data = {
-                "id": payload["sub"],
-                "email": payload["email"],
-                "role": payload["role"]
-            }
-
-            new_access_token = self.create_access_token(user_data)
-
-            return {
-                "access_token": new_access_token,
-                "token_type": "bearer",
-                "expires_in": JWT_EXPIRATION
-            }
-
-        except Exception as e:
-            logger.error(f"Token refresh error: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token"
-            )
 
     def create_access_token(self, user_data: Dict[str, Any], expires_delta: int = None) -> str:
         """
@@ -346,9 +94,7 @@ class JWTAuthMiddleware:
             "role": user_data.get("role", "user"),
             "iat": now,
             "exp": now + timedelta(seconds=exp),
-            "type": "access",
-            "iss": "hanoi-travel",
-            "aud": "hanoi-travel-users"
+            "type": "access"
         }
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
@@ -370,9 +116,7 @@ class JWTAuthMiddleware:
             "role": user_data.get("role", "user"),
             "iat": now,
             "exp": now + timedelta(seconds=REFRESH_TOKEN_EXPIRATION),
-            "type": "refresh",
-            "iss": "hanoi-travel",
-            "aud": "hanoi-travel-users"
+            "type": "refresh"
         }
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
@@ -395,30 +139,21 @@ class JWTAuthMiddleware:
             payload = jwt.decode(
                 token,
                 self.secret_key,
-                algorithms=[self.algorithm],
-                audience="hanoi-travel-users",
-                issuer="hanoi-travel"
+                algorithms=[self.algorithm]
             )
 
-            # Validate token type
+            # Kiểm tra loại token
             if payload.get("type") != token_type:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=f"Token type mismatch. Expected {token_type}"
                 )
 
-            # Check expiration
+            # Kiểm tra token có hết hạn không
             if datetime.utcnow() > datetime.fromtimestamp(payload.get("exp", 0)):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token đã hết hạn"
-                )
-
-            # Validate subject
-            if not payload.get("sub"):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token: missing subject"
                 )
 
             return payload
@@ -433,15 +168,6 @@ class JWTAuthMiddleware:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token không hợp lệ"
-            )
-        except HTTPException:
-            # Re-raise existing HTTPExceptions
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error during token verification: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Token verification failed"
             )
 
     async def get_current_user_from_request(self, request: Request) -> Optional[Dict[str, Any]]:
@@ -486,16 +212,8 @@ auth_middleware = JWTAuthMiddleware()
 # FastAPI Dependencies
 async def get_current_user(request: Request) -> Dict[str, Any]:
     """
-    Enhanced dependency để lấy user hiện tại (bắt buộc phải đăng nhập)
+    Dependency để lấy user hiện tại (bắt buộc phải đăng nhập)
     """
-    # Rate limiting check for auth endpoints
-    ip_address = request.client.host if request.client else "unknown"
-    if not await auth_middleware.check_rate_limit(f"auth_check:{ip_address}"):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many authentication checks. Please try again later."
-        )
-
     user = await auth_middleware.get_current_user_from_request(request)
     if not user:
         raise HTTPException(
@@ -511,28 +229,6 @@ async def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
     Dependency để lấy user hiện tại (tùy chọn - không báo lỗi nếu chưa đăng nhập)
     """
     return await auth_middleware.get_current_user_from_request(request)
-
-
-async def require_active_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
-    """
-    Require user to be active
-    """
-    if current_user.get("status") == "inactive":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is not active"
-        )
-    return current_user
-
-
-def validate_user_password(password: str) -> Tuple[bool, List[str]]:
-    """
-    Validate user password strength
-
-    Returns:
-        Tuple[bool, List[str]]: (is_valid, list_of_errors)
-    """
-    return PasswordValidator.validate_password_strength(password)
 
 
 def require_roles(required_roles: List[str]):
@@ -566,24 +262,10 @@ def require_roles(required_roles: List[str]):
     return decorator
 
 
-# Enhanced role decorators using FastAPI dependencies
-def require_role(required_roles: List[str]):
-    """Enhanced role requirement decorator using FastAPI dependencies"""
-    def role_checker(current_user: Dict[str, Any] = Depends(require_active_user)):
-        user_role = current_user.get("role", "user")
-        if user_role not in required_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied. Required roles: {', '.join(required_roles)}"
-            )
-        return current_user
-    return role_checker
-
-
-# Enhanced role decorators
-require_admin = require_role(["admin"])
-require_moderator = require_role(["admin", "moderator"])
-require_user = require_role(["admin", "moderator", "user"])
+# Decorators thông dụng
+require_admin = require_roles(["admin"])
+require_moderator = require_roles(["admin", "moderator"])
+require_user = require_roles(["admin", "moderator", "user"])
 
 
 class RoleGuard:
@@ -662,25 +344,3 @@ def extract_user_info(payload: Dict[str, Any]) -> Dict[str, Any]:
         "exp": payload.get("exp"),
         "iat": payload.get("iat")
     }
-
-
-# Security Headers Middleware
-async def add_security_headers(request: Request, call_next):
-    """
-    Add security headers to responses for enhanced security
-    """
-    response = await call_next(request)
-
-    security_headers = {
-        "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "DENY",
-        "X-XSS-Protection": "1; mode=block",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-        "Content-Security-Policy": "default-src 'self'",
-        "Referrer-Policy": "strict-origin-when-cross-origin"
-    }
-
-    for header, value in security_headers.items():
-        response.headers[header] = value
-
-    return response

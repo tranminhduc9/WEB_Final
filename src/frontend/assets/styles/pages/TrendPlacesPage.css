@@ -1,0 +1,139 @@
+.trend-places-page {
+  background-color: #fff;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Hero Section với 2 ảnh - theo Figma */
+.trend-hero {
+  padding: 16px 22px; /* left: 22px từ Figma */
+  background: #F8F8F8; /* từ Figma */
+  border-radius: 20px; /* từ Figma */
+  margin: 0 22px; /* canh lề 2 bên */
+}
+
+.trend-hero__container {
+  position: relative;
+  display: flex;
+  gap: 2.31%; /* khoảng cách giữa 2 ảnh: 58.72% - 56.41% = 2.31% */
+  width: 100%;
+  height: 603px; /* height: 603px từ Figma */
+  overflow: hidden;
+}
+
+.trend-hero__image {
+  border-radius: 20px; /* từ Figma */
+  overflow: hidden;
+  height: 100%;
+}
+
+.trend-hero__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px; /* từ Figma */
+}
+
+/* Ảnh trái: left: 0%, right: 43.59% → width ≈ 56.41% */
+.trend-hero__image--left {
+  flex: 0 0 56.41%;
+  max-width: 56.41%;
+}
+
+/* Ảnh phải: left: 58.72%, right: 0% → width ≈ 41.28% */
+.trend-hero__image--right {
+  flex: 0 0 41.28%;
+  max-width: 41.28%;
+}
+
+/* Section styling */
+.trend-section {
+  padding: 24px;
+  margin: 0;
+}
+
+.trend-section__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 20px 0;
+  line-height: 1.2;
+}
+
+.trend-section__title::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 2rem;
+  background-color: #F88622;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+/* Override location-section để bỏ padding-left mặc định */
+.trend-places-page .location-section {
+  padding-left: 24px;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .trend-hero__container {
+    height: 450px;
+  }
+}
+
+@media (max-width: 900px) {
+  .trend-hero {
+    margin: 0 16px;
+    padding: 16px;
+  }
+
+  .trend-hero__container {
+    flex-direction: column;
+    height: auto;
+    gap: 16px;
+  }
+
+  .trend-hero__image {
+    height: 280px;
+  }
+
+  .trend-hero__image--left,
+  .trend-hero__image--right {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .trend-section__title {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .trend-hero {
+    margin: 0 12px;
+    padding: 12px;
+  }
+
+  .trend-hero__image {
+    height: 200px;
+  }
+
+  .trend-section {
+    padding: 16px;
+  }
+
+  .trend-section__title {
+    font-size: 18px;
+  }
+
+  .trend-places-page .location-section {
+    padding-left: 16px;
+  }
+}
+

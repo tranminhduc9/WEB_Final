@@ -1,0 +1,441 @@
+/* UserProfilePage - theo Figma /user/me */
+
+/* ==================== */
+/* Page Container */
+/* ==================== */
+.profile-page {
+  background: #FFFFFF;
+  min-height: 100vh;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ==================== */
+/* Profile Hero Section - theo Figma */
+/* ==================== */
+.profile-hero {
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  gap: 40px;
+  padding: 24px;
+  padding-left: 13.75%; /* left: 13.75% từ Figma */
+  padding-right: 5%;
+  margin-bottom: 40px;
+  min-height: 257px;
+}
+
+/* Avatar */
+.profile-avatar {
+  width: 180px; /* Giảm từ 257px */
+  height: 180px;
+  border-radius: 90px; /* Tròn */
+  background: #f6f5f5;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 90px;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+/* Username */
+.profile-username {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 36px; /* Giảm từ 50px */
+  line-height: 44px;
+  color: #000000;
+  white-space: nowrap; /* Không ngắt dòng */
+}
+
+/* Độ uy tín */
+.profile-metric {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px; /* Giảm từ 30px */
+  line-height: 26px;
+  color: #000000;
+  white-space: nowrap; /* Không ngắt dòng */
+}
+
+/* Chỉnh sửa thông tin cá nhân */
+.profile-edit-btn {
+  margin-left: 40px; /* Khoảng cách cố định thay vì auto */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 24px;
+  color: #000000;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap; /* Không ngắt dòng */
+}
+
+/* Settings icon */
+.profile-edit-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-edit-btn:hover {
+  opacity: 0.7;
+}
+
+/* ==================== */
+/* Sections - theo Figma */
+/* ==================== */
+.profile-section {
+  margin-bottom: 48px;
+  padding-left: 2.57%; /* left: 2.57% từ Figma cho thanh cam */
+}
+
+.profile-section__header {
+  margin-bottom: 40px;
+}
+
+/* Tiêu đề section - từ Figma: font-size 40px, font-weight 700, line-height 48px */
+.profile-section__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 48px;
+  color: #000000;
+  margin: 0 0 32px 0; /* Thêm khoảng cách với cards */
+  padding-left: 14px;
+  position: relative;
+}
+
+/* Thanh cam bên trái - từ Figma: background #F88622, border-radius 5px */
+.profile-section__title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 6px;
+  height: 48px;
+  background: #F88622;
+  border-radius: 5px;
+}
+
+.profile-icon {
+  font-size: 36px;
+}
+
+/* ==================== */
+/* Địa điểm yêu thích - Scroll ngang */
+/* từ Figma: left 5.35%, 3 cards visible */
+/* ==================== */
+.profile-locations-scroll {
+  display: flex;
+  gap: 30px; /* Tăng 50% từ 20px */
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-left: 2.78%; /* Offset thêm từ left section */
+  padding-bottom: 10px;
+  padding-right: 24px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.profile-locations-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-locations-scroll > * {
+  flex: 0 0 auto;
+}
+
+/* ==================== */
+/* Bài viết nổi bật - Grid 2x2 */
+/* từ Figma: Group 14 width 1221px, left 77px */
+/* ==================== */
+.profile-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px 75px; /* Gap giữa các PostCard */
+  max-width: 1221px;
+  margin-left: 2.78%; /* Offset thêm từ left section */
+  padding-right: 24px;
+}
+
+/* ==================== */
+/* Responsive */
+/* ==================== */
+@media (max-width: 1200px) {
+  .profile-hero {
+    padding-left: 5%;
+    gap: 32px;
+  }
+
+  .profile-avatar {
+    width: 200px;
+    height: 200px;
+  }
+
+  .profile-username {
+    font-size: 40px;
+    line-height: 50px;
+  }
+
+  .profile-metric {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .profile-edit-btn {
+    font-size: 20px;
+    line-height: 24px;
+  }
+
+  .profile-edit-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 28px;
+  }
+
+  .profile-section__title {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .profile-section__title::before {
+    height: 40px;
+  }
+
+  .profile-posts-grid {
+    gap: 30px 50px;
+  }
+}
+
+@media (max-width: 900px) {
+  .profile-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    min-height: auto;
+  }
+
+  .profile-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 75px;
+  }
+
+  .profile-avatar img {
+    border-radius: 75px;
+  }
+
+  .profile-username {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .profile-metric {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .profile-edit-btn {
+    margin-left: 0;
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  .profile-edit-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+  }
+
+  .profile-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .profile-section__title {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .profile-section__title::before {
+    height: 36px;
+  }
+
+  .profile-icon {
+    font-size: 28px;
+  }
+
+  .profile-locations-scroll {
+    padding-left: 0;
+    padding-right: 16px;
+  }
+
+  .profile-posts-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-left: 0;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-hero {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+  }
+
+  .profile-avatar img {
+    border-radius: 60px;
+  }
+
+  .profile-username {
+    font-size: 28px;
+    line-height: 36px;
+  }
+
+  .profile-metric {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .profile-edit-btn {
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .profile-edit-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+
+  .profile-section {
+    margin-bottom: 32px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .profile-section__title {
+    font-size: 22px;
+    line-height: 28px;
+    padding-left: 12px;
+  }
+
+  .profile-section__title::before {
+    width: 5px;
+    height: 28px;
+  }
+
+  .profile-icon {
+    font-size: 22px;
+  }
+
+  .profile-locations-scroll {
+    gap: 12px;
+    padding-right: 12px;
+  }
+
+  .profile-posts-grid {
+    gap: 16px;
+    padding-right: 12px;
+  }
+}
+
+/* ==================== */
+/* Avatar Placeholder & Overlay */
+/* ==================== */
+.avatar-placeholder-large {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+  color: white;
+  font-size: 72px;
+  font-weight: 700;
+  border-radius: 90px;
+}
+
+.avatar-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 0 0 90px 90px;
+}
+
+.avatar-overlay span {
+  font-size: 20px;
+}
+
+.profile-avatar:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-uploading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 90px;
+  color: white;
+  font-size: 14px;
+}
+
+.profile-email {
+  margin: 0;
+  font-size: 16px;
+  color: #666;
+}

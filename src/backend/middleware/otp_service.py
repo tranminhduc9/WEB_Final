@@ -85,12 +85,9 @@ class OTPService:
             return otp
 
         try:
-            # Enhanced encryption using SHA-256 with key and randomness
+            # Simple encryption using SHA-256 with key
             key = self.config.ENCRYPTION_KEY.encode()
-            # Use both timestamp and random uuid for uniqueness
-            import uuid
-            random_salt = str(uuid.uuid4())[:8]  # First 8 chars of UUID for randomness
-            data = (otp + str(time.time()) + random_salt).encode()
+            data = (otp + str(time.time())).encode()
             return hashlib.sha256(key + data).hexdigest()
         except Exception as e:
             logger.error(f"OTP encryption failed: {str(e)}")
