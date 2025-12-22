@@ -14,6 +14,7 @@ const UserProfilePage: React.FC = () => {
   // Dữ liệu mẫu địa điểm yêu thích
   const favoriteLocations = [
     {
+      id: '1',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -22,6 +23,7 @@ const UserProfilePage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '2',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -30,6 +32,7 @@ const UserProfilePage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '3',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -105,16 +108,16 @@ const UserProfilePage: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
-        
+
         // Update user in localStorage
         if (user) {
           const updatedUser = { ...user, avatar: base64 };
           localStorage.setItem('user', JSON.stringify(updatedUser));
-          
+
           // Dispatch event to update all components
           window.dispatchEvent(new CustomEvent('user:updated', { detail: updatedUser }));
         }
-        
+
         setIsUploading(false);
       };
       reader.readAsDataURL(file);
@@ -131,8 +134,8 @@ const UserProfilePage: React.FC = () => {
       <div className="profile-page">
         {/* User Hero */}
         <section className="profile-hero">
-          <div 
-            className="profile-avatar" 
+          <div
+            className="profile-avatar"
             onClick={handleAvatarClick}
             style={{ cursor: 'pointer', position: 'relative' }}
             title="Click để thay đổi avatar"
@@ -180,6 +183,7 @@ const UserProfilePage: React.FC = () => {
             {favoriteLocations.map((loc, idx) => (
               <LocationCard
                 key={`fav-${idx}`}
+                id={loc.id}
                 imageSrc={loc.imageSrc}
                 title={loc.title}
                 address={loc.address}

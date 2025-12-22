@@ -1,11 +1,60 @@
 import Header from './components/client/Header';
 import homePhoto from './assets/images/home_photo_1.png';
-import FeaturedPlaces from './components/client/FeaturedPlaces'
+import LocationCard from './components/common/LocationCard';
 import Footer from './components/client/Footer'
 import PostCard from './components/client/PostCard'
 import './App.css'
 
 export default function App() {
+  // Dữ liệu mẫu cho địa điểm nổi bật
+  const featuredLocations = [
+    {
+      id: '1',
+      imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
+      title: 'Hồ Gươm - Quận Hoàn Kiếm',
+      address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
+      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      rating: 4.5,
+      reviewCount: '360'
+    },
+    {
+      id: '2',
+      imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
+      title: 'Hồ Gươm - Quận Hoàn Kiếm',
+      address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
+      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      rating: 4.5,
+      reviewCount: '360'
+    },
+    {
+      id: '3',
+      imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
+      title: 'Hồ Gươm - Quận Hoàn Kiếm',
+      address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
+      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      rating: 4.5,
+      reviewCount: '360'
+    },
+    {
+      id: '4',
+      imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
+      title: 'Hồ Gươm - Quận Hoàn Kiếm',
+      address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
+      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      rating: 4.5,
+      reviewCount: '360'
+    },
+    {
+      id: '5',
+      imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
+      title: 'Hồ Gươm - Quận Hoàn Kiếm',
+      address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
+      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      rating: 4.5,
+      reviewCount: '360'
+    }
+  ];
+
   // Dữ liệu mẫu cho bài viết nổi bật
   const featuredPosts = [
     {
@@ -44,7 +93,24 @@ export default function App() {
         </section>
 
         {/* Các địa điểm nổi bật */}
-        <FeaturedPlaces />
+        <section className="featured-places-section">
+          <h3 className="featured-places-title">Các địa điểm nổi bật</h3>
+          <p className="featured-places-subtitle">Cùng khám phá các địa điểm, di tích để hiểu thêm về Hà Nội nghìn năm văn hiến nhé!</p>
+          <div className="scroll-container">
+            {featuredLocations.map((location) => (
+              <LocationCard
+                key={location.id}
+                id={location.id}
+                imageSrc={location.imageSrc}
+                title={location.title}
+                address={location.address}
+                tags={location.tags}
+                rating={location.rating}
+                reviewCount={location.reviewCount}
+              />
+            ))}
+          </div>
+        </section>
 
         {/* Bài viết nổi bật */}
         <section className="featured-posts-section">

@@ -18,6 +18,10 @@ import BlogPage from './pages/client/BlogPage'
 import BlogDetailPage from './pages/client/BlogDetailPage'
 import LocationInfoPage from './pages/client/LocationInfoPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
+import AdminUsersPage from './pages/admin/AdminUsersPage'
+import AdminLocationsPage from './pages/admin/AdminLocationsPage'
+import AdminReportsPage from './pages/admin/AdminReportsPage'
+import AdminSQLPage from './pages/admin/AdminSQLPage'
 
 // Components
 import Chatbot from './components/client/Chatbot'
@@ -66,6 +70,10 @@ const router = createBrowserRouter([
   // Admin routes
   { path: '/admin', element: <AdminHomePage /> },
   { path: '/admin/statistics', element: <AdminHomePage /> },
+  { path: '/admin/users', element: <AdminUsersPage /> },
+  { path: '/admin/locations', element: <AdminLocationsPage /> },
+  { path: '/admin/reports', element: <AdminReportsPage /> },
+  { path: '/admin/sql', element: <AdminSQLPage /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

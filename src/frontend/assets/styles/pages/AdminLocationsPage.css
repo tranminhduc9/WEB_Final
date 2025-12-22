@@ -1,0 +1,287 @@
+/* Admin Locations Page Styles */
+
+.admin-locations-page {
+    min-height: 100vh;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-locations-main {
+    padding: 40px 54px;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
+}
+
+/* Header Section */
+.admin-locations-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.admin-locations-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 48px;
+    color: #000000;
+    margin: 0;
+}
+
+/* Search Bar */
+.admin-locations-search {
+    position: relative;
+    width: 428px;
+    margin-bottom: 16px;
+}
+
+.admin-locations-search__input {
+    width: 100%;
+    padding: 10px 40px 10px 16px;
+    background: rgba(217, 217, 217, 0.5);
+    border: none;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+}
+
+.admin-locations-search__input::placeholder {
+    color: #9C9C9C;
+}
+
+.admin-locations-search__input:focus {
+    outline: none;
+    background: rgba(217, 217, 217, 0.7);
+}
+
+.admin-locations-search__icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #666;
+}
+
+/* Results Count */
+.admin-locations-count {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 100%;
+    color: #000000;
+    margin: 0 0 24px 24px;
+}
+
+/* Table Container */
+.admin-locations-table-container {
+    background: #FFFFFF;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+}
+
+/* Table Styles */
+.admin-locations-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF;
+}
+
+.admin-locations-table th,
+.admin-locations-table td {
+    padding: 20px 16px;
+    text-align: left;
+    border: 1px solid #000000;
+    background: #D9D9D9;
+}
+
+.admin-locations-table th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 100%;
+    color: #000000;
+    background: #D9D9D9;
+}
+
+.admin-locations-table td {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: #000000;
+}
+
+.admin-locations-table__empty-row td {
+    height: 66px;
+}
+
+/* Table Column Widths */
+.admin-locations-table th:nth-child(1),
+.admin-locations-table td:nth-child(1) {
+    width: 12%;
+}
+
+.admin-locations-table th:nth-child(2),
+.admin-locations-table td:nth-child(2) {
+    width: 22%;
+}
+
+.admin-locations-table th:nth-child(3),
+.admin-locations-table td:nth-child(3) {
+    width: 10%;
+}
+
+.admin-locations-table th:nth-child(4),
+.admin-locations-table td:nth-child(4) {
+    width: 16%;
+}
+
+.admin-locations-table th:nth-child(5),
+.admin-locations-table td:nth-child(5),
+.admin-locations-table th:nth-child(6),
+.admin-locations-table td:nth-child(6),
+.admin-locations-table th:nth-child(7),
+.admin-locations-table td:nth-child(7) {
+    width: 13%;
+}
+
+/* Action Buttons */
+.admin-locations-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    color: #000000;
+    padding: 0;
+    transition: opacity 0.2s;
+}
+
+.admin-locations-action-btn:hover {
+    opacity: 0.7;
+}
+
+.admin-locations-action-icon {
+    width: 20px;
+    height: 20px;
+    color: #666;
+}
+
+/* Pagination */
+.admin-locations-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.admin-locations-pagination__nav {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #000;
+    padding: 8px 12px;
+    transition: opacity 0.2s;
+}
+
+.admin-locations-pagination__nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.admin-locations-pagination__nav:hover:not(:disabled) {
+    opacity: 0.7;
+}
+
+.admin-locations-pagination__page {
+    width: 66px;
+    height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #D9D9D9;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 140%;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-locations-pagination__page:hover:not(.ellipsis) {
+    background: #ccc;
+}
+
+.admin-locations-pagination__page.active {
+    background: #F88622;
+    color: #FFFFFF;
+}
+
+.admin-locations-pagination__page.ellipsis {
+    background: transparent;
+    cursor: default;
+    font-size: 24px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .admin-locations-main {
+        padding: 32px 40px;
+    }
+
+    .admin-locations-search {
+        width: 100%;
+        max-width: 428px;
+    }
+}
+
+@media (max-width: 992px) {
+    .admin-locations-table-container {
+        overflow-x: auto;
+    }
+
+    .admin-locations-table {
+        min-width: 1000px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-locations-main {
+        padding: 24px 20px;
+    }
+
+    .admin-locations-title {
+        font-size: 28px;
+        line-height: 36px;
+    }
+
+    .admin-locations-count {
+        font-size: 24px;
+        margin-left: 0;
+    }
+
+    .admin-locations-pagination__page {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+    }
+}

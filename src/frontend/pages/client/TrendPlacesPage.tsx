@@ -9,6 +9,7 @@ const TrendPlacesPage: React.FC = () => {
   // Dữ liệu mẫu cho địa điểm trending
   const trendingLocations = [
     {
+      id: '1',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -17,6 +18,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '2',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -25,6 +27,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '3',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -33,6 +36,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '4',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -41,6 +45,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '5',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -53,6 +58,7 @@ const TrendPlacesPage: React.FC = () => {
   // Dữ liệu mẫu cho những nơi phải đến
   const mustVisitLocations = [
     {
+      id: '6',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -61,6 +67,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '7',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -69,6 +76,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '8',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -77,6 +85,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '9',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -85,6 +94,7 @@ const TrendPlacesPage: React.FC = () => {
       reviewCount: '3.6K+'
     },
     {
+      id: '10',
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
@@ -102,15 +112,15 @@ const TrendPlacesPage: React.FC = () => {
         <section className="trend-hero">
           <div className="trend-hero__container">
             <div className="trend-hero__image trend-hero__image--left">
-              <img 
-                src="https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg" 
-                alt="Hồ Hoàn Kiếm" 
+              <img
+                src="https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg"
+                alt="Hồ Hoàn Kiếm"
               />
             </div>
             <div className="trend-hero__image trend-hero__image--right">
-              <img 
-                src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800" 
-                alt="Phố cổ Hà Nội" 
+              <img
+                src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800"
+                alt="Phố cổ Hà Nội"
               />
             </div>
           </div>
@@ -125,6 +135,7 @@ const TrendPlacesPage: React.FC = () => {
             {trendingLocations.map((location, index) => (
               <LocationCard
                 key={`trending-${index}`}
+                id={location.id}
                 imageSrc={location.imageSrc}
                 title={location.title}
                 address={location.address}
@@ -145,6 +156,7 @@ const TrendPlacesPage: React.FC = () => {
             {mustVisitLocations.map((location, index) => (
               <LocationCard
                 key={`must-visit-${index}`}
+                id={location.id}
                 imageSrc={location.imageSrc}
                 title={location.title}
                 address={location.address}

@@ -11,9 +11,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +24,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -40,6 +43,7 @@
 .read-the-docs {
   color: #888;
 }
+
 /* Loại bỏ margin/padding mặc định */
 * {
   margin: 0;
@@ -61,36 +65,120 @@ body {
 }
 
 /* ==================== */
+/* Các địa điểm nổi bật Section */
+/* ==================== */
+.featured-places-section {
+  padding: 42px 25px 64px 71px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #FFFFFF;
+}
+
+.featured-places-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 120%;
+  letter-spacing: -0.02em;
+  color: #1E1E1E;
+  margin: 0 0 8px 0;
+}
+
+.featured-places-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 120%;
+  color: #1E1E1E;
+  margin: 0 0 48px 0;
+}
+
+.featured-places-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 48px;
+}
+
+@media (max-width: 1200px) {
+  .featured-places-section {
+    padding: 32px 40px;
+  }
+
+  .featured-places-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 900px) {
+  .featured-places-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .featured-places-section {
+    padding: 24px 20px;
+  }
+
+  .featured-places-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-places-title {
+    font-size: 20px;
+  }
+
+  .featured-places-subtitle {
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+}
+
+/* ==================== */
 /* Bài viết nổi bật Section - theo Figma */
 /* ==================== */
 .featured-posts-section {
   width: 100%;
-  padding: 27px 82px 47px; /* top: 27px, left: 82px từ Figma */
+  padding: 27px 82px 47px;
+  /* top: 27px, left: 82px từ Figma */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #FFFFFF; /* từ Figma */
+  background: #FFFFFF;
+  /* từ Figma */
 }
 
 /* Heading - từ Figma */
 .featured-posts-title {
   font-family: 'Inter', sans-serif;
   font-style: normal;
-  font-weight: 600; /* từ Figma */
-  font-size: 24px; /* từ Figma */
-  line-height: 120%; /* từ Figma */
-  letter-spacing: -0.02em; /* từ Figma */
-  color: #1E1E1E; /* từ Figma */
-  margin: 0 0 8px 0; /* gap: 8px từ Figma */
+  font-weight: 600;
+  /* từ Figma */
+  font-size: 24px;
+  /* từ Figma */
+  line-height: 120%;
+  /* từ Figma */
+  letter-spacing: -0.02em;
+  /* từ Figma */
+  color: #1E1E1E;
+  /* từ Figma */
+  margin: 0 0 8px 0;
+  /* gap: 8px từ Figma */
 }
 
 /* Subheading - từ Figma */
 .featured-posts-subtitle {
   font-family: 'Inter', sans-serif;
   font-style: normal;
-  font-weight: 400; /* từ Figma */
-  font-size: 20px; /* từ Figma */
-  line-height: 120%; /* từ Figma */
-  color: #1E1E1E; /* từ Figma */
-  margin: 0 0 47px 0; /* khoảng cách đến cards: 135px - 27px - 61px ≈ 47px */
+  font-weight: 400;
+  /* từ Figma */
+  font-size: 20px;
+  /* từ Figma */
+  line-height: 120%;
+  /* từ Figma */
+  color: #1E1E1E;
+  /* từ Figma */
+  margin: 0 0 47px 0;
+  /* khoảng cách đến cards: 135px - 27px - 61px ≈ 47px */
 }
 
 /* Cards grid - 2 cards cạnh nhau */
@@ -101,9 +189,10 @@ body {
   flex-wrap: wrap;
 }
 
-.featured-posts-grid > * {
+.featured-posts-grid>* {
   flex: 0 0 auto;
-  /* width: 480px; */ /* để PostCard.css kiểm soát width */
+  /* width: 480px; */
+  /* để PostCard.css kiểm soát width */
   max-width: 100%;
 }
 
@@ -182,7 +271,7 @@ body {
     gap: 24px;
   }
 
-  .featured-posts-grid > * {
+  .featured-posts-grid>* {
     min-width: 100%;
     max-width: 100%;
   }
