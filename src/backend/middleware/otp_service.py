@@ -14,6 +14,8 @@ import logging
 import hashlib
 import os
 
+from fastapi import HTTPException
+
 logger = logging.getLogger(__name__)
 
 
