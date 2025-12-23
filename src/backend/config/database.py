@@ -1,11 +1,11 @@
 """
-C¥u hình Database cho PostgreSQL
+Cáº¥u hÃ¬nh Database cho PostgreSQL
 
-Module này xí lı k¿t nÑi và qu£n lı database PostgreSQL,
-cung c¥p session và engine cho SQLAlchemy ORM.
+Module nÃ y xá»­ lÃ½ káº¿t ná»‘i vÃ  quáº£n lÃ½ database PostgreSQL,
+cung cáº¥p session vÃ  engine cho SQLAlchemy ORM.
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, Float
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, Float, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
@@ -14,16 +14,16 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Database URL të environment variables
+# Database URL tÃ« environment variables
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://postgres:password@localhost:5432/hanoi_travel"
 )
 
-# T¡o SQLAlchemy engine
+# TÂ¡o SQLAlchemy engine
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,  # KiÃm tra k¿t nÑi tr°Ûc khi sí dång
+    pool_pre_ping=True,  # KiÃƒm tra kÂ¿t nÃ‘i trÂ°Ã›c khi sÃ­ dÃ¥ng
     pool_size=int(os.getenv("DB_POOL_SIZE", "10")),
     max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "20")),
     pool_timeout=int(os.getenv("DB_POOL_TIMEOUT", "30")),
@@ -31,7 +31,7 @@ engine = create_engine(
     echo=os.getenv("DEBUG", "false").lower() == "true"  # Log SQL queries trong debug mode
 )
 
-# T¡o SessionLocal class
+# TÂ¡o SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base class cho models
@@ -42,9 +42,9 @@ Base = declarative_base()
 
 class User(Base):
     """
-    Model User - Thông tin ng°İi dùng
+    Model User - ThÃ´ng tin ngÂ°Ãi dÃ¹ng
 
-    L°u trï thông tin ng°İi dùng trong hÇ thÑng Hanoi Travel
+    LÂ°u trÃ¯ thÃ´ng tin ngÂ°Ãi dÃ¹ng trong hÃ‡ thÃ‘ng Hanoi Travel
     """
 
     __tablename__ = "users"
@@ -52,17 +52,17 @@ class User(Base):
     # Primary key
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
-    # Thông tin c¡ b£n
+    # ThÃ´ng tin cÂ¡ bÂ£n
     full_name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
 
-    # Thông tin bÕ sung
+    # ThÃ´ng tin bÃ• sung
     phone = Column(String(15), nullable=True)
     avatar = Column(String(500), nullable=True)
     bio = Column(Text, nullable=True)
 
-    # Role và Status
+    # Role vÃ  Status
     role = Column(String(20), nullable=False, default="user")  # user, admin, moderator
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False)  # Email verification
@@ -80,13 +80,13 @@ class User(Base):
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """
-        ChuyÃn Õi user object sang dictionary
+        ChuyÃƒn Ã•i user object sang dictionary
 
         Args:
-            include_sensitive: Có bao gÓm thông tin nh¡y c£m không
+            include_sensitive: CÃ³ bao gÃ“m thÃ´ng tin nhÂ¡y cÂ£m khÃ´ng
 
         Returns:
-            dict: Thông tin user
+            dict: ThÃ´ng tin user
         """
         data = {
             "id": self.id,
@@ -107,7 +107,7 @@ class User(Base):
 
     def to_compact_dict(self) -> dict:
         """
-        ChuyÃn Õi sang compact format cho responses
+        ChuyÃƒn Ã•i sang compact format cho responses
 
         Returns:
             dict: Compact user info
@@ -124,9 +124,9 @@ class User(Base):
 
 def get_db() -> Session:
     """
-    Dependency Ã l¥y database session
+    Dependency Ãƒ lÂ¥y database session
 
-    Sí dång trong FastAPI endpoints:
+    SÃ­ dÃ¥ng trong FastAPI endpoints:
     @app.get("/users/{user_id}")
     def get_user(user_id: int, db: Session = Depends(get_db)):
         ...
@@ -143,9 +143,9 @@ def get_db() -> Session:
 
 def init_db():
     """
-    Khßi t¡o database - T¡o t¥t c£ tables
+    KhÃŸi tÂ¡o database - TÂ¡o tÂ¥t cÂ£ tables
 
-    Hàm này nên °ãc gÍi khi éng dång khßi Ùng
+    HÃ m nÃ y nÃªn Â°Ã£c gÃi khi Ã©ng dÃ¥ng khÃŸi Ã™ng
     """
     try:
         Base.metadata.create_all(bind=engine)
@@ -157,14 +157,14 @@ def init_db():
 
 def test_connection():
     """
-    Test k¿t nÑi database
+    Test káº¿t ná»‘i database
 
     Returns:
-        bool: True n¿u k¿t nÑi thành công
+        bool: True náº¿u káº¿t ná»‘i thÃ nh cÃ´ng
     """
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         logger.info("Database connection test: SUCCESS")
         return True
@@ -177,27 +177,27 @@ def test_connection():
 
 def create_admin_user(email: str, password: str, full_name: str = "Admin"):
     """
-    T¡o admin user m·c Ënh (n¿u ch°a có)
+    TÂ¡o admin user mÂ·c Ã‹nh (nÂ¿u chÂ°a cÃ³)
 
     Args:
-        email: Email cça admin
-        password: M­t kh©u
-        full_name: Tên §y ç
+        email: Email cÃ§a admin
+        password: MÂ­t khÂ©u
+        full_name: TÃªn Â§y Ã§
 
     Returns:
-        User: Admin user vëa t¡o ho·c ã tÓn t¡i
+        User: Admin user vÃ«a tÂ¡o hoÂ·c Ã£ tÃ“n tÂ¡i
     """
     from ..middleware.auth import auth_middleware
 
     db = SessionLocal()
     try:
-        # KiÃm tra admin ã tÓn t¡i ch°a
+        # KiÃƒm tra admin Ã£ tÃ“n tÂ¡i chÂ°a
         existing_admin = db.query(User).filter(User.email == email).first()
         if existing_admin:
             logger.info(f"Admin user already exists: {email}")
             return existing_admin
 
-        # T¡o admin mÛi
+        # TÂ¡o admin mÃ›i
         admin = User(
             full_name=full_name,
             email=email,

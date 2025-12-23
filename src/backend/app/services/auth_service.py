@@ -14,15 +14,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import logging
 
-from ...config.database import User, get_db
-from ...middleware.auth import auth_middleware
-from ...middleware.response import (
+from config.database import User, get_db
+from middleware.auth import auth_middleware
+from middleware.response import (
     conflict_response,
     invalid_email_response,
     invalid_password_response,
     not_found_response
 )
-from ...utils.email_validator import validate_user_email
+from utils.email_validator import validate_user_email
 
 logger = logging.getLogger(__name__)
 
@@ -127,17 +127,11 @@ class AuthService:
             })
 
             # 7. Return success response
+            # Frontend chỉ cần {success, message} (BaseResponse)
+            # KHÔNG cần user data vì không auto-login sau register
             return True, {
                 "success": True,
-                "message": "Đăng ký thành công",
-                "access_token": access_token,
-                "user": {
-                    "id": new_user.id,
-                    "full_name": new_user.full_name,
-                    "email": new_user.email,
-                    "avatar_url": new_user.avatar,
-                    "role_id": 3  # 3 = user
-                }
+                "message": "Đăng ký thành công"
             }, new_user.to_dict()
 
         except IntegrityError as e:
@@ -232,17 +226,22 @@ class AuthService:
 
             logger.info(f"User logged in successfully: {email} (ID: {user.id})")
 
-            # 6. Return success response
+            # 6. Return success response theo Frontend format
+            # Frontend mong đợi: {success, access_token, refresh_token, user}
+            # KHÔNG wrap trong "data" object
             return True, {
                 "success": True,
                 "message": "Đăng nhập thành công",
                 "access_token": access_token,
                 "refresh_token": refresh_token,
+                "expires_in": 3600,
                 "user": {
-                    "id": user.id,
+                    "id": str(user.id),  # Convert int to string cho frontend
                     "full_name": user.full_name,
-                    "avatar_url": user.avatar,
-                    "role_id": 1 if user.role == "admin" else (2 if user.role == "moderator" else 3)
+                    "email": user.email,
+                    "name": user.full_name,  # Thêm "name" field cho frontend compatibility
+                    "role": user.role,
+                    "avatar": user.avatar
                 }
             }, user.to_dict(include_sensitive=True)
 
@@ -380,15 +379,22 @@ class AuthService:
                     }
                 }, None
 
+            # Return success response theo Frontend format
+            # Frontend expects: {success, user} với user object lồng trong "user" key
             return True, {
                 "success": True,
-                "data": {
-                    "user": user.to_dict(),
-                    "stats": {
-                        "posts_count": 0  # TODO: Implement later
-                    },
-                    "recent_favorites": [],  # TODO: Implement later
-                    "recent_posts": []  # TODO: Implement later
+                "user": {
+                    "id": str(user.id),  # Convert int to string
+                    "full_name": user.full_name,
+                    "name": user.full_name,  # Thêm "name" field
+                    "email": user.email,
+                    "avatar": user.avatar,
+                    "role": user.role,
+                    "bio": user.bio,
+                    "phone": user.phone,
+                    "created_at": user.created_at.isoformat() if user.created_at else None,
+                    "updated_at": user.updated_at.isoformat() if user.updated_at else None,
+                    "is_active": user.is_active
                 }
             }, user.to_dict()
 

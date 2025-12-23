@@ -521,6 +521,25 @@ async def check_rate_limit_dependency(request: Request):
     return True
 
 
+# Alias for easier import and usage
+async def apply_rate_limit(request: Request):
+    """
+    FastAPI dependency để áp dụng rate limiting vào endpoints
+    
+    Usage:
+        from middleware.rate_limit import apply_rate_limit
+        
+        @router.post("/endpoint", dependencies=[Depends(apply_rate_limit)])
+        async def endpoint():
+            ...
+    
+    This will automatically apply rate limiting based on the endpoint's
+    configuration in RateLimitConfig.DEFAULT_LIMITS
+    """
+    await rate_limiter.check_rate_limit(request)
+    return True
+
+
 # Utility functions
 def get_rate_limit_status(identifier: str, endpoint: str = "") -> Dict[str, Any]:
     """
