@@ -4,11 +4,20 @@ Cấu hình và khởi tạo toàn bộ middleware theo đúng thứ tự cho AP
 """
 
 import os
+import sys
 import logging
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+
+if sys.platform == 'win32':
+    import io
+    # Force UTF-8 cho sys.stdout/stderr (Python 3.7+ compatible)
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+    if hasattr(sys.stderr, 'buffer'):
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
 
 from .config import config
 from .cors import setup_cors, add_security_headers
@@ -149,12 +158,14 @@ def setup_middleware(app: FastAPI) -> None:
         app.add_middleware(SearchLoggingMiddleware)
         logger.info("   ✅ Search logging middleware added")
 
-    # 8. Rate Limiting Middleware
+
+    # 8. Rate Limiting
+    # Note: Rate limiting được áp dụng qua FastAPI dependencies
+    # Sử dụng dependencies=[Depends(apply_rate_limit)] ở từng endpoint
     if config.RATE_LIMIT_ENABLED:
-        use_redis = config.RATE_LIMIT_STORAGE == "redis"
-        rate_limiter = RateLimitMiddleware(use_redis=use_redis)
-        app.add_middleware(rate_limiter.__class__)
-        logger.info(f"   ✅ Rate limiting enabled (storage: {config.RATE_LIMIT_STORAGE})")
+        logger.info(f"   ✅ Rate limiting enabled (using dependency injection pattern)")
+        logger.info(f"      Storage: {config.RATE_LIMIT_STORAGE}")
+        logger.info(f"      Applied to auth endpoints via dependencies=[Depends(apply_rate_limit)]")
 
     # Note: Authentication, Validation middleware được thêm
     # ở từng endpoint level qua decorators/dependencies

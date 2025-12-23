@@ -145,7 +145,7 @@ export const authService = {
 
   /**
    * Fetch user profile từ server
-   * GET /users/me
+   * GET /auth/me
    */
   fetchCurrentUser: async (): Promise<User | null> => {
     const token = tokenStorage.getAccessToken();
@@ -157,7 +157,7 @@ export const authService = {
         user: User;
       }
 
-      const response = await axiosClient.get<never, UserMeResponse>('/users/me');
+      const response = await axiosClient.get<never, UserMeResponse>('/auth/me');
 
       if (response.success && response.user) {
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
