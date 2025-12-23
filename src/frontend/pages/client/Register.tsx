@@ -68,7 +68,7 @@ export default function Register() {
       await register({
         email: email.trim(),
         password,
-        name: name.trim(),
+        full_name: name.trim(),
       });
 
       setSuccess(true);

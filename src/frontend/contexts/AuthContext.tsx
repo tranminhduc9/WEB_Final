@@ -2,14 +2,14 @@
  * Auth Context - Global state management cho authentication
  */
 
-import React, { 
-  createContext, 
-  useContext, 
-  useState, 
-  useEffect, 
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
   useCallback,
   useMemo,
-  type ReactNode 
+  type ReactNode
 } from 'react';
 import { authService } from '../services';
 import type { User, LoginRequest, RegisterRequest } from '../types';
@@ -20,7 +20,7 @@ interface AuthContextState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (storedUser) {
             setUser(storedUser);
           }
-          
+
           // Fetch user mới nhất từ server (background)
           const freshUser = await authService.fetchCurrentUser();
           if (freshUser) {
@@ -115,10 +115,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = useCallback(async (credentials: LoginRequest) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const loggedInUser = await authService.login(credentials);
-      setUser(loggedInUser);
+      const response = await authService.login(credentials);
+      // authService.login trả về AuthResponse, extract user từ đó
+      if (response.user) {
+        setUser(response.user);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Đăng nhập thất bại';
       setError(message);
@@ -134,7 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = useCallback(async (data: RegisterRequest) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await authService.register(data);
       // Không tự động login sau register, user cần verify email
@@ -152,7 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    */
   const logout = useCallback(async () => {
     setIsLoading(true);
-    
+
     try {
       await authService.logout();
       setUser(null);
@@ -206,11 +209,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
  */
 export const useAuthContext = (): AuthContextState => {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
     throw new Error('useAuthContext must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 
