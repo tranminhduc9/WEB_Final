@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # ==============================================
+  # SERVICE 1: PostgreSQL Database
+  # ==============================================
+  db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    container_name: travel_db_container
+    restart: unless-stopped
+    
+    environment:
+      # Credentials từ file .env (bảo mật hơn)
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      
+      # Cấu hình bổ sung
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    
+    ports:
+      # [CRITICAL] Map 5433 (host) -> 5432 (container)
+      # Tránh conflict với PostgreSQL local
+      - "${DB_PORT}:5432"
+    
+    volumes:
+      # Volume lưu trữ data persistently
+      - pg_data:/var/lib/postgresql/data
+      
+      # (Optional) Backup mount point
+      # - ./backups:/backups
+    
+    networks:
+      - travel_network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    
+    # Resource limits (tùy chỉnh theo nhu cầu)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ==============================================
+  # SERVICE 2: pgAdmin 4 Web Interface
+  # ==============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: travel_pgadmin_container
+    restart: unless-stopped
+    
+    environment:
+      # Credentials để login vào web pgAdmin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      
+      # Cấu hình bổ sung
+      PGADMIN_CONFIG_SERVER_MODE: 'False'  # Chế độ desktop (không yêu cầu master password)
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    
+    ports:
+      # Truy cập web qua http://localhost:5050
+      - "${PGADMIN_PORT}:80"
+    
+    volumes:
+      # Lưu cấu hình pgAdmin
+      - pgadmin_data:/var/lib/pgadmin
+    
+    networks:
+      - travel_network
+    
+    depends_on:
+      db:
+        condition: service_healthy
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+# ==============================================
+# VOLUMES DEFINITION
+# ==============================================
+volumes:
+  pg_data:
+    driver: local
+    name: travel_postgres_data
+  
+  pgadmin_data:
+    driver: local
+    name: travel_pgadmin_data
+
+# ==============================================
+# NETWORK DEFINITION
+# ==============================================
+networks:
+  travel_network:
+    driver: bridge
+    name: travel_network
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

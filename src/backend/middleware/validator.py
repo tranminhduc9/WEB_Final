@@ -7,187 +7,11 @@ Module này cung cấp validation cho JSON và FormData inputs
 
 from typing import Any, Dict, List, Optional, Union
 from fastapi import Request, HTTPException, UploadFile, Form
-from pydantic import BaseModel, ValidationError, validator as pydantic_validator
+from pydantic import BaseModel, ValidationError
 import re
 import logging
-import html
-import json
-import base64
-from urllib.parse import unquote
 
 logger = logging.getLogger(__name__)
-
-
-class SecurityValidator:
-    """Enhanced security validation for XSS and SQL injection prevention"""
-
-    @staticmethod
-    def sanitize_input(input_data: Any) -> Any:
-        """
-        Sanitize input data to prevent XSS attacks
-
-        Args:
-            input_data: Input data to sanitize (string, dict, list)
-
-        Returns:
-            Sanitized data
-        """
-        if isinstance(input_data, str):
-            # HTML escape to prevent XSS
-            escaped = html.escape(input_data)
-            # Remove potential script tags
-            escaped = re.sub(r'<script.*?>.*?</script.*?>', '', escaped, flags=re.IGNORECASE | re.DOTALL)
-            # Remove JavaScript event handlers
-            escaped = re.sub(r'on\w+\s*=\s*["\'][^"\']*["\']', '', escaped, flags=re.IGNORECASE)
-            return escaped
-        elif isinstance(input_data, dict):
-            return {key: SecurityValidator.sanitize_input(value) for key, value in input_data.items()}
-        elif isinstance(input_data, list):
-            return [SecurityValidator.sanitize_input(item) for item in input_data]
-        else:
-            return input_data
-
-    @staticmethod
-    def detect_sql_injection(input_data: str) -> bool:
-        """
-        Detect potential SQL injection attempts
-
-        Args:
-            input_data: String to check
-
-        Returns:
-            bool: True if SQL injection detected
-        """
-        if not isinstance(input_data, str):
-            return False
-
-        # Common SQL injection patterns
-        sql_patterns = [
-            r'(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)',
-            r'(--|#|/\*|\*/)',
-            r'(\bOR\b.*?=.*?=|\bAND\b.*?=.*?=)',
-            r'(\bWHERE\b.*\bOR\b)',
-            r'(\'\s*OR\s*\'.*\'.*=|\'.*\s*OR\s*.*?=.*?=)',
-            r';\s*(DROP|DELETE|UPDATE|INSERT)',
-            r'(?i)script\s*>',
-            r'(?i)javascript\s*:'
-        ]
-
-        input_lower = input_data.lower()
-        for pattern in sql_patterns:
-            if re.search(pattern, input_lower):
-                return True
-        return False
-
-    @staticmethod
-    def detect_xss(input_data: str) -> bool:
-        """
-        Detect potential XSS attempts
-
-        Args:
-            input_data: String to check
-
-        Returns:
-            bool: True if XSS detected
-        """
-        if not isinstance(input_data, str):
-            return False
-
-        # XSS patterns
-        xss_patterns = [
-            r'<script[^>]*>.*?</script[^>]*>',
-            r'javascript\s*:',
-            r'vbscript\s*:',
-            r'onload\s*=\s*["\'][^"\']*["\']',
-            r'onerror\s*=\s*["\'][^"\']*["\']',
-            r'onclick\s*=\s*["\'][^"\']*["\']',
-            r'onmouseover\s*=\s*["\'][^"\']*["\']',
-            r'<iframe[^>]*>',
-            r'<object[^>]*>',
-            r'<embed[^>]*>',
-            r'<link[^>]*>',
-            r'<meta[^>]*>',
-            r'eval\s*\(',
-            r'expression\s*\('
-        ]
-
-        input_lower = input_data.lower()
-        for pattern in xss_patterns:
-            if re.search(pattern, input_lower, re.IGNORECASE):
-                return True
-        return False
-
-    @staticmethod
-    def validate_file_content_security(file_content: bytes) -> bool:
-        """
-        Validate file content for security threats
-
-        Args:
-            file_content: File content as bytes
-
-        Returns:
-            bool: True if file is safe
-        """
-        try:
-            # Check for executable file signatures
-            executable_signatures = [
-                b'\x4D\x5A',  # PE/Windows executable
-                b'\x7FELF',  # Linux executable
-                b'\xCA\xFE\xBA\xBE',  # Java class
-                b'\xFE\xED\xFA',  # Mach-O binary
-            ]
-
-            for signature in executable_signatures:
-                if file_content.startswith(signature):
-                    return False
-
-            # Check for script content in image files
-            if file_content.startswith(b'\xFF\xD8\xFF'):  # JPEG
-                if b'<script' in file_content.lower():
-                    return False
-            elif file_content.startswith(b'\x89PNG'):  # PNG
-                if b'<script' in file_content.lower():
-                    return False
-
-            return True
-
-        except Exception:
-            # If we can't validate, err on the side of caution
-            return False
-
-    @staticmethod
-    def validate_filename(filename: str) -> bool:
-        """
-        Validate filename for path traversal attempts
-
-        Args:
-            filename: Filename to validate
-
-        Returns:
-            bool: True if filename is safe
-        """
-        if not filename:
-            return False
-
-        # Check for path traversal
-        dangerous_patterns = [
-            r'\.\./',
-            r'\.\\.\\',
-            r'^[/\\]',
-            r'[/\\]$',
-            r'\x00',  # Null byte
-            r'[<>:"|?*]',
-        ]
-
-        for pattern in dangerous_patterns:
-            if re.search(pattern, filename):
-                return False
-
-        # Check length
-        if len(filename) > 255:
-            return False
-
-        return True
 
 
 class ValidationRule:
@@ -196,8 +20,6 @@ class ValidationRule:
     @staticmethod
     def email(email: str) -> bool:
         """Validate email format"""
-        if not email or not isinstance(email, str):
-            return False
         pattern = r'^[a-zA-Z0-9._%+-]+(?<!\.)@[a-zA-Z0-9.-]+(?<!\.)\.[a-zA-Z]{2,}$'
         # Additional check: no consecutive dots
         if '..' in email:
@@ -214,7 +36,7 @@ class ValidationRule:
         - Contains uppercase, lowercase, number
         - Contains special character: !@#$%^&*(),.?":{}|<>
         """
-        if not password or not isinstance(password, str) or len(password) < 8:
+        if len(password) < 8:
             return False
 
         has_upper = bool(re.search(r'[A-Z]', password))
@@ -227,8 +49,6 @@ class ValidationRule:
     @staticmethod
     def phone_number(phone: str) -> bool:
         """Validate Vietnamese phone number"""
-        if not phone or not isinstance(phone, str):
-            return False
         # Accept: 0123456789, 09xxxxxxxx, +84xxxxxxxx, etc.
         pattern = r'^(0|\+84)\d{9,10}$'
         return bool(re.match(pattern, phone))
@@ -253,43 +73,8 @@ class ValidationRule:
         elif not hasattr(file, 'filename'):
             return False
 
-        # Validate filename security first
-        if not SecurityValidator.validate_filename(file.filename):
-            return False
-
         file_extension = file.filename.lower().split('.')[-1]
         return file_extension in [ext.lower() for ext in allowed_types]
-
-    @staticmethod
-    def file_content_security(file: UploadFile, max_size_mb: int = 5) -> bool:
-        """
-        Validate file content for security threats
-
-        Args:
-            file: UploadFile object
-            max_size_mb: Maximum file size in MB
-
-        Returns:
-            bool: True if file is safe
-        """
-        try:
-            # Check file size first
-            if hasattr(file, 'size') and file.size:
-                if file.size > max_size_mb * 1024 * 1024:
-                    return False
-
-            # Read file content for security validation
-            content = file.file.read(1024)  # Read first 1KB for security check
-            file.file.seek(0)  # Reset file pointer
-
-            if not SecurityValidator.validate_file_content_security(content):
-                return False
-
-            return True
-
-        except Exception:
-            # If we can't validate, err on the side of caution
-            return False
 
 
 class RequestValidator:
@@ -302,17 +87,15 @@ class RequestValidator:
         self,
         request: Request,
         schema: BaseModel,
-        required_fields: Optional[List[str]] = None,
-        security_check: bool = True
+        required_fields: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
-        Enhanced JSON validation with security checks
+        Validate JSON request body
 
         Args:
             request: FastAPI request
             schema: Pydantic schema for validation
             required_fields: List of required field names
-            security_check: Whether to perform security validation
 
         Returns:
             Dict: Validated data
@@ -330,10 +113,6 @@ class RequestValidator:
                 detail="Request body must be valid JSON"
             )
 
-        # Security validation
-        if security_check:
-            await self._validate_request_security(body)
-
         # Check required fields
         if required_fields:
             missing_fields = [field for field in required_fields if field not in body]
@@ -343,12 +122,9 @@ class RequestValidator:
                     detail=f"Missing required fields: {', '.join(missing_fields)}"
                 )
 
-        # Sanitize input data
-        sanitized_body = SecurityValidator.sanitize_input(body)
-
         # Validate with Pydantic schema
         try:
-            validated_data = schema(**sanitized_body)
+            validated_data = schema(**body)
             return validated_data.dict()
         except ValidationError as e:
             error_details = {}
@@ -363,33 +139,6 @@ class RequestValidator:
                     "errors": error_details
                 }
             )
-
-    async def _validate_request_security(self, data: Dict[str, Any]):
-        """Validate request data for security threats"""
-        def check_security_recursive(obj, path=""):
-            if isinstance(obj, str):
-                # Check for SQL injection
-                if SecurityValidator.detect_sql_injection(obj):
-                    logger.warning(f"SQL injection detected at path: {path}")
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Potential SQL injection detected"
-                    )
-                # Check for XSS
-                if SecurityValidator.detect_xss(obj):
-                    logger.warning(f"XSS detected at path: {path}")
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Potential XSS attack detected"
-                    )
-            elif isinstance(obj, dict):
-                for key, value in obj.items():
-                    check_security_recursive(value, f"{path}.{key}" if path else key)
-            elif isinstance(obj, list):
-                for i, item in enumerate(obj):
-                    check_security_recursive(item, f"{path}[{i}]")
-
-        check_security_recursive(data)
 
     async def validate_form_data(
         self,
@@ -534,18 +283,6 @@ class UserRegistrationSchema(BaseModel):
     full_name: str
     email: str
     password: str
-
-    @pydantic_validator('email')
-    def validate_email(cls, v):
-        if not ValidationRule().email(v):
-            raise ValueError('Invalid email format')
-        return v
-
-    @pydantic_validator('password')
-    def validate_password(cls, v):
-        if not ValidationRule().password(v):
-            raise ValueError('Password must be at least 8 characters with uppercase, lowercase, digit, and special character')
-        return v
 
     class Config:
         schema_extra = {
@@ -713,107 +450,5 @@ class ChatbotMessageSchema(BaseModel):
             "example": {
                 "message": "Tôi muốn đi chơi Hà Nội 1 ngày với 500k",
                 "history": []
-            }
-        }
-
-
-class LogoutSchema(BaseModel):
-    """Schema for logout"""
-    refresh_token: str
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-            }
-        }
-
-
-class GetFavoritesQuerySchema(BaseModel):
-    """Schema for get favorites query params"""
-    page: Optional[int] = 1
-    limit: Optional[int] = 10
-
-    @pydantic_validator('page')
-    def validate_page(cls, v):
-        if v < 1:
-            raise ValueError('Page must be >= 1')
-        return v
-
-    @pydantic_validator('limit')
-    def validate_limit(cls, v):
-        if v < 1 or v > 100:
-            raise ValueError('Limit must be between 1 and 100')
-        return v
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "page": 1,
-                "limit": 10
-            }
-        }
-
-
-class FileUploadResponse(BaseModel):
-    """Schema for file upload response"""
-    url: str
-    public_id: str
-    format: Optional[str] = None
-    size: Optional[int] = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "url": "https://res.cloudinary.com/demo/image/upload/sample.jpg",
-                "public_id": "hanoi-travel/avatars/123/abc123",
-                "format": "jpg",
-                "size": 1024000
-            }
-        }
-
-
-class UserStatsResponse(BaseModel):
-    """Schema for user stats in profile"""
-    posts_count: int = 0
-    places_visited: int = 0
-    favorites_count: int = 0
-    followers_count: Optional[int] = 0
-    following_count: Optional[int] = 0
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "posts_count": 15,
-                "places_visited": 42,
-                "favorites_count": 8
-            }
-        }
-
-
-class PublicUserProfileResponse(BaseModel):
-    """Schema for public user profile response"""
-    id: int
-    full_name: str
-    avatar_url: Optional[str] = None
-    bio: Optional[str] = None
-    reputation_score: int = 0
-    stats: UserStatsResponse
-    recent_posts: Optional[List[dict]] = []
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "id": 123,
-                "full_name": "Nguyen Van A",
-                "avatar_url": "https://example.com/avatar.jpg",
-                "bio": "I love Hanoi",
-                "reputation_score": 150,
-                "stats": {
-                    "posts_count": 15,
-                    "places_visited": 42,
-                    "favorites_count": 8
-                },
-                "recent_posts": []
             }
         }

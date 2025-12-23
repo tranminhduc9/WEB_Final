@@ -1,0 +1,264 @@
+/* CreatePostModal - theo Figma */
+
+/* Overlay */
+.create-post-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal container */
+.create-post-modal {
+  background: #D9D9D9;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 800px;
+  padding: 24px 32px;
+  position: relative;
+}
+
+/* ==================== */
+/* Header */
+/* ==================== */
+.create-post__header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.create-post__title {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 32px;
+  line-height: 40px;
+  color: #000000;
+  margin: 0;
+  text-align: center;
+}
+
+.create-post__close {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-post__close svg {
+  width: 28px;
+  height: 28px;
+  stroke: #000000;
+}
+
+.create-post__close:hover svg {
+  stroke: #F88622;
+}
+
+/* Divider */
+.create-post__divider {
+  width: 100%;
+  height: 1px;
+  background: #000000;
+  margin-bottom: 20px;
+}
+
+/* ==================== */
+/* Options bar */
+/* ==================== */
+.create-post__options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.create-post__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.create-post__option span {
+  font-family: 'Roboto', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 24px;
+  color: #000000;
+}
+
+.create-post__option-icon {
+  font-size: 28px;
+  color: #000000;
+}
+
+.create-post__star {
+  font-size: 28px;
+}
+
+.create-post__image-icon {
+  font-size: 28px;
+}
+
+.create-post__rating-input {
+  width: 40px;
+  height: 32px;
+  background: #C0C0C0;
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.create-post__rating-input:focus {
+  outline: 2px solid #F88622;
+}
+
+.create-post__image-count {
+  font-size: 14px !important;
+  color: #F88622 !important;
+}
+
+/* ==================== */
+/* Content textarea */
+/* ==================== */
+.create-post__content {
+  margin-bottom: 20px;
+}
+
+.create-post__textarea {
+  width: 100%;
+  height: 300px;
+  background: rgba(156, 156, 156, 0.5);
+  border: none;
+  border-radius: 0;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 28px;
+  color: #000000;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.create-post__textarea::placeholder {
+  color: #000000;
+  opacity: 0.3;
+}
+
+.create-post__textarea:focus {
+  outline: none;
+}
+
+/* ==================== */
+/* Submit button */
+/* ==================== */
+.create-post__submit {
+  width: 100%;
+  height: 50px;
+  background: #F88622;
+  border: none;
+  border-radius: 0;
+  font-family: 'Roboto', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.create-post__submit:hover {
+  background: #e07520;
+}
+
+/* ==================== */
+/* Responsive */
+/* ==================== */
+@media (max-width: 768px) {
+  .create-post-modal {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .create-post__title {
+    font-size: 24px;
+  }
+
+  .create-post__options {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .create-post__option span {
+    font-size: 16px;
+  }
+
+  .create-post__textarea {
+    height: 200px;
+    font-size: 16px;
+  }
+
+  .create-post__submit {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-post-modal {
+    padding: 16px;
+  }
+
+  .create-post__title {
+    font-size: 20px;
+  }
+
+  .create-post__option span {
+    font-size: 14px;
+  }
+
+  .create-post__option-icon,
+  .create-post__star,
+  .create-post__image-icon {
+    font-size: 24px;
+  }
+
+  .create-post__textarea {
+    height: 150px;
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .create-post__submit {
+    height: 44px;
+    font-size: 16px;
+  }
+}
+
+
+
