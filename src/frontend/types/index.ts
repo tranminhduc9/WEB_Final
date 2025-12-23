@@ -21,3 +21,5 @@ export * from './user';
 // Admin types
 export * from './admin';
 
+// Model types (Places, Posts)
+export * from './models';
