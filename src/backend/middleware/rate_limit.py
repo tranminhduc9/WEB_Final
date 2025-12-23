@@ -26,8 +26,7 @@ class RateLimitConfig:
 
     # Mức độ rate limit (requests/minute) theo API contract
     RATE_LIMITS = {
-        "high": 5,      # 5 req/phút - Register, OTP
-        "login": 10,    # 10 req/phút - Login (special case)
+        "high": 5,      # 5 req/phút - Login, Register, OTP
         "medium": 20,   # 20 req/phút - Write actions: Post, Comment
         "low": 100,     # 100 req/phút - Read actions: Search, Get Details
         "suggest": 200, # 200 req/phút - Places suggest endpoint
@@ -36,9 +35,9 @@ class RateLimitConfig:
 
     # Default limits cho các endpoint theo API contract
     DEFAULT_LIMITS = {
-        # Authentication endpoints - Login: 10 req/phút, Others: 5 req/phút
+        # Authentication endpoints - High: 5 req/phút
         "POST:/api/v1/auth/register": ("high", 60),
-        "POST:/api/v1/auth/login": ("login", 60),  # Special login tier: 10 req/min
+        "POST:/api/v1/auth/login": ("high", 60),
         "POST:/api/v1/auth/forgot-password": ("high", 60),
         "POST:/api/v1/auth/reset-password": ("high", 60),
         "POST:/api/v1/auth/refresh-token": ("medium", 60),
@@ -126,9 +125,8 @@ class MemoryRateLimiter:
         """
         current_time = time.time()
 
-        # Cleanup interval adaptive to window size for better test accuracy
-        cleanup_interval = min(10, max(1, window_size // 2))
-        if current_time - self._last_cleanup[key] < cleanup_interval:
+        # Chỉ cleanup mỗi 10 giây để tránh performance impact
+        if current_time - self._last_cleanup[key] < 10:
             return
 
         cutoff_time = current_time - window_size
@@ -419,6 +417,18 @@ class RateLimitMiddleware:
         if not allowed:
             logger.warning(f"Rate limit exceeded for {identifier} on {method}:{path}")
 
+            # Use standard error response format theo API contract
+            from .response import rate_limit_response
+            response = rate_limit_response(metadata["retry_after"])
+
+            # Add rate limit headers
+            response.headers.update({
+                "X-RateLimit-Limit": str(metadata["limit"]),
+                "X-RateLimit-Remaining": str(metadata["remaining"]),
+                "X-RateLimit-Reset": str(metadata["reset_time"]),
+                "Retry-After": str(metadata["retry_after"])
+            })
+
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail={
@@ -433,7 +443,7 @@ class RateLimitMiddleware:
                 headers={
                     "X-RateLimit-Limit": str(metadata["limit"]),
                     "X-RateLimit-Remaining": str(metadata["remaining"]),
-                    "X-RateLimit-Reset": str(metadata.get("reset_time", 0)),
+                    "X-RateLimit-Reset": str(metadata["reset_time"]),
                     "Retry-After": str(metadata["retry_after"])
                 }
             )

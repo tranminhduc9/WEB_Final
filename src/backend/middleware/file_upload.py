@@ -161,6 +161,7 @@ class CloudinaryUploader:
         # Check file size
         if hasattr(file, 'size') and file.size:
             if file.size > FileUploadConfig.MAX_IMAGE_SIZE:
+                from .response import file_too_large_response
                 raise HTTPException(
                     status_code=400,
                     detail={
@@ -179,6 +180,7 @@ class CloudinaryUploader:
                 allowed_extensions.extend(extensions)
 
             if ext not in allowed_extensions:
+                from .response import invalid_file_type_response
                 raise HTTPException(
                     status_code=400,
                     detail={
@@ -191,6 +193,7 @@ class CloudinaryUploader:
 
         # Check MIME type
         if file.content_type not in FileUploadConfig.ALLOWED_IMAGE_TYPES:
+            from .response import invalid_file_type_response
             raise HTTPException(
                 status_code=400,
                 detail={

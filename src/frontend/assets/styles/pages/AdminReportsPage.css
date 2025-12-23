@@ -1,0 +1,236 @@
+/* Admin Reports Page Styles */
+
+.admin-reports-page {
+    min-height: 100vh;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-reports-main {
+    padding: 40px 54px;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
+}
+
+/* Header Section */
+.admin-reports-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.admin-reports-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 48px;
+    color: #000000;
+    margin: 0;
+}
+
+/* Table Container */
+.admin-reports-table-container {
+    background: #FFFFFF;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+}
+
+/* Table Styles */
+.admin-reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF;
+}
+
+.admin-reports-table th,
+.admin-reports-table td {
+    padding: 20px 16px;
+    text-align: left;
+    border: 1px solid #000000;
+    background: #D9D9D9;
+}
+
+.admin-reports-table th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 100%;
+    color: #000000;
+    background: #D9D9D9;
+}
+
+.admin-reports-table td {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: #000000;
+}
+
+.admin-reports-table tr.resolved td {
+    opacity: 0.6;
+}
+
+.admin-reports-table__empty-row td {
+    height: 66px;
+}
+
+/* Table Column Widths */
+.admin-reports-table th:nth-child(1),
+.admin-reports-table td:nth-child(1) {
+    width: 12%;
+}
+
+.admin-reports-table th:nth-child(2),
+.admin-reports-table td:nth-child(2) {
+    width: 20%;
+}
+
+.admin-reports-table th:nth-child(3),
+.admin-reports-table td:nth-child(3) {
+    width: 18%;
+}
+
+.admin-reports-table th:nth-child(4),
+.admin-reports-table td:nth-child(4) {
+    width: 15%;
+}
+
+.admin-reports-table th:nth-child(5),
+.admin-reports-table td:nth-child(5),
+.admin-reports-table th:nth-child(6),
+.admin-reports-table td:nth-child(6) {
+    width: 17%;
+}
+
+/* Action Buttons */
+.admin-reports-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    color: #000000;
+    padding: 0;
+    transition: opacity 0.2s;
+}
+
+.admin-reports-action-btn:hover:not(:disabled) {
+    opacity: 0.7;
+}
+
+.admin-reports-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-reports-action-icon {
+    width: 20px;
+    height: 20px;
+    color: #666;
+}
+
+/* Pagination */
+.admin-reports-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.admin-reports-pagination__nav {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #000;
+    padding: 8px 12px;
+    transition: opacity 0.2s;
+}
+
+.admin-reports-pagination__nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.admin-reports-pagination__nav:hover:not(:disabled) {
+    opacity: 0.7;
+}
+
+.admin-reports-pagination__page {
+    width: 66px;
+    height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #D9D9D9;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 140%;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-reports-pagination__page:hover:not(.ellipsis) {
+    background: #ccc;
+}
+
+.admin-reports-pagination__page.active {
+    background: #F88622;
+    color: #FFFFFF;
+}
+
+.admin-reports-pagination__page.ellipsis {
+    background: transparent;
+    cursor: default;
+    font-size: 24px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .admin-reports-main {
+        padding: 32px 40px;
+    }
+}
+
+@media (max-width: 992px) {
+    .admin-reports-table-container {
+        overflow-x: auto;
+    }
+
+    .admin-reports-table {
+        min-width: 900px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-reports-main {
+        padding: 24px 20px;
+    }
+
+    .admin-reports-title {
+        font-size: 28px;
+        line-height: 36px;
+    }
+
+    .admin-reports-pagination__page {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+    }
+}

@@ -152,12 +152,8 @@ def setup_middleware(app: FastAPI) -> None:
     # 8. Rate Limiting Middleware
     if config.RATE_LIMIT_ENABLED:
         use_redis = config.RATE_LIMIT_STORAGE == "redis"
-        redis_client = None  # TODO: Get from config if using Redis
-        app.add_middleware(
-            RateLimitMiddleware,
-            use_redis=use_redis,
-            redis_client=redis_client
-        )
+        rate_limiter = RateLimitMiddleware(use_redis=use_redis)
+        app.add_middleware(rate_limiter.__class__)
         logger.info(f"   ✅ Rate limiting enabled (storage: {config.RATE_LIMIT_STORAGE})")
 
     # Note: Authentication, Validation middleware được thêm
