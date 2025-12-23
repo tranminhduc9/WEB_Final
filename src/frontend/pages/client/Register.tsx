@@ -10,11 +10,10 @@ export default function Register() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phone, setPhone] = useState('');
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  
+
   const { register, error, clearError, isLoading } = useAuthContext();
   const navigate = useNavigate();
 
@@ -49,14 +48,6 @@ export default function Register() {
       return 'Mật khẩu xác nhận không khớp';
     }
 
-    // Phone validation (optional but if provided, must be valid)
-    if (phone) {
-      const phoneRegex = /^[0-9]{10,11}$/;
-      if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
-        return 'Số điện thoại không hợp lệ (10-11 số)';
-      }
-    }
-
     return null;
   };
 
@@ -64,7 +55,7 @@ export default function Register() {
     e.preventDefault();
     clearError();
     setLocalError('');
-    
+
     const validationError = validateForm();
     if (validationError) {
       setLocalError(validationError);
@@ -72,19 +63,18 @@ export default function Register() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await register({
         email: email.trim(),
         password,
         name: name.trim(),
-        phone: phone.trim() || undefined,
       });
-      
+
       setSuccess(true);
       // Redirect to login after 2 seconds
       setTimeout(() => {
-        navigate('/login', { 
+        navigate('/login', {
           state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' }
         });
       }, 2000);
@@ -104,7 +94,7 @@ export default function Register() {
         <div className="register-form-section">
           <div className="form-wrapper" style={{ textAlign: 'center' }}>
             <h2>ĐĂNG KÝ THÀNH CÔNG!</h2>
-            <img src={logo} alt="register" className="logo" />
+            <img src={logo} alt="register" className="register-logo" />
             <p style={{ marginTop: '1rem', color: '#4CAF50' }}>
               Tài khoản của bạn đã được tạo thành công.
             </p>
@@ -113,7 +103,9 @@ export default function Register() {
             </p>
           </div>
         </div>
-        <div className="register-image-section" style={{ backgroundImage: `url(${image_register})` }}></div>
+        <div className="register-image-section">
+          <img src={image_register} alt="Register illustration" />
+        </div>
       </div>
     );
   }
@@ -123,15 +115,15 @@ export default function Register() {
       <div className="register-form-section">
         <div className="form-wrapper">
           <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
-          <img src={logo} alt="register" className="logo" />
-          
+          <img src={logo} alt="register" className="register-logo" />
+
           <form onSubmit={onSubmit}>
             <div className="input-group subheading">
               <label htmlFor="email">Email *</label>
-              <input 
-                type="email" 
-                id="email" 
-                value={email} 
+              <input
+                type="email"
+                id="email"
+                value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (displayError) {
@@ -144,13 +136,13 @@ export default function Register() {
                 autoComplete="email"
               />
             </div>
-            
+
             <div className="input-group subheading">
               <label htmlFor="name">Họ và tên *</label>
-              <input 
-                type="text" 
-                id="name" 
-                value={name} 
+              <input
+                type="text"
+                id="name"
+                value={name}
                 onChange={(e) => {
                   setName(e.target.value);
                   if (displayError) {
@@ -163,32 +155,13 @@ export default function Register() {
                 autoComplete="name"
               />
             </div>
-            
-            <div className="input-group subheading">
-              <label htmlFor="phone">Số điện thoại</label>
-              <input 
-                type="tel" 
-                id="phone" 
-                value={phone} 
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  if (displayError) {
-                    clearError();
-                    setLocalError('');
-                  }
-                }}
-                placeholder="0901234567"
-                disabled={isLoading}
-                autoComplete="tel"
-              />
-            </div>
-            
+
             <div className="input-group subheading">
               <label htmlFor="password">Mật khẩu *</label>
-              <input 
-                type="password" 
-                id="password" 
-                value={password} 
+              <input
+                type="password"
+                id="password"
+                value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
                   if (displayError) {
@@ -201,13 +174,13 @@ export default function Register() {
                 autoComplete="new-password"
               />
             </div>
-            
+
             <div className="input-group subheading">
               <label htmlFor="confirm-password">Xác nhận mật khẩu *</label>
-              <input 
-                type="password" 
-                id="confirm-password" 
-                value={confirmPassword} 
+              <input
+                type="password"
+                id="confirm-password"
+                value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
                   if (displayError) {
@@ -220,26 +193,28 @@ export default function Register() {
                 autoComplete="new-password"
               />
             </div>
-            
+
             {displayError && (
               <div className="error-message">{displayError}</div>
             )}
-            
-            <button 
-              type="submit" 
+
+            <button
+              type="submit"
               className="register-button"
               disabled={isLoading || isSubmitting}
             >
               {isLoading || isSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}
             </button>
-            
+
             <div className="forgot-password">
               <Link to="/login">Đã có tài khoản? Đăng nhập</Link>
             </div>
           </form>
         </div>
       </div>
-      <div className="register-image-section" style={{ backgroundImage: `url(${image_register})` }}></div>
+      <div className="register-image-section">
+        <img src={image_register} alt="Register illustration" />
+      </div>
     </div>
   );
 }
