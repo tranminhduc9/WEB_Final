@@ -2,3 +2,7 @@
 __pycache__/
 node_modules/
 *.log
+.idea
+__pycache__
+.pytest_cache
+nul
