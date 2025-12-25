@@ -104,14 +104,12 @@ async def get_user_profile(
             message="Lấy thông tin profile thành công",
             data={
                 "user": {
+                    # Swagger UserDetailResponse.data.user: id, full_name, email, bio, reputation_score
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "avatar_url": user.avatar_url,
                     "bio": user.bio,
-                    "reputation_score": user.reputation_score,
-                    "role_id": user.role_id,
-                    "created_at": user.created_at.isoformat() if user.created_at else None
+                    "reputation_score": user.reputation_score
                 },
                 "stats": stats,
                 "recent_favorites": recent_favorites,

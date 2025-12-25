@@ -305,13 +305,12 @@ async def toggle_like(
             "likes_count": result["total_likes"]
         })
         
-        return success_response(
-            message="Đã cập nhật like",
-            data={
-                "is_liked": result["liked"],
-                "likes_count": result["total_likes"]
-            }
-        )
+        return {
+            "success": True,
+            "message": "Đã cập nhật like",
+            "is_liked": result["liked"],
+            "likes_count": result["total_likes"]
+        }
         
     except Exception as e:
         logger.error(f"Error toggling like: {str(e)}")
@@ -459,10 +458,11 @@ async def toggle_favorite_post(
             db.commit()
             is_favorited = True
         
-        return success_response(
-            message="Đã cập nhật favorite",
-            data={"is_favorited": is_favorited}
-        )
+        return {
+            "success": True,
+            "message": "Đã cập nhật favorite",
+            "is_favorited": is_favorited
+        }
         
     except Exception as e:
         db.rollback()

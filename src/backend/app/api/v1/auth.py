@@ -414,21 +414,18 @@ async def refresh_access_token(
             refresh_token=refresh_data.refresh_token
         )
 
-        # Xử lý kết quả - Return theo Frontend format (flat structure)
+        # Xử lý kết quả - Return theo Swagger AuthResponse format
         if success:
-            # Frontend expects: {success, access_token, refresh_token, expires_in, user?}
-            # KHÔNG wrap trong "data"
+            # Swagger spec: { success, access_token, user? }
             return {
                 "success": True,
-                "message": response["message"],
                 "access_token": response["access_token"],
-                "refresh_token": response["refresh_token"],
-                "expires_in": 3600
+                "user": response.get("user")  # Optional user in refresh
             }
         else:
-            # Error case
-            error_code = response.get("error", {}).get("code", "UNKNOWN_ERROR")
-            error_message = response.get("error", {}).get("message", "Đã có lỗi xảy ra")
+            # Error case - theo Swagger ErrorResponse format
+            error_code = response.get("error", {}).get("code", "INVALID_TOKEN")
+            error_message = response.get("error", {}).get("message", "Token không hợp lệ")
 
             return error_response(
                 message=error_message,
@@ -456,101 +453,48 @@ async def refresh_access_token(
 async def logout(
     request: Request,
     refresh_data: Optional[RefreshTokenRequest] = None,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Đăng xuất user
+    Đăng xuất user - Theo Swagger spec KHÔNG yêu cầu authentication
 
     **Flow:**
-    1. Lấy user info từ access token
-    2. Log logout action
+    1. Nhận refresh_token từ body (optional)
+    2. Revoke refresh token trong database nếu có
     3. Return success
 
-    **Note:** Client cần xóa access token và refresh token
+    **Note:** Client cần xóa access token và refresh token ở local
 
     **Responses:**
     - 200: Đăng xuất thành công
     - 500: Internal server error
     """
     try:
-        # Lấy auth service
-        auth_service = get_auth_service(db)
+        # Nếu có refresh_token, revoke nó
+        if refresh_data and refresh_data.refresh_token:
+            # Lấy auth service
+            auth_service = get_auth_service(db)
+            
+            # Tìm và revoke token trong database
+            from config.database import TokenRefresh
+            token_record = db.query(TokenRefresh).filter(
+                TokenRefresh.refresh_token == refresh_data.refresh_token
+            ).first()
+            
+            if token_record:
+                token_record.revoked = True
+                db.commit()
+                logger.info(f"Token revoked for user_id: {token_record.user_id}")
 
-        # Gọi service để logout
-        user_id = int(current_user.get("user_id", 0))
-        success, response = await auth_service.logout_user(user_id=user_id)
-
-        # Xử lý kết quả
-        if success:
-            return success_response(message=response["message"])
-        else:
-            return server_error_response()
+        return success_response(message="Đăng xuất thành công")
 
     except Exception as e:
         logger.error(f"Unexpected error in logout endpoint: {str(e)}")
         return server_error_response()
 
 
-@router.get(
-    "/me",
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(apply_rate_limit)],
-    responses={
-        200: {"description": "Profile data"},
-        401: {"model": ErrorResponse, "description": "Unauthorized"},
-        429: {"model": ErrorResponse, "description": "Too Many Requests"},
-        500: {"model": ErrorResponse, "description": "Internal Server Error"}
-    },
-    summary="Get Current User (Auth endpoint)",
-    description="Lấy thông tin user hiện tại - Alias cho /users/me. Rate limit: 20 requests/minute"
-)
-async def get_current_user_auth(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Lấy thông tin user hiện tại (endpoint /auth/me)
-
-    **Lưu ý:** Đây là alias cho /users/me để tương thích với frontend
-
-    **Flow:**
-    1. Verify access token
-    2. Lấy user info từ database
-    3. Return user profile
-
-    **Responses:**
-    - 200: Thành công, return user profile
-    - 401: Chưa đăng nhập
-    - 500: Internal server error
-    """
-    try:
-        # Lấy auth service
-        auth_service = get_auth_service(db)
-
-        # Lấy user ID từ token
-        user_id = int(current_user.get("user_id", 0))
-
-        # Gọi service để lấy user info
-        success, response, user_data = await auth_service.get_current_user(user_id=user_id)
-
-        # Xử lý kết quả - Return trực tiếp response từ service
-        if success:
-            # Service đã return format frontend cần: {success, user}
-            return response
-        else:
-            error_code = response.get("error", {}).get("code", "UNKNOWN_ERROR")
-            error_message = response.get("error", {}).get("message", "Đã có lỗi xảy ra")
-
-            if error_code == "USER_NOT_FOUND":
-                return not_found_response("người dùng")
-            else:
-                return server_error_response()
-
-    except Exception as e:
-        logger.error(f"Unexpected error in get_current_user (auth/me) endpoint: {str(e)}")
-        return server_error_response()
+# NOTE: /auth/me endpoint removed to match Swagger spec
+# Users should use /users/me instead (defined in users.py)
 
 
 @router.post(

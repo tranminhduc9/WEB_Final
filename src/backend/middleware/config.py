@@ -116,32 +116,32 @@ class MiddlewareConfig:
         # Check required configs
         if cls.ENVIRONMENT == "production":
             if cls.JWT_SECRET_KEY == "hanoi-travel-super-secret-key-change-in-production-2024":
-                warnings.append("⚠️  Production: Please change JWT_SECRET_KEY")
+                warnings.append("[WARN] Production: Please change JWT_SECRET_KEY")
 
 
 
             if cls.SESSION_SECRET == "session-secret-change-in-production":
-                warnings.append("⚠️  Production: Please change SESSION_SECRET")
+                warnings.append("[WARN] Production: Please change SESSION_SECRET")
 
             if "localhost" in cls.CORS_ORIGINS[0]:
-                warnings.append("⚠️  Production: CORS_ORIGINS contains localhost")
+                warnings.append("[WARN] Production: CORS_ORIGINS contains localhost")
 
         # Check optional but recommended configs
         if not cls.CLOUDINARY_CLOUD_NAME:
-            warnings.append("⚠️  Cloudinary not configured - file upload will use local storage")
+            warnings.append("[WARN] Cloudinary not configured - file upload will use local storage")
 
         if not cls.SENDGRID_API_KEY:
-            warnings.append("⚠️  SendGrid not configured - email features will be disabled")
+            warnings.append("[WARN] SendGrid not configured - email features will be disabled")
 
         if cls.REDIS_HOST == "localhost" and cls.ENVIRONMENT == "production":
-            warnings.append("⚠️  Production: Consider using external Redis service")
+            warnings.append("[WARN] Production: Consider using external Redis service")
 
         # Check database connections
         if not cls.DATABASE_URL or "username:password" in cls.DATABASE_URL:
-            warnings.append("⚠️  Please configure DATABASE_URL with proper credentials")
+            warnings.append("[WARN] Please configure DATABASE_URL with proper credentials")
 
         if not cls.MONGO_URI or "localhost" in cls.MONGO_URI and cls.ENVIRONMENT == "production":
-            warnings.append("⚠️  Production: Consider using external MongoDB service")
+            warnings.append("[WARN] Production: Consider using external MongoDB service")
 
         return warnings
 

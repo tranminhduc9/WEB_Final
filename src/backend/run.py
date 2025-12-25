@@ -16,7 +16,7 @@ sys.path.insert(0, str(backend_dir))
 # Change to backend directory
 os.chdir(backend_dir)
 
-# ⚠️ QUAN TRỌNG: Load environment từ root directory TRƯỚC
+# IMPORTANT: Load environment tu root directory TRUOC
 from config.load_env import load_environment, is_loaded
 
 if not is_loaded():
@@ -24,7 +24,7 @@ if not is_loaded():
     if not load_success:
         print("WARNING: Failed to load .env file. Server may not work correctly.")
 else:
-    print("✓ Environment loaded successfully")
+    print("[OK] Environment loaded successfully")
 
 import uvicorn
 import logging
@@ -63,13 +63,14 @@ def main():
     logger.info("")
 
     try:
-        # Start server
+        # Start server với full logging
         uvicorn.run(
             "app.main:app",  # Module path from src/backend directory
             host=host,
             port=port,
             reload=reload,
-            log_level="info"
+            log_level="debug",
+            access_log=True
         )
     except KeyboardInterrupt:
         logger.info("\n" + "=" * 70)

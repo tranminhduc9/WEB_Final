@@ -154,14 +154,15 @@ async def upload_files(
                 status_code=400
             )
         
-        response_data = {"urls": uploaded_urls}
+        response_data = {
+            "success": True,
+            "message": f"Đã upload {len(uploaded_urls)} file",
+            "urls": uploaded_urls
+        }
         if errors:
             response_data["errors"] = errors
         
-        return success_response(
-            message=f"Đã upload {len(uploaded_urls)} file",
-            data=response_data
-        )
+        return response_data
         
     except Exception as e:
         logger.error(f"Error uploading files: {str(e)}")
