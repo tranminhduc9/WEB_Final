@@ -13,6 +13,7 @@ import Login from './pages/client/Login'
 import Register from './pages/client/Register'
 import SearchResultsPage from './pages/client/SearchResultsPage'
 import TrendPlacesPage from './pages/client/TrendPlacesPage'
+import PlacesPage from './pages/client/PlacesPage'
 import UserProfilePage from './pages/client/UserProfilePage'
 import BlogPage from './pages/client/BlogPage'
 import BlogDetailPage from './pages/client/BlogDetailPage'
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
   { path: '/', element: <App /> },
   { path: '/search', element: <SearchResultsPage /> },
   { path: '/trend-places', element: <TrendPlacesPage /> },
+  { path: '/places', element: <PlacesPage /> },
   { path: '/blogs', element: <BlogPage /> },
   { path: '/blog/:id', element: <BlogDetailPage /> },
   { path: '/location/:id', element: <LocationInfoPage /> },

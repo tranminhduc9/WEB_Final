@@ -7,20 +7,40 @@ interface LocationCardProps {
   imageSrc: string;
   title: string;
   address: string;
-  tags: string[];
+  priceMin?: number;
+  priceMax?: number;
   rating: number;
   reviewCount: string;
 }
+
+// Format price VND
+const formatPriceVND = (price: number): string => {
+  if (price === 0) return '0 VNĐ';
+  return `${price.toLocaleString('vi-VN')} VNĐ`;
+};
 
 export default function LocationCard({
   id,
   imageSrc,
   title,
   address,
-  tags,
+  priceMin = 0,
+  priceMax = 0,
   rating,
   reviewCount,
 }: LocationCardProps) {
+  // Hiển thị giá
+  const renderPrice = () => {
+    if (priceMin === 0 && priceMax === 0) {
+      return <span className="price-text">Miễn phí</span>;
+    }
+    return (
+      <span className="price-text">
+        {formatPriceVND(priceMin)} - {formatPriceVND(priceMax)}
+      </span>
+    );
+  };
+
   const cardContent = (
     <>
       <img src={imageSrc} alt={title} />
@@ -31,15 +51,16 @@ export default function LocationCard({
             <Icons.Location className="place-address-icon" />
             {address}
           </p>
-          <div className="tags">
-            {tags.map((tag, index) => (
-              <span key={index} className="tag">{tag}</span>
-            ))}
-          </div>
         </div>
-        <div className="place-rating">
-          <span className="rating-value">⭐ {rating}</span>
-          <span className="review-count"> – {reviewCount} reviews</span>
+        <div className="place-footer">
+          {/* Price trước Rating */}
+          <div className="place-price">
+            {renderPrice()}
+          </div>
+          <div className="place-rating">
+            <span className="rating-value">⭐ {rating}</span>
+            <span className="review-count"> ~ {reviewCount} reviews</span>
+          </div>
         </div>
       </div>
     </>

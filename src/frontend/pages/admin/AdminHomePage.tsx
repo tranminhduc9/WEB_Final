@@ -18,7 +18,8 @@ const featuredLocations = [
         imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
         title: 'Hồ Gươm - Quận Hoàn Kiếm',
         address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
-        tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+        priceMin: 0,
+        priceMax: 0,
         rating: 4.5,
         reviewCount: '360',
         stats: {
@@ -34,7 +35,8 @@ const featuredLocations = [
         imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
         title: 'Hồ Gươm - Quận Hoàn Kiếm',
         address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
-        tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+        priceMin: 0,
+        priceMax: 0,
         rating: 4.5,
         reviewCount: '360',
         stats: {
@@ -50,7 +52,8 @@ const featuredLocations = [
         imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
         title: 'Hồ Gươm - Quận Hoàn Kiếm',
         address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
-        tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+        priceMin: 0,
+        priceMax: 0,
         rating: 4.5,
         reviewCount: '360',
         stats: {
@@ -133,7 +136,8 @@ function AdminHomePage() {
                                         imageSrc={location.imageSrc}
                                         title={location.title}
                                         address={location.address}
-                                        tags={location.tags}
+                                        priceMin={location.priceMin}
+                                        priceMax={location.priceMax}
                                         rating={location.rating}
                                         reviewCount={location.reviewCount}
                                     />

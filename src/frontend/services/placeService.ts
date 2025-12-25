@@ -101,6 +101,36 @@ export const placeService = {
         );
         return response;
     },
+
+    /**
+     * Tìm kiếm địa điểm
+     * GET /places/search
+     * Params: keyword, district_id, page
+     */
+    searchPlaces: async (params: { keyword?: string; district_id?: number; page?: number }): Promise<ListResponse<PlaceCompact>> => {
+        const queryParams = new URLSearchParams();
+        if (params.keyword) queryParams.append('keyword', params.keyword);
+        if (params.district_id) queryParams.append('district_id', String(params.district_id));
+        if (params.page) queryParams.append('page', String(params.page));
+
+        const queryString = queryParams.toString();
+        const url = queryString ? `/places/search?${queryString}` : '/places/search';
+
+        const response = await axiosClient.get<never, ListResponse<PlaceCompact>>(url);
+        return response;
+    },
+
+    /**
+     * Gợi ý tìm kiếm
+     * GET /places/suggest
+     * Params: keyword (required)
+     */
+    getSuggestions: async (keyword: string): Promise<{ success: boolean; data: string[] }> => {
+        const response = await axiosClient.get<never, { success: boolean; data: string[] }>(
+            `/places/suggest?keyword=${encodeURIComponent(keyword)}`
+        );
+        return response;
+    },
 };
 
 export default placeService;
