@@ -121,34 +121,41 @@
     stroke: #000000;
 }
 
-/* Tags Container */
+/* Tags Container - DEPRECATED, replaced with price */
 .tags {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
+    display: none;
 }
 
-/* Tag - từ Figma Group 38 và Group 40 */
+/* Tag - DEPRECATED */
 .tag {
+    display: none;
+}
+
+/* Place Footer */
+.place-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+}
+
+/* Price Display - từ Figma Group 38 */
+.place-price {
+    display: inline-block;
+}
+
+.price-text {
+    display: inline-block;
+    padding: 4px 12px;
     background: #D9D9D9;
-    /* Từ Figma Rectangle 1532578320 và 1532578321 */
+    border-radius: 4px;
     font-family: 'Inter', sans-serif;
-    /* Từ Figma */
     font-style: normal;
     font-weight: 400;
-    /* Từ Figma */
     font-size: 16px;
-    /* Từ Figma */
     line-height: 19px;
-    /* Từ Figma */
     text-align: center;
-    /* Từ Figma */
     color: rgba(62, 60, 60, 0.8);
-    /* Từ Figma */
-    padding: 4px 12px;
-    border-radius: 4px;
-    white-space: nowrap;
 }
 
 /* Rating - từ Figma "⭐ 4,5 (360) ~ 3,6K + reviews" */

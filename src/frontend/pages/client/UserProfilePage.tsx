@@ -18,7 +18,8 @@ const UserProfilePage: React.FC = () => {
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
-      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      priceMin: 0,
+      priceMax: 0,
       rating: 4.5,
       reviewCount: '3.6K+'
     },
@@ -27,7 +28,8 @@ const UserProfilePage: React.FC = () => {
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
-      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      priceMin: 0,
+      priceMax: 0,
       rating: 4.5,
       reviewCount: '3.6K+'
     },
@@ -36,7 +38,8 @@ const UserProfilePage: React.FC = () => {
       imageSrc: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
       title: 'Hồ Gươm - Quận Hoàn Kiếm',
       address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
-      tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+      priceMin: 0,
+      priceMax: 0,
       rating: 4.5,
       reviewCount: '3.6K+'
     }
@@ -187,7 +190,8 @@ const UserProfilePage: React.FC = () => {
                 imageSrc={loc.imageSrc}
                 title={loc.title}
                 address={loc.address}
-                tags={loc.tags}
+                priceMin={loc.priceMin}
+                priceMax={loc.priceMax}
                 rating={loc.rating}
                 reviewCount={loc.reviewCount}
               />

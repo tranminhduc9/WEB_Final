@@ -19,6 +19,8 @@ const mockLocationData = {
         'https://images.unsplash.com/photo-1599708153386-09f68a3f6d66?w=800',
     ],
     openingHours: 'Tất cả các ngày trong tuần / Cuối tuần mở phố đi bộ',
+    priceMin: 500000,
+    priceMax: 5000000,
     description: `Hồ Hoàn Kiếm (Hán-Nôm: 湖還劍) còn được gọi là Hồ Gươm là một hồ nước ngọt tự nhiên nằm ở phường Hoàn Kiếm, trung tâm thành phố Hà Nội. Hồ có diện tích khoảng 12 ha. Trước kia, hồ còn có các tên gọi là hồ Lục Thủy (vì nước có màu xanh quanh năm), hồ Thủy Quân (dùng để duyệt thủy binh).`,
     fullDescription: `Hồ Hoàn Kiếm (Hán-Nôm: 湖還劍) còn được gọi là Hồ Gươm là một hồ nước ngọt tự nhiên nằm ở phường Hoàn Kiếm, trung tâm thành phố Hà Nội. Hồ có diện tích khoảng 12 ha. Trước kia, hồ còn có các tên gọi là hồ Lục Thủy (vì nước có màu xanh quanh năm), hồ Thủy Quân (dùng để duyệt thủy binh).
 
@@ -172,6 +174,21 @@ const LocationInfoPage: React.FC = () => {
                             >
                                 {isDescriptionExpanded ? 'Thu gọn' : 'Xem thêm...'}
                             </button>
+                        </section>
+
+                        {/* Price Section */}
+                        <section className="location-section">
+                            <div className="location-section__header">
+                                <div className="location-section__accent"></div>
+                                <h2 className="location-section__title">Giá:</h2>
+                            </div>
+                            <p className="location-price">
+                                <span className="location-price__value">{location.priceMin.toLocaleString('vi-VN')}</span>
+                                <span className="location-price__unit"> VNĐ</span>
+                                <span className="location-price__separator"> - </span>
+                                <span className="location-price__value">{location.priceMax.toLocaleString('vi-VN')}</span>
+                                <span className="location-price__unit"> VNĐ</span>
+                            </p>
                         </section>
 
                         {/* Posts */}

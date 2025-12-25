@@ -1,33 +1,36 @@
 .search-page {
-    background-color: #fff;
-    min-height: 100vh;
+  background-color: #fff;
+  min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  padding: 16px 0 16px; /* khoảng cách trên/dưới cân nhau */
-  }
-  
-  .search-page__container {
+  padding: 16px 0 16px;
+  /* khoảng cách trên/dưới cân nhau */
+}
+
+.search-page__container {
   width: 100%;
   margin: 0;
   padding: 0 24px 16px;
-  }
-  
-  /* --- Section Styling --- */
-  .search-section {
+}
+
+/* --- Section Styling --- */
+.search-section {
   margin-bottom: 32px;
 }
 
 /* Tinh chỉnh riêng cho các section dùng LocationCard trên trang search
    để khoảng cách với lề trên/dưới đồng đều và khớp layout Figma */
 .search-page .location-section {
-  margin: 16px 0 16px; /* trên/dưới đều nhau */
-  padding-left: 0; /* bỏ padding-left 20px từ .location-section mặc định để canh đều với container */
-  }
-  
-  .search-section__header {
+  margin: 16px 0 16px;
+  /* trên/dưới đều nhau */
+  padding-left: 0;
+  /* bỏ padding-left 20px từ .location-section mặc định để canh đều với container */
+}
+
+.search-section__header {
   margin-bottom: 16px;
-  }
-  
-  .search-section__title {
+}
+
+.search-section__title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -47,25 +50,25 @@
   background-color: #FF6F00;
   border-radius: 4px;
   margin-right: 8px;
-  }
-  
-  .icon-location {
-    font-size: 20px;
+}
+
+.icon-location {
+  font-size: 20px;
   margin-left: 4px;
-    vertical-align: middle;
-  }
-  
-  /* --- Grid System --- */
-  .search-grid {
-    display: grid;
+  vertical-align: middle;
+}
+
+/* --- Grid System --- */
+.search-grid {
+  display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 24px;
-  }
-  
+  gap: 24px;
+}
+
 /* Card size giống layout mẫu */
-  /* --- Responsive --- */
+/* --- Responsive --- */
 @media (max-width: 1200px) {
-    .search-grid {
+  .search-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -77,19 +80,55 @@
 
   .search-section__title {
     font-size: 22px;
-    }
   }
-  
+}
+
 @media (max-width: 600px) {
-    .search-grid {
+  .search-grid {
     grid-template-columns: 1fr;
   }
 
   .search-page__container {
     padding: 20px 16px 40px;
-    }
-    
-    .search-section__title {
-      font-size: 20px;
-    }
   }
+
+  .search-section__title {
+    font-size: 20px;
+  }
+}
+
+/* Result count */
+.search-section__count {
+  font-size: 16px;
+  font-weight: 400;
+  color: #666;
+  margin-left: 12px;
+}
+
+/* Empty state */
+.search-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 16px;
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+
+/* Skeleton loading */
+.place-card.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 20px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

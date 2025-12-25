@@ -198,7 +198,8 @@ export default function App() {
                   imageSrc={place.main_image_url}
                   title={place.name}
                   address={(place as typeof MOCK_LOCATIONS[0]).address || 'Hà Nội'}
-                  tags={(place as typeof MOCK_LOCATIONS[0]).tags || ['Du lịch']}
+                  priceMin={place.price_min}
+                  priceMax={place.price_max}
                   rating={place.rating_average}
                   reviewCount="0"
                 />
