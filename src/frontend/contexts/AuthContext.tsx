@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import { authService } from '../services';
 import type { User, LoginRequest, RegisterRequest } from '../types';
+import { isApiErrorResponse } from '../types/auth';
 
 // Auth Context State
 interface AuthContextState {
@@ -123,7 +124,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(response.user);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Đăng nhập thất bại';
+      // Xử lý error từ axios interceptor (ApiErrorResponse object)
+      let message = 'Đăng nhập thất bại';
+      if (isApiErrorResponse(err)) {
+        message = err.error?.message || message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
       setError(message);
       throw err;
     } finally {
@@ -142,7 +149,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.register(data);
       // Không tự động login sau register, user cần verify email
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Đăng ký thất bại';
+      // Xử lý error từ axios interceptor (ApiErrorResponse object)
+      let message = 'Đăng ký thất bại';
+      if (isApiErrorResponse(err)) {
+        message = err.error?.message || message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
       setError(message);
       throw err;
     } finally {
