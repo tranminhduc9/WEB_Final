@@ -95,9 +95,8 @@ def start_docker_databases():
     os.chdir(SRC_DIR)
 
     data_db_running = check_container_running("travel_db_container")
-    auth_db_running = check_container_running("auth_db_container")
 
-    if data_db_running and auth_db_running:
+    if data_db_running:
         logger.info("✅ All Docker databases already running")
         return True
 
@@ -122,50 +121,6 @@ def start_docker_databases():
 
     except Exception as e:
         logger.error(f"❌ Error starting Docker databases: {e}")
-        return False
-
-
-def start_auth_db_container():
-    """Khởi động Auth DB container"""
-    logger.info("=" * 70)
-    logger.info("STEP 2: STARTING AUTH DB CONTAINER")
-    logger.info("=" * 70)
-
-    if check_container_running("auth_db_container"):
-        logger.info("✅ Auth DB container already running")
-        return True
-
-    try:
-        logger.info("🚀 Starting Auth DB container...")
-
-        subprocess.run(
-            ["docker", "rm", "-f", "auth_db_container"],
-            capture_output=True,
-            timeout=10
-        )
-
-        result = subprocess.run([
-            "docker", "run", "-d",
-            "--name", "auth_db_container",
-            "-e", "POSTGRES_USER=postgres",
-            "-e", "POSTGRES_PASSWORD=password",
-            "-e", "POSTGRES_DB=hanoi_travel",
-            "-p", "5432:5432",
-            "postgres:17-alpine"
-        ], capture_output=True, text=True, timeout=30)
-
-        if result.returncode != 0:
-            logger.error(f"❌ Failed to start Auth DB: {result.stderr}")
-            return False
-
-        logger.info("✅ Auth DB container started successfully")
-        logger.info("⏳ Waiting for Auth DB to be ready...")
-        time.sleep(5)
-
-        return True
-
-    except Exception as e:
-        logger.error(f"❌ Error starting Auth DB: {e}")
         return False
 
 
@@ -490,11 +445,10 @@ def main():
             logger.error("❌ Docker is not running. Please start Docker Desktop.")
             return 1
 
-        # Step 2: Start databases
+        # Step 2: Start databases (docker-compose - port 5433)
+        # NOTE: Không cần start_auth_db_container() nữa
+        # vì đã có unified database từ docker-compose
         if not start_docker_databases():
-            return 1
-
-        if not start_auth_db_container():
             return 1
 
         # Step 3: Start backend

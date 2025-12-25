@@ -17,6 +17,8 @@ import logging
 import traceback
 import os
 from enum import Enum
+from sqlalchemy.orm import Session
+from config.database import SessionLocal, ActivityLog
 
 logger = logging.getLogger(__name__)
 
@@ -270,6 +272,34 @@ class AuditLogger:
                 self._add_to_buffer(entry)
             else:
                 self._write_to_file(entry)
+
+        # Ghi vào Database (Activity Logs) nếu có user_id
+        if entry.user_id:
+            try:
+                db = SessionLocal()
+                # Chỉ log short details vào column details (text)
+                detail_text = entry.message
+                if entry.details:
+                    # Kèm thêm một số info quan trọng
+                    detail_text += f" | {json.dumps(entry.details, default=str)}"
+                
+                # Truncate nếu quá dài
+                if len(detail_text) > 2000:
+                    detail_text = detail_text[:2000] + "..."
+
+                activity_log = ActivityLog(
+                    user_id=int(entry.user_id),
+                    action=entry.action_type if isinstance(entry.action_type, str) else str(entry.action_type),
+                    details=detail_text,
+                    ip_address=entry.ip_address,
+                    created_at=entry.timestamp
+                )
+                db.add(activity_log)
+                db.commit()
+                db.close()
+            except Exception as e:
+                logger.error(f"Failed to write to activity_logs table: {e}")
+                # Không raise error để tránh ảnh hưởng request chính
 
         return entry
 

@@ -6,11 +6,13 @@ Endpoint để xem và quản lý logs hệ thống
 
 from fastapi import APIRouter, Depends, Query, Request, HTTPException, status
 from typing import Optional
-import os
 from pathlib import Path
 import logging
 
 from middleware.response import success_response, error_response
+from config.database import get_db, ActivityLog
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +49,8 @@ async def get_audit_logs(
     limit: int = Query(100, ge=1, le=1000, description="Số lượng log entries"),
     offset: int = Query(0, ge=0, description="Offset để pagination"),
     action_type: Optional[str] = Query(None, description="Filter theo action type"),
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(require_admin),
+    db: Session = Depends(get_db)
 ):
     """
     Lấy audit logs từ file
@@ -64,40 +67,38 @@ async def get_audit_logs(
         Danh sách audit log entries
     """
     try:
-        # Đường dẫn đến audit log file
-        backend_dir = Path(__file__).parent.parent.parent.absolute()
-        audit_log_path = backend_dir / "logs" / "audit.log"
+        # Query database
+        query = db.query(ActivityLog)
 
-        if not audit_log_path.exists():
-            return success_response(
-                message="Audit log file not found",
-                data={"logs": [], "total": 0}
-            )
+        # Filter
+        if action_type:
+            query = query.filter(ActivityLog.action == action_type)
 
-        # Đọc logs từ file
-        logs = []
-        with open(audit_log_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                try:
-                    import json
-                    log_entry = json.loads(line.strip())
+        # Count total
+        total = query.count()
 
-                    # Filter theo action_type nếu có
-                    if action_type and log_entry.get('action_type') != action_type:
-                        continue
+        # Sort and Paging
+        logs = query.order_by(desc(ActivityLog.created_at))\
+                    .offset(offset)\
+                    .limit(limit)\
+                    .all()
 
-                    logs.append(log_entry)
-                except json.JSONDecodeError:
-                    continue
-
-        # Pagination
-        total = len(logs)
-        paginated_logs = logs[offset:offset + limit]
+        # Format output
+        result_logs = []
+        for log in logs:
+            result_logs.append({
+                "id": log.id,
+                "user_id": log.user_id,
+                "action": log.action,
+                "details": log.details,
+                "ip_address": log.ip_address,
+                "created_at": log.created_at
+            })
 
         return success_response(
-            message=f"Retrieved {len(paginated_logs)} audit logs",
+            message=f"Retrieved {len(result_logs)} audit logs",
             data={
-                "logs": paginated_logs,
+                "logs": result_logs,
                 "total": total,
                 "limit": limit,
                 "offset": offset

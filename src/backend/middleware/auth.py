@@ -92,7 +92,7 @@ class JWTAuthMiddleware:
             "sub": str(user_data.get("id")),
             "email": user_data.get("email"),
             "role": user_data.get("role", "user"),
-            "iat": now,
+            "role_id": user_data.get("role_id", 3),
             "exp": now + timedelta(seconds=exp),
             "type": "access"
         }
@@ -114,6 +114,7 @@ class JWTAuthMiddleware:
             "sub": str(user_data.get("id")),
             "email": user_data.get("email"),
             "role": user_data.get("role", "user"),
+            "role_id": user_data.get("role_id", 3),  # Schema v3.1: 1=admin, 2=moderator, 3=user
             "iat": now,
             "exp": now + timedelta(seconds=REFRESH_TOKEN_EXPIRATION),
             "type": "refresh"
@@ -197,6 +198,7 @@ class JWTAuthMiddleware:
                 "user_id": payload.get("sub"),
                 "email": payload.get("email"),
                 "role": payload.get("role"),
+                "role_id": payload.get("role_id", 3),  # Schema v3.1
                 "exp": payload.get("exp")
             }
 
