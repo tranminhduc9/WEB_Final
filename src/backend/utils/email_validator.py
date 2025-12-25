@@ -333,6 +333,8 @@ hunter_validator = HunterIOValidator()
 async def validate_user_email(email: str, min_score: int = 50) -> tuple[bool, str, Dict[str, Any]]:
     """
     Hàm tiện ích để validate email cho user registration
+    
+    CHỈ GỌI Hunter.io API 1 LẦN và reuse kết quả.
 
     Args:
         email: Email cần validate
@@ -341,7 +343,32 @@ async def validate_user_email(email: str, min_score: int = 50) -> tuple[bool, st
     Returns:
         tuple: (is_valid: bool, message: str, validation_data: dict)
     """
+    # Gọi API 1 lần duy nhất
     result = await hunter_validator.validate_email(email)
-    is_acceptable, message = await hunter_validator.is_email_acceptable(email, min_score)
+    
+    # Kiểm tra acceptability dựa trên kết quả đã có (không gọi API lại)
+    # Nếu có lỗi API - REJECT
+    if result.get("api_error", False):
+        error_msg = result.get("message", "Email validation service unavailable")
+        logger.error(f"Email validation failed for {email}: {error_msg}")
+        return False, error_msg, result
 
-    return is_acceptable, message, result
+    # Email không hợp lệ về format - REJECT
+    if result["status"] == EmailStatus.INVALID:
+        return False, result.get("message", "Email is invalid or not deliverable"), result
+
+    # Email hợp lệ và deliverable - ACCEPT
+    if result["status"] == EmailStatus.VALID and result["deliverable"]:
+        return True, "Email is valid and deliverable", result
+
+    # Email có rủi ro nhưng score đủ cao - ACCEPT
+    if result["status"] == EmailStatus.RISKY and result["score"] >= min_score:
+        return True, f"Email is acceptable (score: {result['score']})", result
+
+    # Email risky nhưng score quá thấp - REJECT
+    if result["status"] == EmailStatus.RISKY:
+        return False, f"Email score too low: {result['score']} (minimum: {min_score})", result
+
+    # Unknown status - REJECT
+    return False, "Could not verify email. Please try again later", result
+

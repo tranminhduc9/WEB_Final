@@ -443,7 +443,7 @@ def init_db():
         missing_tables = defined_tables - existing_tables
 
         if missing_tables:
-            logger.info(f"⚠️ Phát hiện các bảng thiếu: {list(missing_tables)}")
+            logger.info(f"[WARN] Phat hien cac bang thieu: {list(missing_tables)}")
             
             # Xóa các orphan indexes (index tồn tại nhưng bảng không có)
             # Điều này xảy ra khi tạo bảng bị fail giữa chừng
@@ -485,7 +485,7 @@ def init_db():
                     if table is not None:
                         try:
                             table.create(bind=engine, checkfirst=True)
-                            logger.info(f"  ✓ Đã tạo bảng: {table_name}")
+                            logger.info(f"  [OK] Da tao bang: {table_name}")
                             created_count += 1
                         except ProgrammingError as e:
                             error_msg = str(e)
@@ -500,22 +500,22 @@ def init_db():
                                         conn.commit()
                                     # Thử tạo lại
                                     table.create(bind=engine, checkfirst=True)
-                                    logger.info(f"  ✓ Đã tạo bảng: {table_name} (sau khi xóa orphan objects)")
+                                    logger.info(f"  [OK] Da tao bang: {table_name} (sau khi xoa orphan objects)")
                                     created_count += 1
                                 except Exception as retry_err:
-                                    logger.error(f"  ✗ Không thể tạo bảng {table_name}: {str(retry_err)}")
+                                    logger.error(f"  [FAIL] Khong the tao bang {table_name}: {str(retry_err)}")
                             elif "UndefinedTable" in error_msg:
                                 # FK reference chưa tồn tại - sẽ thử lại sau
-                                logger.warning(f"  ⏳ Chờ FK dependency: {table_name}")
+                                logger.warning(f"  [WAIT] Cho FK dependency: {table_name}")
                             else:
-                                logger.error(f"  ✗ Lỗi tạo bảng {table_name}: {error_msg}")
+                                logger.error(f"  [FAIL] Loi tao bang {table_name}: {error_msg}")
             
             if created_count > 0:
-                logger.info(f"✓ Đã tạo thành công {created_count} bảng mới")
+                logger.info(f"[OK] Da tao thanh cong {created_count} bang moi")
             else:
-                logger.info("✓ Không có bảng mới nào được tạo (có thể đã tồn tại)")
+                logger.info("[OK] Khong co bang moi nao duoc tao (co the da ton tai)")
         else:
-            logger.info("✓ Tất cả bảng đã tồn tại, không tạo bảng mới")
+            logger.info("[OK] Tat ca bang da ton tai, khong tao bang moi")
 
         # Verify kết quả
         inspector = inspect(engine)
@@ -524,13 +524,13 @@ def init_db():
         still_missing = defined_tables - new_tables
 
         if created_tables:
-            logger.info(f"✓ Kết quả: Đã tạo các bảng: {list(created_tables)}")
+            logger.info(f"[OK] Ket qua: Da tao cac bang: {list(created_tables)}")
         
         if still_missing:
-            logger.warning(f"⚠️ Vẫn còn thiếu các bảng: {list(still_missing)}")
+            logger.warning(f"[WARN] Van con thieu cac bang: {list(still_missing)}")
             logger.warning("   Vui lòng kiểm tra init.sql hoặc tạo bảng thủ công")
         else:
-            logger.info("✓ Database schema verification complete")
+            logger.info("[OK] Database schema verification complete")
 
         return True
 

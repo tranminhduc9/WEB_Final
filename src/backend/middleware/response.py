@@ -66,34 +66,36 @@ class APIResponse:
         message: str,
         error_code: Optional[str] = None,
         status_code: int = 400,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[List[Dict[str, str]]] = None
     ) -> JSONResponse:
         """
-        Tạo error response
+        Tạo error response theo Swagger API Spec v1.0.5
+
+        Format: { success: false, error: { code, message, details? } }
 
         Args:
             message: Error message
-            error_code: Error code cho debugging
+            error_code: Error code (required by spec)
             status_code: HTTP status code
-            details: Additional error details
+            details: Validation error details [{ field, message }]
 
         Returns:
-            JSONResponse: Standardized error response
+            JSONResponse: Standardized error response matching Swagger ErrorResponse
         """
-        response_data = {
-            "success": False,
-            "message": message,
-            "data": None
+        # Build error object theo Swagger spec
+        error_obj: Dict[str, Any] = {
+            "code": error_code or "UNKNOWN_ERROR",
+            "message": message
         }
 
-        # Add error code nếu có
-        if error_code:
-            response_data["error_code"] = error_code
+        # Add details nếu có (cho validation errors)
+        if details:
+            error_obj["details"] = details
 
-        # Add details nếu có (chỉ trong debug mode)
-        import os
-        if details and os.getenv("DEBUG", "false").lower() == "true":
-            response_data["details"] = details
+        response_data = {
+            "success": False,
+            "error": error_obj
+        }
 
         return JSONResponse(
             content=response_data,

@@ -108,18 +108,18 @@ def load_environment(force_reload: bool = False) -> bool:
         if missing_vars:
             logger.warning(f"Missing environment variables: {', '.join(missing_vars)}")
         else:
-            logger.info("✓ Environment variables loaded successfully")
+            logger.info("[OK] Environment variables loaded successfully")
 
         # Log một số key config (không log sensitive data)
         api_key = os.getenv("HUNTER_IO_API_KEY", "")
         if api_key:
-            logger.info(f"✓ HUNTER_IO_API_KEY: {api_key[:10]}...{api_key[-4:]}")
+            logger.info(f"[OK] HUNTER_IO_API_KEY: {api_key[:10]}...{api_key[-4:]}")
 
         db_url = os.getenv("DATABASE_URL", "")
         if db_url:
             # Mask password in URL
             safe_url = db_url.split("@")[-1] if "@" in db_url else db_url
-            logger.info(f"✓ DATABASE_URL: ...@{safe_url}")
+            logger.info(f"[OK] DATABASE_URL: ...@{safe_url}")
 
         return True
 

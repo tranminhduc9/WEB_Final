@@ -14,13 +14,13 @@ import os
 import sys
 from pathlib import Path
 
-# ⚠️ QUAN TRỌNG: Thêm thư mục cha vào sys.path TRƯỚC khi import relative modules
+# IMPORTANT: Them thu muc cha vao sys.path TRUOC khi import relative modules
 # app/main.py -> parent = src/backend
 backend_dir = Path(__file__).parent.parent.absolute()
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
-# ⚠️ QUAN TRỌNG: Load environment từ root directory TRƯỚC khi import các module khác
+# IMPORTANT: Load environment tu root directory TRUOC khi import cac module khac
 # Import centralized environment loader - dùng absolute import sau khi đã thêm sys.path
 from config.load_env import load_environment, is_loaded
 
@@ -80,15 +80,22 @@ class UTF8StreamHandler(logging.StreamHandler):
                 line_buffering=True
             )
 
-# Cấu hình logging với UTF-8 handlers
+# Cấu hình logging với UTF-8 handlers - DEBUG level để hiện tất cả logs
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         UTF8FileHandler(log_dir / "app.log"),
         UTF8StreamHandler()
     ]
 )
+
+# Đảm bảo tất cả các loggers hiển thị logs
+for logger_name in ['uvicorn', 'uvicorn.access', 'uvicorn.error', 'fastapi', 'sqlalchemy.engine', 'httpx']:
+    logging.getLogger(logger_name).setLevel(logging.DEBUG)
+    logging.getLogger(logger_name).handlers = []  # Xóa handlers mặc định
+    logging.getLogger(logger_name).addHandler(UTF8StreamHandler())
+
 logger = logging.getLogger(__name__)
 
 
@@ -116,20 +123,20 @@ async def lifespan(app: FastAPI):
     try:
         # Test kết nối database
         if test_connection():
-            logger.info("✓ Kiểm tra kết nối database: THÀNH CÔNG")
+            logger.info("[OK] Kiem tra ket noi database: THANH CONG")
 
             # Khởi tạo database tables
             init_db()
-            logger.info("✓ Đã khởi tạo database")
+            logger.info("[OK] Da khoi tao database")
         else:
-            logger.warning("✗ Kiểm tra kết nối database: THẤT BẠI")
+            logger.warning("[FAIL] Kiem tra ket noi database: THAT BAI")
             logger.warning("Máy chủ sẽ khởi động nhưng tính năng database có thể không hoạt động")
 
-        logger.info("✓ Hoàn tất khởi động máy chủ")
+        logger.info("[OK] Hoan tat khoi dong may chu")
         logger.info("=" * 60)
 
     except Exception as e:
-        logger.error(f"✗ Lỗi khởi động: {str(e)}")
+        logger.error(f"[FAIL] Loi khoi dong: {str(e)}")
 
     # Chuyển điều khiển cho ứng dụng
     yield
@@ -138,7 +145,7 @@ async def lifespan(app: FastAPI):
     logger.info("=" * 60)
     logger.info("TẮT MÁY CHỦ HANOI TRAVEL API")
     logger.info("=" * 60)
-    logger.info("✓ Đã tắt máy chủ")
+    logger.info("[OK] Da tat may chu")
 
 
 # ==================== CREATE FASTAPI APP ====================
@@ -266,7 +273,7 @@ if __name__ == "__main__":
 
     # Lấy config từ environment
     host = os.getenv("BACKEND_HOST", "127.0.0.1")
-    port = int(os.getenv("BACKEND_PORT", "8000"))
+    port = int(os.getenv("BACKEND_PORT", "8080"))  # Default 8080 to match run.py
     reload = os.getenv("DEBUG", "false").lower() == "true"
 
     logger.info(f"Starting server at http://{host}:{port}")

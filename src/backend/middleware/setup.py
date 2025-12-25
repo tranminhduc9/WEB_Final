@@ -87,7 +87,7 @@ def setup_middleware(app: FastAPI) -> None:
     Args:
         app: FastAPI application instance
     """
-    logger.info("🔧 Setting up middleware chain...")
+    logger.info("[SETUP] Setting up middleware chain...")
 
     # 1. CORS Middleware
     if config.CORS_ORIGINS:
@@ -96,48 +96,48 @@ def setup_middleware(app: FastAPI) -> None:
             CORSMiddleware,
             **cors_config
         )
-        logger.info(f"   ✅ CORS configured for: {', '.join(config.CORS_ORIGINS)}")
+        logger.info(f"   [OK] CORS configured for: {', '.join(config.CORS_ORIGINS)}")
 
     # 2. Security Headers (cho production)
     if config.ENVIRONMENT == "production":
         add_security_headers(app)
-        logger.info("   ✅ Security headers added")
+        logger.info("   [OK] Security headers added")
 
     # 3. Request ID Middleware
     app.add_middleware(RequestIDMiddleware)
-    logger.info("   ✅ Request ID middleware added")
+    logger.info("   [OK] Request ID middleware added")
 
     # 4. Timing Middleware
     app.add_middleware(TimingMiddleware)
-    logger.info("   ✅ Timing middleware added")
+    logger.info("   [OK] Timing middleware added")
 
     # 5. Error Handler Middleware (quan trọng nhất)
     app.add_middleware(ErrorMiddleware)
-    logger.info("   ✅ Error handling middleware added")
+    logger.info("   [OK] Error handling middleware added")
 
     # 6. Audit Logging Middleware
     if config.ENABLE_AUDIT_LOG:
         app.add_middleware(AuditMiddleware, audit_logger=audit_logger)
-        logger.info("   ✅ Audit logging middleware added")
+        logger.info("   [OK] Audit logging middleware added")
 
     # 7. Search Logging Middleware
     if config.ENABLE_SEARCH_LOGGING:
         app.add_middleware(SearchLoggingMiddleware)
-        logger.info("   ✅ Search logging middleware added")
+        logger.info("   [OK] Search logging middleware added")
 
 
     # 8. Rate Limiting
     # Note: Rate limiting được áp dụng qua FastAPI dependencies
     # Sử dụng dependencies=[Depends(apply_rate_limit)] ở từng endpoint
     if config.RATE_LIMIT_ENABLED:
-        logger.info(f"   ✅ Rate limiting enabled (using dependency injection pattern)")
+        logger.info(f"   [OK] Rate limiting enabled (using dependency injection pattern)")
         logger.info(f"      Storage: {config.RATE_LIMIT_STORAGE}")
         logger.info(f"      Applied to auth endpoints via dependencies=[Depends(apply_rate_limit)]")
 
     # Note: Authentication, Validation middleware được thêm
     # ở từng endpoint level qua decorators/dependencies
 
-    logger.info("🎉 Middleware chain setup completed!")
+    logger.info("[DONE] Middleware chain setup completed!")
 
 
 def setup_app(app: FastAPI) -> FastAPI:
@@ -215,7 +215,7 @@ def setup_app(app: FastAPI) -> FastAPI:
             }
         }
 
-    logger.info("🚀 FastAPI application configured successfully!")
+    logger.info("[READY] FastAPI application configured successfully!")
     return app
 
 

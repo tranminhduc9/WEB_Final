@@ -47,8 +47,19 @@ class AuthService:
         """
         self.db = db
 
+    # Class-level flag để tránh check roles mỗi lần register
+    _roles_checked = False
+
     def _ensure_roles_exist(self):
-        """Đảm bảo các roles mặc định tồn tại"""
+        """
+        Đảm bảo các roles mặc định tồn tại
+        
+        Chỉ check 1 lần per session để tránh duplicate queries
+        """
+        # Skip nếu đã check rồi
+        if AuthService._roles_checked:
+            return
+            
         default_roles = [
             {"id": 1, "role_name": "admin"},
             {"id": 2, "role_name": "moderator"},
@@ -63,8 +74,10 @@ class AuthService:
         
         try:
             self.db.commit()
+            AuthService._roles_checked = True  # Mark as checked
         except:
             self.db.rollback()
+
 
     async def register_user(
         self,
@@ -140,23 +153,25 @@ class AuthService:
 
             logger.info(f"User registered successfully: {email} (ID: {new_user.id})")
 
-            # 6. Gửi email xác thực
+            # 6. Gửi email chào mừng
             try:
                 from middleware.email_service import email_service
-                await email_service.send_verification_email(
+                email_sent = await email_service.send_welcome_email(
                     email=email,
-                    full_name=full_name,
-                    user_id=new_user.id
+                    full_name=full_name
                 )
-                logger.info(f"Verification email sent to {email}")
+                if email_sent:
+                    logger.info(f"Welcome email sent to {email}")
+                else:
+                    logger.warning(f"Failed to send welcome email to {email}")
             except Exception as e:
-                # Không block register nếu gửi email thất bại
-                logger.warning(f"Failed to send verification email to {email}: {str(e)}")
+                # Không block registration nếu gửi email thất bại
+                logger.warning(f"Failed to send welcome email to {email}: {str(e)}")
 
             # 7. Return success response
             return True, {
                 "success": True,
-                "message": "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản."
+                "message": "Đăng ký thành công! Bạn có thể đăng nhập ngay."
             }, new_user.to_dict()
 
         except IntegrityError as e:
@@ -263,21 +278,16 @@ class AuthService:
 
             logger.info(f"User logged in successfully: {email} (ID: {user.id})")
 
-            # 7. Return success response theo Frontend format
+            # 7. Return success response theo Swagger AuthResponse + UserCompact
             return True, {
                 "success": True,
                 "message": "Đăng nhập thành công",
                 "access_token": access_token,
-                "refresh_token": refresh_token,
-                "expires_in": 3600,
                 "user": {
-                    "id": str(user.id),
+                    "id": user.id,  # Swagger spec: integer, không phải string
                     "full_name": user.full_name,
-                    "email": user.email,
-                    "name": user.full_name,
-                    "role": user.role_name,
-                    "role_id": user.role_id,
-                    "avatar": user.avatar_url
+                    "avatar_url": user.avatar_url,
+                    "role_id": user.role_id
                 }
             }, user.to_dict(include_sensitive=True)
 
@@ -393,9 +403,13 @@ class AuthService:
 
             return True, {
                 "success": True,
-                "message": "Refresh token thành công",
                 "access_token": new_access_token,
-                "refresh_token": new_refresh_token
+                "user": {
+                    "id": user.id,
+                    "full_name": user.full_name,
+                    "avatar_url": user.avatar_url,
+                    "role_id": user.role_id
+                }
             }
 
         except Exception as e:
@@ -477,23 +491,14 @@ class AuthService:
                     }
                 }, None
 
-            # Return success response theo Frontend format
+            # Return success response theo Swagger UserCompact format
             return True, {
                 "success": True,
                 "user": {
-                    "id": str(user.id),
+                    "id": user.id,  # Swagger spec: integer
                     "full_name": user.full_name,
-                    "name": user.full_name,
-                    "email": user.email,
-                    "avatar": user.avatar_url,
                     "avatar_url": user.avatar_url,
-                    "role": user.role_name,
-                    "role_id": user.role_id,
-                    "bio": user.bio,
-                    "reputation_score": user.reputation_score,
-                    "created_at": user.created_at.isoformat() if user.created_at else None,
-                    "updated_at": user.updated_at.isoformat() if user.updated_at else None,
-                    "is_active": user.is_active
+                    "role_id": user.role_id
                 }
             }, user.to_dict()
 

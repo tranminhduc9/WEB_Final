@@ -146,18 +146,17 @@ async def admin_login(
         # Generate tokens
         access_token = auth_middleware.create_access_token(user)
         
-        return success_response(
-            message="Đăng nhập thành công",
-            data={
-                "access_token": access_token,
-                "user": {
-                    "id": user.id,
-                    "full_name": user.full_name,
-                    "avatar_url": user.avatar_url,
-                    "role_id": user.role_id
-                }
+        return {
+            "success": True,
+            "message": "Đăng nhập thành công",
+            "access_token": access_token,
+            "user": {
+                "id": user.id,
+                "full_name": user.full_name,
+                "avatar_url": user.avatar_url,
+                "role_id": user.role_id
             }
-        )
+        }
         
     except Exception as e:
         logger.error(f"Admin login error: {str(e)}")

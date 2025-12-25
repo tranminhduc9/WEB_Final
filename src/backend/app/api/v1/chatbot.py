@@ -144,14 +144,13 @@ async def send_message(
             if place:
                 suggested_places.append(place)
         
-        return success_response(
-            message="Đã nhận phản hồi",
-            data={
-                "conversation_id": conversation_id,
-                "bot_response": ai_result["response"],
-                "suggested_places": suggested_places
-            }
-        )
+        return {
+            "success": True,
+            "message": "Đã nhận phản hồi",
+            "conversation_id": conversation_id,
+            "bot_response": ai_result["response"],
+            "suggested_places": suggested_places
+        }
         
     except Exception as e:
         logger.error(f"Error in chatbot: {str(e)}")

@@ -1,9 +1,7 @@
 """
 Email Service Middleware
 
-Module này xử lý gửi email cho các chức năng như
-forgot password, verification, notifications.
-
+Module này xử lý gửi email cho chức năng forgot password (reset link).
 Sử dụng SendGrid API (HTTP) để gửi email.
 """
 
@@ -42,78 +40,6 @@ class EmailTemplate:
     """Templates cho email"""
 
     @staticmethod
-    def forgot_password_otp(otp: str, expiry_minutes: int = 10) -> Dict[str, str]:
-        """Template cho forgot password OTP"""
-        return {
-            "subject": "Mã OTP đặt lại mật khẩu - Hanoi Travel",
-            "html": f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Đặt lại mật khẩu - Hanoi Travel</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: #2c3e50; color: white; padding: 20px; text-align: center; }}
-                    .content {{ padding: 30px; background: #f9f9f9; }}
-                    .otp {{ font-size: 32px; font-weight: bold; color: #e74c3c; text-align: center; padding: 20px; background: white; border-radius: 5px; margin: 20px 0; }}
-                    .footer {{ text-align: center; padding: 20px; color: #666; font-size: 14px; }}
-                    .btn {{ display: inline-block; padding: 12px 24px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🏛️ Hanoi Travel</h1>
-                        <p>Khám phá Hà Nội cùng chúng tôi</p>
-                    </div>
-
-                    <div class="content">
-                        <h2>Xin chào,</h2>
-                        <p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại Hanoi Travel.</p>
-
-                        <p><strong>Mã OTP của bạn là:</strong></p>
-                        <div class="otp">{otp}</div>
-
-                        <p><strong>Lưu ý:</strong></p>
-                        <ul>
-                            <li>Mã OTP có hiệu lực trong <strong>{expiry_minutes} phút</strong></li>
-                            <li>Vui lòng không chia sẻ mã này với người khác</li>
-                            <li>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này</li>
-                        </ul>
-
-                        <p>Nếu có vấn đề gì, vui lòng liên hệ với chúng tôi.</p>
-                    </div>
-
-                    <div class="footer">
-                        <p>&copy; 2024 Hanoi Travel. All rights reserved.</p>
-                        <p>Email này được gửi tự động, vui lòng không trả lời.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """,
-            "text": f"""
-            Hanoi Travel - Đặt lại mật khẩu
-
-            Xin chào,
-
-            Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại Hanoi Travel.
-
-            Mã OTP của bạn là: {otp}
-
-            Thông tin:
-            - Mã có hiệu lực trong {expiry_minutes} phút
-            - Vui lòng không chia sẻ mã này với người khác
-            - Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này
-
-            Trân trọng,
-            Đội ngũ Hanoi Travel
-            """
-        }
-
-    @staticmethod
     def welcome_email(full_name: str, email: str) -> Dict[str, str]:
         """Template cho welcome email"""
         return {
@@ -136,7 +62,7 @@ class EmailTemplate:
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>🎉 Chào mừng bạn!</h1>
+                        <h1>Chao mung ban!</h1>
                         <p>Tham gia cộng đồng Hanoi Travel</p>
                     </div>
 
@@ -146,10 +72,10 @@ class EmailTemplate:
 
                         <p>Tại Hanoi Travel, bạn có thể:</p>
                         <ul>
-                            <li>🗺️ Khám phá những địa điểm tuyệt đẹp của Hà Nội</li>
-                            <li>📝 Chia sẻ trải nghiệm du lịch của bạn</li>
-                            <li>👥 Kết nối với cộng đồng du lịch</li>
-                            <li>🤖 Nhận gợi ý từ AI Chatbot thông minh</li>
+                            <li>Kham pha nhung dia diem tuyet dep cua Ha Noi</li>
+                            <li>Chia se trai nghiem du lich cua ban</li>
+                            <li>Ket noi voi cong dong du lich</li>
+                            <li>Nhan goi y tu AI Chatbot thong minh</li>
                         </ul>
 
                         <p>Bắt đầu khám phá ngay!</p>
@@ -272,78 +198,6 @@ class EmailTemplate:
             """
         }
 
-    @staticmethod
-    def email_verification(full_name: str, verification_url: str) -> Dict[str, str]:
-        """Template cho email xác thực"""
-        return {
-            "subject": "Xác thực email của bạn - Hanoi Travel",
-            "html": f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Xác thực Email - Hanoi Travel</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: #3498db; color: white; padding: 20px; text-align: center; }}
-                    .content {{ padding: 30px; background: #f9f9f9; }}
-                    .footer {{ text-align: center; padding: 20px; color: #666; font-size: 14px; }}
-                    .btn {{ display: inline-block; padding: 15px 30px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }}
-                    .btn:hover {{ background: #219a52; }}
-                    .warning {{ color: #e74c3c; font-size: 14px; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>✉️ Xác thực Email</h1>
-                        <p>Hanoi Travel - Khám phá thủ đô</p>
-                    </div>
-
-                    <div class="content">
-                        <h2>Xin chào {html.escape(full_name)},</h2>
-                        <p>Cảm ơn bạn đã đăng ký tài khoản tại Hanoi Travel!</p>
-                        
-                        <p>Vui lòng click vào nút bên dưới để xác thực email của bạn:</p>
-                        
-                        <center>
-                            <a href="{verification_url}" class="btn">Xác thực Email</a>
-                        </center>
-                        
-                        <p style="margin-top: 20px;"><strong>Hoặc copy link sau vào trình duyệt:</strong></p>
-                        <p style="word-break: break-all; background: #eee; padding: 10px; border-radius: 5px;">{verification_url}</p>
-                        
-                        <p class="warning"><strong>Lưu ý:</strong> Link xác thực có hiệu lực trong 24 giờ.</p>
-                        
-                        <p>Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.</p>
-                    </div>
-
-                    <div class="footer">
-                        <p>&copy; 2024 Hanoi Travel. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """,
-            "text": f"""
-            Xác thực Email - Hanoi Travel
-
-            Xin chào {full_name},
-
-            Cảm ơn bạn đã đăng ký tài khoản tại Hanoi Travel!
-
-            Vui lòng click vào link sau để xác thực email:
-            {verification_url}
-
-            Lưu ý: Link xác thực có hiệu lực trong 24 giờ.
-
-            Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.
-
-            Trân trọng,
-            Đội ngũ Hanoi Travel
-            """
-        }
 
 
 class EmailService:
@@ -360,9 +214,9 @@ class EmailService:
         self.is_configured = bool(self.config.SENDGRID_API_KEY)
 
         if self.is_configured:
-            logger.info(f"✅ Email service configured (SendGrid)")
+            logger.info(f"[OK] Email service configured (SendGrid)")
         else:
-            logger.warning("⚠️ Email service not configured - set SENDGRID_API_KEY in .env")
+            logger.warning("[WARN] Email service not configured - set SENDGRID_API_KEY in .env")
 
     async def send_email(
         self,
@@ -420,24 +274,7 @@ class EmailService:
             return False
 
 
-    async def send_forgot_password_otp(self, email: str, otp: str) -> bool:
-        """
-        Gửi OTP cho forgot password
 
-        Args:
-            email: Email người nhận
-            otp: Mã OTP
-
-        Returns:
-            bool: True nếu gửi thành công
-        """
-        template = EmailTemplate.forgot_password_otp(otp)
-        return await self.send_email(
-            to_email=email,
-            subject=template["subject"],
-            html_content=template["html"],
-            text_content=template["text"]
-        )
 
     async def send_welcome_email(self, email: str, full_name: str) -> bool:
         """
@@ -476,42 +313,7 @@ class EmailService:
             text_content=template["text"]
         )
 
-    async def send_verification_email(self, email: str, full_name: str, user_id: int) -> bool:
-        """
-        Gửi email xác thực
 
-        Args:
-            email: Email người nhận
-            full_name: Tên đầy đủ
-            user_id: ID của user
-
-        Returns:
-            bool: True nếu gửi thành công
-        """
-        import jwt
-        from datetime import datetime, timedelta
-        
-        # Generate verification token (valid 24h)
-        secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key")
-        payload = {
-            "user_id": user_id,
-            "type": "email_verification",
-            "exp": datetime.utcnow() + timedelta(hours=24)
-        }
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-        
-        # Build verification URL
-        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-        verification_url = f"{frontend_url}/verify-email?token={token}"
-        
-        # Send email
-        template = EmailTemplate.email_verification(full_name, verification_url)
-        return await self.send_email(
-            to_email=email,
-            subject=template["subject"],
-            html_content=template["html"],
-            text_content=template["text"]
-        )
 
     async def send_custom_email(
         self,
@@ -551,19 +353,6 @@ email_service = EmailService()
 
 
 # Utility functions
-async def send_otp_email(email: str, otp: str) -> bool:
-    """
-    Shortcut để gửi OTP email
-
-    Args:
-        email: Email người nhận
-        otp: Mã OTP
-
-    Returns:
-        bool: True nếu gửi thành công
-    """
-    return await email_service.send_forgot_password_otp(email, otp)
-
 
 async def send_welcome_email_quick(email: str, full_name: str) -> bool:
     """
