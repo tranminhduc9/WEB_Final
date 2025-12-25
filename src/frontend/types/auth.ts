@@ -6,19 +6,42 @@
 // User roles
 export type UserRole = 'user' | 'admin' | 'moderator';
 
-// User model
+// Role ID mapping: 1 = admin, 2 = moderator, 3 = user
+export type RoleId = 1 | 2 | 3;
+
+// User model - Synced with database.py Schema v3.1
 export interface User {
-  id: string;
+  // Primary key
+  id: number;
+
+  // Thông tin cơ bản
+  full_name: string;
   email: string;
-  name: string;
-  full_name?: string;
-  avatar?: string | null;
-  role: UserRole;
-  phone?: string;
-  address?: string;
+
+  // Thông tin bổ sung
+  avatar_url?: string | null;
+  bio?: string | null;
+
+  // Role (FK to roles table: 1=admin, 2=moderator, 3=user)
+  role_id: RoleId;
+  role?: UserRole;  // Computed from role_id for backward compatibility
+
+  // Status
+  reputation_score?: number;
+  is_active?: boolean;
+  ban_reason?: string | null;
+
+  // Soft delete
+  deleted_at?: string | null;
+
+  // Timestamps
+  last_login_at?: string | null;
   created_at?: string;
   updated_at?: string;
-  is_active?: boolean;
+
+  // Legacy fields (for backward compatibility with existing code)
+  name?: string;           // Alias for full_name
+  avatar?: string | null;  // Alias for avatar_url
 }
 
 // ============================
@@ -201,4 +224,37 @@ export function getValidationErrors(error: ApiErrorResponse): Record<string, str
     });
   }
   return errors;
+}
+
+// ============================
+// ROLE HELPERS
+// ============================
+
+// Role ID to Role name mapping
+const ROLE_ID_MAP: Record<RoleId, UserRole> = {
+  1: 'admin',
+  2: 'moderator',
+  3: 'user',
+};
+
+// Convert role_id to UserRole
+export function getRoleFromId(roleId: RoleId | number): UserRole {
+  return ROLE_ID_MAP[roleId as RoleId] || 'user';
+}
+
+// Get user role safely (handles both role and role_id)
+export function getUserRole(user: User | null | undefined): UserRole {
+  if (!user) return 'user';
+  if (user.role) return user.role;
+  return getRoleFromId(user.role_id);
+}
+
+// Check if user has specific role
+export function hasRole(user: User | null | undefined, role: UserRole): boolean {
+  return getUserRole(user) === role;
+}
+
+// Check if user has any of the specified roles
+export function hasAnyRole(user: User | null | undefined, roles: UserRole[]): boolean {
+  return roles.includes(getUserRole(user));
 }

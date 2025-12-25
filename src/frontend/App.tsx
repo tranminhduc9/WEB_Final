@@ -195,7 +195,7 @@ export default function App() {
                 <LocationCard
                   key={place.id}
                   id={String(place.id)}
-                  imageSrc={place.main_image_url}
+                  imageSrc={place.main_image_url || ''}
                   title={place.name}
                   address={(place as typeof MOCK_LOCATIONS[0]).address || 'Hà Nội'}
                   priceMin={place.price_min}
