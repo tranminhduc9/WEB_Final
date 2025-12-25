@@ -11,9 +11,7 @@
     scroll-behavior: smooth;
     padding-bottom: 10px;
     scrollbar-width: none;
-    /* Firefox: ẩn thanh scroll, vẫn cuộn được */
     -ms-overflow-style: none;
-    /* IE/Edge cũ */
 }
 
 .location-list-title {
@@ -27,23 +25,19 @@
 
 .scroll-container::-webkit-scrollbar {
     display: none;
-    /* Chrome/Safari: ẩn thanh scroll, vẫn cuộn được */
 }
 
 /* Card Container - từ Figma Rectangle 1532578303 */
 .place-card {
+    position: relative;
     width: 350px;
-    height: 500px;
+    height: 512px;
     flex: 0 0 auto;
-    border-radius: 20px;
-    /* Từ Figma: border-radius: 20px */
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.1);
     background: #F6F5F5;
-    /* Từ Figma */
+    border-radius: 20px;
     overflow: hidden;
     transition: transform 0.3s ease;
-    display: flex;
-    flex-direction: column;
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.1);
 }
 
 .place-card:hover {
@@ -52,67 +46,79 @@
 
 /* Image - từ Figma Rectangle 1532578300 */
 .place-card img {
+    position: absolute;
+    left: 0;
+    top: 0;
     width: 100%;
-    height: 350px;
+    height: 73%;
+    /* từ top 0 đến bottom 27% */
     object-fit: cover;
     border-radius: 10px;
-    /* Từ Figma: border-radius: 10px */
 }
 
 /* Info Container */
 .place-info {
-    padding: 8px 12px;
-    flex: 1;
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 73%;
+    bottom: 0;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    padding: 8px 0;
 }
 
 .place-info-top {
-    flex: 1;
+    flex: 0 0 auto;
 }
 
-/* Title - từ Figma "Hồ Gươm - Quận Hoàn Kiếm" */
+/* Title - từ Figma "Hồ Gươm - Quận Hoàn Kiếm" - top 75.59% */
 .place-info h3 {
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
     font-family: 'Roboto', sans-serif;
-    /* Từ Figma */
     font-style: normal;
     font-weight: 700;
-    /* Từ Figma */
     font-size: 24px;
-    /* Từ Figma */
     line-height: 28px;
-    /* Từ Figma */
     color: #000000;
-    /* Từ Figma */
+    /* Giới hạn 1 dòng */
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-/* Address - từ Figma "Phường Hoàn Kiếm - Thành phố Hà Nội" */
-.place-info p {
-    margin: 0 0 8px 0;
-    font-family: 'Roboto', sans-serif;
-    /* Từ Figma */
-    font-style: normal;
-    font-weight: 400;
-    /* Từ Figma */
-    font-size: 16px;
-    /* Từ Figma */
-    line-height: 19px;
-    /* Từ Figma */
-    color: #000000;
-    /* Từ Figma */
-}
-
-/* Address với icon */
+/* Address - từ Figma "Phường Hoàn Kiếm - Thành phố Hà Nội" - top 81.84% */
 .place-address {
     display: flex;
     align-items: center;
     gap: 4px;
+    margin: 0 0 6px 0;
+    font-family: 'Roboto', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 19px;
+    color: #000000;
+}
+
+.place-address span {
+    /* Giới hạn 1 dòng */
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .place-address-icon {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    transform: scale(0.85);
+    margin-top: 2px;
+    /* Đẩy icon xuống để căn ngang với text */
 }
 
 .place-address-icon svg {
@@ -121,32 +127,22 @@
     stroke: #000000;
 }
 
-/* Tags Container - DEPRECATED, replaced with price */
-.tags {
-    display: none;
-}
-
-/* Tag - DEPRECATED */
-.tag {
-    display: none;
-}
-
 /* Place Footer */
 .place-footer {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     margin-top: auto;
 }
 
-/* Price Display - từ Figma Group 38 */
+/* Price Display - từ Figma Group 38, Rectangle 1532578320 - top 87.3% */
 .place-price {
     display: inline-block;
 }
 
 .price-text {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 2px 10px;
     background: #D9D9D9;
     border-radius: 4px;
     font-family: 'Inter', sans-serif;
@@ -158,28 +154,27 @@
     color: rgba(62, 60, 60, 0.8);
 }
 
-/* Rating - từ Figma "⭐ 4,5 (360) ~ 3,6K + reviews" */
+/* Rating - từ Figma "⭐ 4,5 (360) ~ 3,6K + reviews" - top 93.36% */
 .place-rating {
-    margin-top: auto;
     font-family: 'Roboto', sans-serif;
-    /* Từ Figma */
     font-style: normal;
     font-weight: 400;
-    /* Từ Figma */
     font-size: 16px;
-    /* Từ Figma */
     line-height: 19px;
-    /* Từ Figma */
 }
 
 .rating-value {
     color: #F88622;
-    /* Giữ màu cam cho rating */
 }
 
 .review-count {
     color: #000000;
-    /* Màu đen cho reviewCount */
+}
+
+/* Tags - DEPRECATED */
+.tags,
+.tag {
+    display: none;
 }
 
 /* Link Styles */

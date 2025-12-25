@@ -5,7 +5,7 @@
 import axiosClient from './axiosClient';
 import type {
   ApiResponse,
-  User,
+
   UserProfile,
   UpdateProfileRequest,
   UpdateProfileResponse,
@@ -24,27 +24,27 @@ export const userApi = {
    * Lấy profile của user hiện tại
    */
   getProfile: async (): Promise<ApiResponse<UserProfile>> => {
-    const response = await axiosClient.get<ApiResponse<UserProfile>>(USER_ENDPOINTS.PROFILE);
-    return response.data;
+    const response = await axiosClient.get<any, ApiResponse<UserProfile>>(USER_ENDPOINTS.PROFILE);
+    return response;
   },
 
   /**
    * Lấy profile của user khác (public)
    */
   getUserById: async (userId: string): Promise<ApiResponse<UserProfile>> => {
-    const response = await axiosClient.get<ApiResponse<UserProfile>>(`/users/${userId}`);
-    return response.data;
+    const response = await axiosClient.get<any, ApiResponse<UserProfile>>(`/users/${userId}`);
+    return response;
   },
 
   /**
    * Cập nhật profile
    */
   updateProfile: async (data: UpdateProfileRequest): Promise<ApiResponse<UpdateProfileResponse>> => {
-    const response = await axiosClient.put<ApiResponse<UpdateProfileResponse>>(
+    const response = await axiosClient.put<any, ApiResponse<UpdateProfileResponse>>(
       USER_ENDPOINTS.UPDATE_PROFILE,
       data
     );
-    return response.data;
+    return response;
   },
 
   /**
@@ -53,8 +53,8 @@ export const userApi = {
   uploadAvatar: async (file: File): Promise<ApiResponse<AvatarUploadResponse>> => {
     const formData = new FormData();
     formData.append('avatar', file);
-    
-    const response = await axiosClient.post<ApiResponse<AvatarUploadResponse>>(
+
+    const response = await axiosClient.post<any, ApiResponse<AvatarUploadResponse>>(
       USER_ENDPOINTS.AVATAR,
       formData,
       {
@@ -63,17 +63,17 @@ export const userApi = {
         },
       }
     );
-    return response.data;
+    return response;
   },
 
   /**
    * Xóa avatar
    */
   deleteAvatar: async (): Promise<ApiResponse<{ message: string }>> => {
-    const response = await axiosClient.delete<ApiResponse<{ message: string }>>(
+    const response = await axiosClient.delete<any, ApiResponse<{ message: string }>>(
       USER_ENDPOINTS.AVATAR
     );
-    return response.data;
+    return response;
   },
 };
 

@@ -12,7 +12,7 @@ import axios, {
 import type { ApiErrorResponse, ApiErrorObject } from '../types/auth';
 
 // API Base URL - theo API spec
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
@@ -179,11 +179,16 @@ axiosClient.interceptors.response.use(
       }
     }
 
-    // Xử lý các lỗi khác
+    // Xử lý các lỗi khác (bao gồm 400)
+    // Backend có thể trả về 2 format khác nhau:
+    // Format 1: { success: false, message: "...", error_code: "..." }
+    // Format 2: { success: false, error: { code: "...", message: "..." } }
+    const responseData = error.response?.data;
+
     const errorObject: ApiErrorObject = {
-      code: error.response?.data?.error?.code || 'UNKNOWN_ERROR',
-      message: error.response?.data?.error?.message || error.message || 'Có lỗi xảy ra',
-      details: error.response?.data?.error?.details,
+      code: responseData?.error?.code || responseData?.error_code || 'UNKNOWN_ERROR',
+      message: responseData?.error?.message || responseData?.message || error.message || 'Có lỗi xảy ra',
+      details: responseData?.error?.details,
     };
 
     return Promise.reject({
