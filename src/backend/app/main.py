@@ -14,31 +14,37 @@ import os
 import sys
 from pathlib import Path
 
-# ⚠️ QUAN TRỌNG: Load environment từ root directory TRƯỚC khi import các module khác
-# Import centralized environment loader
-from config.load_env import load_environment, is_loaded
-
-# Load environment variables from WEB_Final/.env
-if not is_loaded():
-    load_success = load_environment()
-    if not load_success:
-        print("WARNING: Failed to load .env file. Some features may not work.")
-else:
-    print("✓ Environment already loaded")
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-
-# Thêm thư mục cha vào path cho việc import
+# ⚠️ QUAN TRỌNG: Thêm thư mục cha vào sys.path TRƯỚC khi import relative modules
 # app/main.py -> parent = src/backend
 backend_dir = Path(__file__).parent.parent.absolute()
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
+# ⚠️ QUAN TRỌNG: Load environment từ root directory TRƯỚC khi import các module khác
+# Import centralized environment loader - dùng absolute import sau khi đã thêm sys.path
+from config.load_env import load_environment, is_loaded
+
+# Load environment variables from src/.env
+if not is_loaded():
+    load_success = load_environment()
+    if not load_success:
+        print("WARNING: Failed to load .env file. Some features may not work.")
+else:
+    print("[OK] Environment already loaded")
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
 from config.database import init_db, test_connection
 from app.api.v1.auth import router as auth_router
 from app.api.v1.logs import router as logs_router
+from app.api.v1.places import router as places_router
+from app.api.v1.users import router as users_router
+from app.api.v1.posts import router as posts_router
+from app.api.v1.chatbot import router as chatbot_router
+from app.api.v1.upload import router as upload_router
+from app.api.v1.admin import router as admin_router
 
 # Import middleware setup
 from middleware.setup import setup_middleware, setup_app
@@ -91,47 +97,48 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Lifespan context manager cho startup và shutdown events
+    Lifespan context manager cho sự kiện khởi động và tắt
 
-    Startup:
+    Khởi động:
     1. Kết nối database
-    2. Tạo tables
-    3. Test connection
+    2. Tạo tables (nếu chưa tồn tại)
+    3. Test kết nối
+    4. Log thông tin cấu hình
 
-    Shutdown:
-    1. Đóng database connections
+    Tắt:
+    1. Đóng các kết nối database
     """
-    # Startup
+    # Khởi động
     logger.info("=" * 60)
-    logger.info("STARTING HANOI TRAVEL API SERVER")
+    logger.info("KHỞI ĐỘNG MÁY CHỦ HANOI TRAVEL API")
     logger.info("=" * 60)
 
     try:
-        # Test database connection
+        # Test kết nối database
         if test_connection():
-            logger.info("✓ Database connection test: SUCCESS")
+            logger.info("✓ Kiểm tra kết nối database: THÀNH CÔNG")
 
-            # Initialize database tables
+            # Khởi tạo database tables
             init_db()
-            logger.info("✓ Database initialized")
+            logger.info("✓ Đã khởi tạo database")
         else:
-            logger.warning("✗ Database connection test: FAILED")
-            logger.warning("Server will start but database features may not work")
+            logger.warning("✗ Kiểm tra kết nối database: THẤT BẠI")
+            logger.warning("Máy chủ sẽ khởi động nhưng tính năng database có thể không hoạt động")
 
-        logger.info("✓ Server startup completed")
+        logger.info("✓ Hoàn tất khởi động máy chủ")
         logger.info("=" * 60)
 
     except Exception as e:
-        logger.error(f"✗ Startup error: {str(e)}")
+        logger.error(f"✗ Lỗi khởi động: {str(e)}")
 
-    # Yield control to the application
+    # Chuyển điều khiển cho ứng dụng
     yield
 
-    # Shutdown
+    # Tắt
     logger.info("=" * 60)
-    logger.info("SHUTTING DOWN HANOI TRAVEL API SERVER")
+    logger.info("TẮT MÁY CHỦ HANOI TRAVEL API")
     logger.info("=" * 60)
-    logger.info("✓ Server shutdown completed")
+    logger.info("✓ Đã tắt máy chủ")
 
 
 # ==================== CREATE FASTAPI APP ====================
@@ -212,6 +219,12 @@ async def health_check():
 # Include routers
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(logs_router, prefix="/api/v1")
+app.include_router(places_router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")
+app.include_router(posts_router, prefix="/api/v1")
+app.include_router(chatbot_router, prefix="/api/v1")
+app.include_router(upload_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
 
 
 # ==================== ERROR HANDLERS ====================
