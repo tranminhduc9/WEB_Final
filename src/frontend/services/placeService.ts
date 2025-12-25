@@ -131,6 +131,18 @@ export const placeService = {
         );
         return response;
     },
+
+    /**
+     * Toggle yêu thích địa điểm
+     * POST /places/{id}/favorite
+     * Requires authentication
+     */
+    toggleFavoritePlace: async (id: number): Promise<{ success: boolean; is_favorited: boolean }> => {
+        const response = await axiosClient.post<never, { success: boolean; is_favorited: boolean }>(
+            `/places/${id}/favorite`
+        );
+        return response;
+    },
 };
 
 export default placeService;
