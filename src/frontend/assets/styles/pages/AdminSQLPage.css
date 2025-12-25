@@ -1,0 +1,262 @@
+/* Admin SQL Page Styles */
+
+.admin-sql-page {
+    min-height: 100vh;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-sql-main {
+    padding: 40px 54px;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
+}
+
+/* Header Section */
+.admin-sql-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.admin-sql-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 48px;
+    color: #000000;
+    margin: 0;
+}
+
+/* SQL Query Section */
+.admin-sql-query-section {
+    margin-bottom: 32px;
+}
+
+.admin-sql-query-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 100%;
+    color: #000000;
+    margin: 0 0 16px 0;
+}
+
+.admin-sql-editor-container {
+    position: relative;
+    width: 100%;
+}
+
+.admin-sql-editor {
+    width: 100%;
+    min-height: 527px;
+    padding: 40px 56px;
+    background: #D9D9D9;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 25px;
+    line-height: 150%;
+    color: #000000;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.admin-sql-editor::placeholder {
+    color: #666;
+}
+
+.admin-sql-editor:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #F88622;
+}
+
+.admin-sql-execute-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 177px;
+    height: 36px;
+    background: #F88622;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 100%;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.admin-sql-execute-btn:hover {
+    background: #e5770a;
+}
+
+/* Results Count */
+.admin-sql-count {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 100%;
+    color: #000000;
+    margin: 0 0 24px 0;
+}
+
+/* Table Container */
+.admin-sql-table-container {
+    background: #FFFFFF;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+}
+
+/* Table Styles */
+.admin-sql-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #FFFFFF;
+}
+
+.admin-sql-table th,
+.admin-sql-table td {
+    padding: 20px 16px;
+    text-align: left;
+    border: 1px solid #000000;
+    background: #D9D9D9;
+}
+
+.admin-sql-table th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 100%;
+    color: #000000;
+    background: #D9D9D9;
+}
+
+.admin-sql-table td {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: #000000;
+}
+
+.admin-sql-table__empty-row td {
+    height: 66px;
+}
+
+/* Pagination */
+.admin-sql-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.admin-sql-pagination__nav {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #000;
+    padding: 8px 12px;
+    transition: opacity 0.2s;
+}
+
+.admin-sql-pagination__nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.admin-sql-pagination__nav:hover:not(:disabled) {
+    opacity: 0.7;
+}
+
+.admin-sql-pagination__page {
+    width: 66px;
+    height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #D9D9D9;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 140%;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-sql-pagination__page:hover:not(.ellipsis) {
+    background: #ccc;
+}
+
+.admin-sql-pagination__page.active {
+    background: #F88622;
+    color: #FFFFFF;
+}
+
+.admin-sql-pagination__page.ellipsis {
+    background: transparent;
+    cursor: default;
+    font-size: 24px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .admin-sql-main {
+        padding: 32px 40px;
+    }
+}
+
+@media (max-width: 992px) {
+    .admin-sql-table-container {
+        overflow-x: auto;
+    }
+
+    .admin-sql-table {
+        min-width: 800px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-sql-main {
+        padding: 24px 20px;
+    }
+
+    .admin-sql-title {
+        font-size: 28px;
+        line-height: 36px;
+    }
+
+    .admin-sql-query-label {
+        font-size: 24px;
+    }
+
+    .admin-sql-editor {
+        min-height: 300px;
+        padding: 24px;
+        font-size: 18px;
+    }
+
+    .admin-sql-count {
+        font-size: 24px;
+    }
+
+    .admin-sql-pagination__page {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+    }
+}

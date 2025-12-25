@@ -2,10 +2,17 @@
  * Types Index - Export tất cả types
  */
 
-// Common types
-export * from './common';
+// Common types (exclude ApiError vì đã có trong auth)
+export type {
+    ApiResponse,
+    PaginationParams,
+    PaginatedResponse,
+    LoadingState,
+    SelectOption,
+    DateRange
+} from './common';
 
-// Auth types
+// Auth types (bao gồm ApiError)
 export * from './auth';
 
 // User types
@@ -14,3 +21,5 @@ export * from './user';
 // Admin types
 export * from './admin';
 
+// Model types (Places, Posts)
+export * from './models';

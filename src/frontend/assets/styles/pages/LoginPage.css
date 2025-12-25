@@ -1,105 +1,275 @@
-.login-container{
-    display: flex;
+/* Login Page - giống Register Page */
+
+.login-container {
+    box-sizing: border-box;
+    position: relative;
     width: 100%;
-    height:100vh;
-    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    background: #FFFFFF;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-weight: 300;
+    overflow: hidden;
 }
-.subheading {
-    font-family: 'Inter', sans-serif;
-    font-weight: 300;
-    font-size: 20px;
-    line-height: 28px;
-    letter-spacing: 0.2px;
-    color: #333333;
-  }
-.login-form-section{
-    flex: 1;
-    background-color: #ffffff;
+
+/* Form Section - bên trái */
+.login-form-section {
+    width: 41.25%;
+    /* 594px / 1440px */
+    min-width: 400px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 40px;
-    box-sizing: border-box;
-}
-.form-wrapper{
-    width: 100%;
-    max-width: 500px;
-    text-align: center;
-}
-.logo{
-    width: 200px;
-    height:200px;
-    margin-bottom: 15px;
+    align-items: flex-start;
+    padding: 20px 40px 40px 40px;
+    background: #FFFFFF;
+    overflow: hidden;
 }
 
-.form-wrapper h2{
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 30px;
+.login-form-section .form-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 473px;
+    padding: 20px 0;
 }
-.input-group{
-    margin-bottom: 30px;
+
+/* Logo */
+.login-logo {
+    display: block;
+    width: 138px;
+    height: 129px;
+    margin: 0 auto 12px;
+    object-fit: contain;
+}
+
+/* Title */
+.login-form-section .form-wrapper h2 {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 32px;
+    line-height: 120%;
+    text-align: center;
+    letter-spacing: -0.02em;
+    color: #1E1E1E;
+    margin: 0 0 32px 0;
+}
+
+/* Input Groups */
+.login-form-section .input-group {
+    margin-bottom: 20px;
     text-align: left;
 }
-.input-group label {
+
+.login-form-section .input-group label {
     display: block;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 120%;
+    color: #1E1E1E;
     margin-bottom: 8px;
-    font-weight: 300;
-    color: #555;
 }
 
-.input-group input{
+.login-form-section .input-group input {
     width: 100%;
-    padding: 18px 20px;
-    border:none;
+    padding: 16px 24px;
+    border: none;
     border-radius: 30px;
-    background-color: #f4f4f4;
-    font-size: 1.1rem;
+    background: rgba(239, 236, 236, 0.8);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 120%;
+    color: #1E1E1E;
     box-sizing: border-box;
+    outline: none;
+    transition: box-shadow 0.2s ease;
 }
-.login-button{
+
+.login-form-section .input-group input::placeholder {
+    color: #9C9C9C;
+}
+
+.login-form-section .input-group input:focus {
+    box-shadow: 0 0 0 2px #FD7A05;
+}
+
+.login-form-section .input-group input:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Subheading class */
+.login-form-section .subheading {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 120%;
+    color: #1E1E1E;
+}
+
+/* Login Button */
+.login-button {
     width: 100%;
-    padding: 18px;
-    border:none;
-    border-radius: 8px;
-    background-color: #f77f00;
-    font-size: 1.1rem;
-    color: #fff;
-    font-weight: 300;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 10px;
+    background: #FD7A05;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 120%;
+    text-align: center;
+    color: #FFFFFF;
     cursor: pointer;
-    margin-top:10px;
-    transition: background-color 0.3s ease;
+    margin-top: 24px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
-.login-button:hover{
-    background-color: #e07300;
+
+.login-button:hover {
+    background-color: #E06D00;
+    transform: translateY(-1px);
 }
-.forgot-password {
-    display: block;
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+.login-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Error Message */
+.login-form-section .error-message {
+    color: #e74c3c;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    margin-top: 8px;
+    text-align: center;
+    padding: 8px;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 8px;
+}
+
+/* Forgot Password / Register Link */
+.login-form-section .forgot-password {
     margin-top: 20px;
-    color: #555 !important;
-    text-decoration: none;
-    font-size: 0.9rem;
-  }
-  .forgot-password a:link,
-.forgot-password a:visited,
-.forgot-password a:hover,
-.forgot-password a:active {
-    color: #555 !important;
+    text-align: center;
 }
-  
-  .forgot-password:hover {
+
+.login-form-section .forgot-password a {
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 120%;
+    color: #1E1E1E;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.login-form-section .forgot-password a:hover {
+    color: #FD7A05;
     text-decoration: underline;
-  }
-  
-  /* ----- PHẦN BÊN PHẢI (ẢNH) ----- */
-  .login-image-section {
-    flex: 2; /* Chiếm 1 phần (50% còn lại) */
-    
-    /* Kỹ thuật dùng ảnh nền CSS */
-    background-size: cover; /* Phóng to/thu nhỏ ảnh để lấp đầy div */
-    background-position: center; /* Căn ảnh ở giữa */
-    background-repeat: no-repeat;
-  }
+}
+
+.login-form-section .register-link {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.login-form-section .register-link span {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: #1E1E1E;
+}
+
+.login-form-section .register-link a {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: #FD7A05;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-form-section .register-link a:hover {
+    text-decoration: underline;
+}
+
+/* Image Section - bên phải */
+.login-image-section {
+    flex: 1;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.login-image-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .login-form-section {
+        width: 50%;
+        min-width: 350px;
+    }
+
+    .login-form-section .form-wrapper {
+        max-width: 400px;
+    }
+
+    .login-form-section .form-wrapper h2 {
+        font-size: 28px;
+    }
+
+    .login-form-section .input-group label {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+    }
+
+    .login-form-section {
+        width: 100%;
+        min-width: 100%;
+        padding: 32px 24px;
+        order: 2;
+    }
+
+    .login-image-section {
+        width: 100%;
+        min-height: 200px;
+        order: 1;
+    }
+
+    .login-form-section .form-wrapper h2 {
+        font-size: 24px;
+    }
+
+    .login-logo {
+        width: 120px;
+        height: 112px;
+    }
+
+    .login-form-section .input-group label {
+        font-size: 16px;
+    }
+
+    .login-form-section .input-group input {
+        padding: 14px 20px;
+        font-size: 14px;
+    }
+
+    .login-button {
+        font-size: 18px;
+        padding: 14px 20px;
+    }
+}

@@ -359,3 +359,199 @@ class MiddlewareTestHelper:
         mock_collection.delete_one = AsyncMock(return_value=Mock(deleted_count=1))
 
         return mock_client
+
+
+# ============================================================================
+# MONGODB-SPECIFIC FIXTURES
+# ============================================================================
+
+@pytest.fixture
+def mock_mongodb_client():
+    """
+    Mock MongoDB client fixture cho MongoDB tests
+
+    Returns a fully mocked MongoDBClient with:
+    - is_connected = True
+    - Mocked database and collections
+    - AsyncMock methods for CRUD operations
+    """
+    from unittest.mock import MagicMock
+    from middleware.mongodb_client import MongoDBClient
+
+    # Create client instance
+    client = MongoDBClient()
+    client.is_connected = True
+
+    # Mock database
+    mock_db = MagicMock()
+
+    # Mock collections with async methods
+    def create_mock_collection():
+        mock_coll = MagicMock()
+        mock_coll.insert_one = AsyncMock(return_value=MagicMock(inserted_id="mock_id"))
+        mock_coll.find_one = AsyncMock(return_value=None)
+        mock_coll.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
+        mock_coll.delete_one = AsyncMock(return_value=MagicMock(deleted_count=1))
+        mock_coll.count_documents = AsyncMock(return_value=0)
+        return mock_coll
+
+    # Setup db.__getitem__ to return mock collection
+    mock_db.__getitem__ = Mock(side_effect=lambda x: create_mock_collection())
+
+    # Attach db to client
+    client.db = mock_db
+
+    return client
+
+
+@pytest.fixture
+def sample_mongodb_post_data():
+    """Sample post data cho MongoDB tests"""
+    return {
+        "author_id": 123,
+        "title": "Bài viết test",
+        "content": "<p>Nội dung test</p>",
+        "related_place_id": 50,
+        "tags": ["du lịch", "hà nội"],
+        "status": "approved",
+        "images": ["https://example.com/img.jpg"]
+    }
+
+
+@pytest.fixture
+def sample_mongodb_comment_data():
+    """Sample comment data cho MongoDB tests"""
+    return {
+        "post_id": "post_123",
+        "user_id": 456,
+        "content": "Bài viết rất hay!",
+        "images": [],
+        "parent_id": None  # Root comment
+    }
+
+
+@pytest.fixture
+def sample_mongodb_audit_log_data():
+    """Sample audit log data cho MongoDB tests"""
+    return {
+        "user_id": 123,
+        "action": "create",
+        "resource_type": "post",
+        "resource_id": "post_456",
+        "details": {"title": "New Post"},
+        "ip_address": "192.168.1.100",
+        "user_agent": "Mozilla/5.0"
+    }
+
+
+@pytest.fixture
+def mock_mongodb_collections():
+    """
+    Mock multiple MongoDB collections with different behaviors
+
+    Returns dict of collection names to mock collections
+    """
+    collections = {}
+
+    # Posts collection
+    posts_coll = MagicMock()
+    posts_coll.insert_one = AsyncMock(return_value=MagicMock(inserted_id="post_id"))
+    posts_coll.find_one = AsyncMock(return_value={"_id": "post_id", "title": "Test Post"})
+    posts_coll.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
+    posts_coll.delete_one = AsyncMock(return_value=MagicMock(deleted_count=1))
+    posts_coll.count_documents = AsyncMock(return_value=10)
+    collections["posts"] = posts_coll
+
+    # Comments collection
+    comments_coll = MagicMock()
+    comments_coll.insert_one = AsyncMock(return_value=MagicMock(inserted_id="comment_id"))
+    comments_coll.find_one = AsyncMock(return_value={"_id": "comment_id", "content": "Test"})
+    comments_coll.find = Mock(return_value=AsyncIterator([]))  # Empty cursor by default
+    comments_coll.count_documents = AsyncMock(return_value=5)
+    collections["post_comments"] = comments_coll
+
+    # Audit logs collection
+    audit_coll = MagicMock()
+    audit_coll.insert_one = AsyncMock(return_value=MagicMock(inserted_id="audit_id"))
+    audit_coll.find = Mock(return_value=AsyncIterator([]))
+    audit_coll.delete_many = AsyncMock(return_value=MagicMock(deleted_count=0))
+    collections["audit_logs"] = audit_coll
+
+    # Likes collection
+    likes_coll = MagicMock()
+    likes_coll.find_one = AsyncMock(return_value=None)  # Not liked by default
+    likes_coll.insert_one = AsyncMock(return_value=MagicMock(inserted_id="like_id"))
+    likes_coll.delete_one = AsyncMock(return_value=MagicMock(deleted_count=1))
+    likes_coll.count_documents = AsyncMock(return_value=0)
+    collections["post_likes"] = likes_coll
+
+    return collections
+
+
+class AsyncIterator:
+    """Helper class to create async iterator for mocking MongoDB cursors"""
+
+    def __init__(self, items):
+        self.items = items
+
+    def __aiter__(self):
+        self.iter = iter(self.items)
+        return self
+
+    async def __anext__(self):
+        try:
+            return next(self.iter)
+        except StopIteration:
+            raise StopAsyncIteration
+
+
+@pytest.fixture
+def sample_nested_comment_tree():
+    """
+    Sample nested comment tree structure
+
+    Returns:
+        list: List of comment dicts representing a tree structure
+    """
+    return [
+        {
+            "_id": "root_1",
+            "post_id": "post_123",
+            "user_id": 1,
+            "content": "Root comment 1",
+            "parent_id": None,
+            "depth": 0,
+            "path": [],
+            "created_at": datetime(2024, 1, 1)
+        },
+        {
+            "_id": "reply_1",
+            "post_id": "post_123",
+            "user_id": 2,
+            "content": "Reply to root 1",
+            "parent_id": "root_1",
+            "depth": 1,
+            "path": ["root_1"],
+            "created_at": datetime(2024, 1, 2)
+        },
+        {
+            "_id": "reply_2",
+            "post_id": "post_123",
+            "user_id": 3,
+            "content": "Nested reply to reply 1",
+            "parent_id": "reply_1",
+            "depth": 2,
+            "path": ["root_1", "reply_1"],
+            "created_at": datetime(2024, 1, 3)
+        },
+        {
+            "_id": "root_2",
+            "post_id": "post_123",
+            "user_id": 4,
+            "content": "Root comment 2",
+            "parent_id": None,
+            "depth": 0,
+            "path": [],
+            "created_at": datetime(2024, 1, 4)
+        }
+    ]

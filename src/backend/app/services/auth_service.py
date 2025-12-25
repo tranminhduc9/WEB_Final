@@ -1,0 +1,424 @@
+"""
+Authentication Service
+
+Service này xử lý logic nghiệp vụ liên quan đến authentication bao gồm:
+- User registration với email validation
+- User login
+- Token management
+- Password handling
+"""
+
+from typing import Dict, Any, Optional, Tuple
+from datetime import datetime
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+import logging
+
+from config.database import User, get_db
+from middleware.auth import auth_middleware
+from middleware.response import (
+    conflict_response,
+    invalid_email_response,
+    invalid_password_response,
+    not_found_response
+)
+from utils.email_validator import validate_user_email
+
+logger = logging.getLogger(__name__)
+
+
+class AuthService:
+    """
+    Service xử lý authentication logic
+    """
+
+    def __init__(self, db: Session):
+        """
+        Khởi tạo Auth Service
+
+        Args:
+            db: Database session
+        """
+        self.db = db
+
+    async def register_user(
+        self,
+        full_name: str,
+        email: str,
+        password: str
+    ) -> Tuple[bool, Dict[str, Any], Optional[Dict[str, Any]]]:
+        """
+        Đăng ký user mới với email validation bằng Hunter.io
+
+        Args:
+            full_name: Tên đầy đủ
+            email: Email
+            password: Mật khẩu
+
+        Returns:
+            Tuple: (success: bool, response: dict, user_data: dict or None)
+        """
+        try:
+            # 1. Validate email với Hunter.io
+            is_valid, validation_msg, validation_data = await validate_user_email(
+                email=email,
+                min_score=50  # Score tối thiểu
+            )
+
+            # Nếu email không hợp lệ
+            if not is_valid:
+                logger.warning(f"Email validation failed for {email}: {validation_msg}")
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "INVALID_EMAIL",
+                        "message": validation_msg
+                    }
+                }, None
+
+            logger.info(f"Email validation passed for {email}: {validation_msg}")
+
+            # 2. Kiểm tra email đã tồn tại chưa
+            existing_user = self.db.query(User).filter(User.email == email).first()
+            if existing_user:
+                logger.warning(f"Registration failed: Email already exists - {email}")
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "EMAIL_EXISTS",
+                        "message": "Email đã được sử dụng"
+                    }
+                }, None
+
+            # 3. Hash mật khẩu
+            password_hash = auth_middleware.hash_password(password)
+
+            # 4. Tạo user mới
+            new_user = User(
+                full_name=full_name,
+                email=email,
+                password_hash=password_hash,
+                role="user",
+                is_active=True,
+                is_verified=False,  # Cần verify email (tính năng sau này)
+                reputation_score=0.0,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+
+            # 5. Lưu vào database
+            self.db.add(new_user)
+            self.db.commit()
+            self.db.refresh(new_user)
+
+            logger.info(f"User registered successfully: {email} (ID: {new_user.id})")
+
+            # 6. Tạo tokens cho user (auto login sau registration)
+            access_token = auth_middleware.create_access_token({
+                "id": new_user.id,
+                "email": new_user.email,
+                "role": new_user.role
+            })
+
+            refresh_token = auth_middleware.create_refresh_token({
+                "id": new_user.id,
+                "email": new_user.email,
+                "role": new_user.role
+            })
+
+            # 7. Return success response
+            # Frontend chỉ cần {success, message} (BaseResponse)
+            # KHÔNG cần user data vì không auto-login sau register
+            return True, {
+                "success": True,
+                "message": "Đăng ký thành công"
+            }, new_user.to_dict()
+
+        except IntegrityError as e:
+            self.db.rollback()
+            logger.error(f"Database integrity error during registration: {str(e)}")
+            return False, {
+                "success": False,
+                "error": {
+                    "code": "REGISTRATION_ERROR",
+                    "message": "Có lỗi xảy ra trong quá trình đăng ký"
+                }
+            }, None
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Unexpected error during registration: {str(e)}")
+            return False, {
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                }
+            }, None
+
+    async def login_user(
+        self,
+        email: str,
+        password: str
+    ) -> Tuple[bool, Dict[str, Any], Optional[Dict[str, Any]]]:
+        """
+        Đăng nhập user
+
+        Args:
+            email: Email
+            password: Mật khẩu
+
+        Returns:
+            Tuple: (success: bool, response: dict, user_data: dict or None)
+        """
+        try:
+            # 1. Tìm user theo email
+            user = self.db.query(User).filter(User.email == email).first()
+
+            if not user:
+                logger.warning(f"Login failed: User not found - {email}")
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "INVALID_CREDENTIALS",
+                        "message": "Email hoặc mật khẩu không đúng"
+                    }
+                }, None
+
+            # 2. Kiểm tra user có bị khóa không
+            if not user.is_active:
+                logger.warning(f"Login failed: User is banned - {email}")
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "ACCOUNT_BANNED",
+                        "message": "Tài khoản của bạn đã bị khóa"
+                    }
+                }, None
+
+            # 3. Verify mật khẩu
+            if not auth_middleware.verify_password(password, user.password_hash):
+                logger.warning(f"Login failed: Invalid password - {email}")
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "INVALID_CREDENTIALS",
+                        "message": "Email hoặc mật khẩu không đúng"
+                    }
+                }, None
+
+            # 4. Cập nhật last_login
+            user.last_login = datetime.utcnow()
+            self.db.commit()
+
+            # 5. Tạo tokens
+            access_token = auth_middleware.create_access_token({
+                "id": user.id,
+                "email": user.email,
+                "role": user.role
+            })
+
+            refresh_token = auth_middleware.create_refresh_token({
+                "id": user.id,
+                "email": user.email,
+                "role": user.role
+            })
+
+            logger.info(f"User logged in successfully: {email} (ID: {user.id})")
+
+            # 6. Return success response theo Frontend format
+            # Frontend mong đợi: {success, access_token, refresh_token, user}
+            # KHÔNG wrap trong "data" object
+            return True, {
+                "success": True,
+                "message": "Đăng nhập thành công",
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "expires_in": 3600,
+                "user": {
+                    "id": str(user.id),  # Convert int to string cho frontend
+                    "full_name": user.full_name,
+                    "email": user.email,
+                    "name": user.full_name,  # Thêm "name" field cho frontend compatibility
+                    "role": user.role,
+                    "avatar": user.avatar
+                }
+            }, user.to_dict(include_sensitive=True)
+
+        except Exception as e:
+            logger.error(f"Unexpected error during login: {str(e)}")
+            return False, {
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+                }
+            }, None
+
+    async def refresh_token(
+        self,
+        refresh_token: str
+    ) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Refresh access token sử dụng refresh token
+
+        Args:
+            refresh_token: Refresh token hiện tại
+
+        Returns:
+            Tuple: (success: bool, response: dict)
+        """
+        try:
+            # 1. Verify refresh token
+            payload = await auth_middleware.verify_token(refresh_token, "refresh")
+
+            # 2. Lấy user từ database
+            user = self.db.query(User).filter(User.id == int(payload["sub"])).first()
+
+            if not user:
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "INVALID_TOKEN",
+                        "message": "Refresh token không hợp lệ"
+                    }
+                }
+
+            # 3. Kiểm tra user có bị khóa không
+            if not user.is_active:
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "ACCOUNT_BANNED",
+                        "message": "Tài khoản của bạn đã bị khóa"
+                    }
+                }
+
+            # 4. Tạo access token mới
+            new_access_token = auth_middleware.create_access_token({
+                "id": user.id,
+                "email": user.email,
+                "role": user.role
+            })
+
+            # Tạo refresh token mới (rotate tokens)
+            new_refresh_token = auth_middleware.create_refresh_token({
+                "id": user.id,
+                "email": user.email,
+                "role": user.role
+            })
+
+            logger.info(f"Token refreshed for user: {user.email} (ID: {user.id})")
+
+            return True, {
+                "success": True,
+                "message": "Refresh token thành công",
+                "access_token": new_access_token,
+                "refresh_token": new_refresh_token
+            }
+
+        except Exception as e:
+            logger.error(f"Error refreshing token: {str(e)}")
+            return False, {
+                "success": False,
+                "error": {
+                    "code": "INVALID_TOKEN",
+                    "message": "Refresh token không hợp lệ hoặc đã hết hạn"
+                }
+            }
+
+    async def logout_user(self, user_id: int) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Đăng xuất user (client-side token removal)
+
+        Args:
+            user_id: ID của user
+
+        Returns:
+            Tuple: (success: bool, response: dict)
+        """
+        try:
+            # Logout chủ yếu là client-side responsibility (xóa tokens)
+            # Server-side có thể thêm blacklist tokens trong production
+            logger.info(f"User logged out: ID {user_id}")
+
+            return True, {
+                "success": True,
+                "message": "Đăng xuất thành công"
+            }
+
+        except Exception as e:
+            logger.error(f"Error during logout: {str(e)}")
+            return False, {
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Đã có lỗi xảy ra"
+                }
+            }
+
+    async def get_current_user(self, user_id: int) -> Tuple[bool, Dict[str, Any], Optional[Dict[str, Any]]]:
+        """
+        Lấy thông tin user hiện tại
+
+        Args:
+            user_id: ID của user
+
+        Returns:
+            Tuple: (success: bool, response: dict, user_data: dict or None)
+        """
+        try:
+            user = self.db.query(User).filter(User.id == user_id).first()
+
+            if not user:
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "USER_NOT_FOUND",
+                        "message": "Không tìm thấy người dùng"
+                    }
+                }, None
+
+            # Return success response theo Frontend format
+            # Frontend expects: {success, user} với user object lồng trong "user" key
+            return True, {
+                "success": True,
+                "user": {
+                    "id": str(user.id),  # Convert int to string
+                    "full_name": user.full_name,
+                    "name": user.full_name,  # Thêm "name" field
+                    "email": user.email,
+                    "avatar": user.avatar,
+                    "role": user.role,
+                    "bio": user.bio,
+                    "phone": user.phone,
+                    "created_at": user.created_at.isoformat() if user.created_at else None,
+                    "updated_at": user.updated_at.isoformat() if user.updated_at else None,
+                    "is_active": user.is_active
+                }
+            }, user.to_dict()
+
+        except Exception as e:
+            logger.error(f"Error getting user profile: {str(e)}")
+            return False, {
+                "success": False,
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Đã có lỗi xảy ra"
+                }
+            }, None
+
+
+# ==================== UTILITY FUNCTIONS ====================
+
+def get_auth_service(db: Session) -> AuthService:
+    """
+    Factory function để lấy Auth Service instance
+
+    Args:
+        db: Database session
+
+    Returns:
+        AuthService: Auth service instance
+    """
+    return AuthService(db)

@@ -1,17 +1,18 @@
 /**
  * Axios Client - Configured axios instance với interceptors
+ * Base URL: http://localhost:8080/api/v1
  */
 
-import axios, { 
-  AxiosInstance, 
-  AxiosError, 
+import axios, {
+  AxiosInstance,
+  AxiosError,
   InternalAxiosRequestConfig,
-  AxiosResponse 
+  AxiosResponse
 } from 'axios';
-import type { ApiResponse, ApiError } from '../types';
+import type { ApiErrorResponse, ApiErrorObject } from '../types/auth';
 
-// API Base URL - lấy từ env hoặc default
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// API Base URL - theo API spec
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
@@ -21,18 +22,24 @@ const REFRESH_TOKEN_KEY = 'refresh_token';
 export const tokenStorage = {
   getAccessToken: (): string | null => localStorage.getItem(ACCESS_TOKEN_KEY),
   getRefreshToken: (): string | null => localStorage.getItem(REFRESH_TOKEN_KEY),
-  
-  setTokens: (accessToken: string, refreshToken: string): void => {
+
+  setTokens: (accessToken: string, refreshToken?: string): void => {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    }
   },
-  
+
+  setAccessToken: (accessToken: string): void => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  },
+
   clearTokens: (): void => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem('user');
   },
-  
+
   isTokenExpired: (token: string): boolean => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -70,15 +77,19 @@ const processQueue = (error: Error | null, token: string | null = null): void =>
   failedQueue = [];
 };
 
-// Request interceptor - Thêm token vào header
+// ============================
+// REQUEST INTERCEPTOR
+// Tự động attach Authorization: Bearer <token>
+// ============================
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = tokenStorage.getAccessToken();
-    
+
+    // Attach token nếu có và chưa hết hạn
     if (token && !tokenStorage.isTokenExpired(token)) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error: AxiosError) => {
@@ -86,17 +97,23 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - Xử lý errors và refresh token
+// ============================
+// RESPONSE INTERCEPTOR
+// Trả về response.data trực tiếp
+// Xử lý errors và refresh token
+// ============================
 axiosClient.interceptors.response.use(
+  // Success: trả về response.data trực tiếp
   (response: AxiosResponse) => {
-    return response;
+    return response.data;
   },
-  async (error: AxiosError<ApiError>) => {
+
+  // Error handling
+  async (error: AxiosError<ApiErrorResponse>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
-    // Nếu lỗi 401 và chưa retry
+
+    // Xử lý 401 Unauthorized - Refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Nếu đang refresh token, đợi
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({
@@ -110,60 +127,71 @@ axiosClient.interceptors.response.use(
           });
         });
       }
-      
+
       originalRequest._retry = true;
       isRefreshing = true;
-      
+
       const refreshToken = tokenStorage.getRefreshToken();
-      
+
       if (refreshToken && !tokenStorage.isTokenExpired(refreshToken)) {
         try {
-          // Gọi refresh token endpoint
-          const response = await axios.post<ApiResponse<{
+          const response = await axios.post<{
+            success: boolean;
             access_token: string;
-            refresh_token: string;
-          }>>(`${API_BASE_URL}/auth/refresh`, {
+            refresh_token?: string;
+          }>(`${API_BASE_URL}/auth/refresh`, {
             refresh_token: refreshToken,
           });
-          
-          if (response.data.success && response.data.data) {
-            const { access_token, refresh_token } = response.data.data;
-            tokenStorage.setTokens(access_token, refresh_token);
-            
-            processQueue(null, access_token);
-            
-            originalRequest.headers.Authorization = `Bearer ${access_token}`;
+
+          if (response.data.success && response.data.access_token) {
+            const newAccessToken = response.data.access_token;
+            const newRefreshToken = response.data.refresh_token;
+
+            tokenStorage.setTokens(newAccessToken, newRefreshToken);
+            processQueue(null, newAccessToken);
+
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
             return axiosClient(originalRequest);
           }
         } catch (refreshError) {
           processQueue(new Error('Refresh token failed'), null);
           tokenStorage.clearTokens();
-          
-          // Dispatch event để AuthContext biết cần logout
           window.dispatchEvent(new CustomEvent('auth:logout'));
-          
           return Promise.reject(refreshError);
         } finally {
           isRefreshing = false;
         }
       } else {
-        // Không có refresh token hoặc đã hết hạn
         tokenStorage.clearTokens();
         window.dispatchEvent(new CustomEvent('auth:logout'));
       }
     }
-    
-    // Format error message
-    const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra';
-    
+
+    // Xử lý 422 Validation Error - theo API spec
+    if (error.response?.status === 422) {
+      const errorData = error.response.data;
+      if (errorData && errorData.error) {
+        return Promise.reject({
+          success: false,
+          error: errorData.error,
+          status: 422,
+        } as ApiErrorResponse & { status: number });
+      }
+    }
+
+    // Xử lý các lỗi khác
+    const errorObject: ApiErrorObject = {
+      code: error.response?.data?.error?.code || 'UNKNOWN_ERROR',
+      message: error.response?.data?.error?.message || error.message || 'Có lỗi xảy ra',
+      details: error.response?.data?.error?.details,
+    };
+
     return Promise.reject({
-      message: errorMessage,
-      error_code: error.response?.data?.error_code || 'UNKNOWN_ERROR',
+      success: false,
+      error: errorObject,
       status: error.response?.status,
-      originalError: error,
-    });
+    } as ApiErrorResponse & { status?: number });
   }
 );
 
 export default axiosClient;
-

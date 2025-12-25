@@ -1,150 +1,132 @@
 /**
  * Auth Service - Business logic cho authentication
+ * Strict TypeScript - No `any` types
+ * API Base URL: http://localhost:8080/api/v1
  */
 
-import { authApi, tokenStorage } from '../api';
+import axiosClient, { tokenStorage } from '../api/axiosClient';
 import type {
   LoginRequest,
   RegisterRequest,
+  AuthResponse,
+  BaseResponse,
   User,
   ChangePasswordRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
-} from '../types';
+  RefreshTokenResponse,
+  LogoutRequest,
+} from '../types/auth';
+import {
+  isApiErrorResponse,
+  getValidationErrors,
+} from '../types/auth';
 
 // User storage key
 const USER_STORAGE_KEY = 'user';
 
-// Demo mode - set to false when backend is ready
-const DEMO_MODE = true;
-
-// Demo accounts for testing
-const DEMO_ACCOUNTS: Record<string, { password: string; user: User }> = {
-  'admin@demo.com': {
-    password: '123456',
-    user: {
-      id: 'demo-admin-001',
-      email: 'admin@demo.com',
-      name: 'Admin User',
-      role: 'admin',
-      avatar: null,
-    },
-  },
-  'user@demo.com': {
-    password: '123456',
-    user: {
-      id: 'demo-user-001',
-      email: 'user@demo.com',
-      name: 'Test User',
-      role: 'user',
-      avatar: null,
-    },
-  },
-  'mod@demo.com': {
-    password: '123456',
-    user: {
-      id: 'demo-mod-001',
-      email: 'mod@demo.com',
-      name: 'Moderator',
-      role: 'moderator',
-      avatar: null,
-    },
-  },
-};
-
+// ============================
+// AUTH SERVICE
+// ============================
 export const authService = {
   /**
    * Đăng nhập
+   * POST /auth/login
+   * Body: { email, password }
+   * Returns: { success: true, access_token: "...", user: { ... } }
    */
-  login: async (credentials: LoginRequest): Promise<User> => {
-    // Demo mode - không cần backend
-    if (DEMO_MODE) {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-      
-      const account = DEMO_ACCOUNTS[credentials.email.toLowerCase()];
-      if (account && account.password === credentials.password) {
-        const user = account.user;
-        const fakeToken = btoa(JSON.stringify({ user_id: user.id, exp: Date.now() + 3600000 }));
-        
-        tokenStorage.setTokens(fakeToken, fakeToken);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-        
-        window.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
-        return user;
-      }
-      throw new Error('Email hoặc mật khẩu không đúng');
-    }
-    
-    // Production mode - call real API
-    const response = await authApi.login(credentials);
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Đăng nhập thất bại');
-    }
-    
-    const { user, access_token, refresh_token } = response.data;
-    
+  login: async (credentials: LoginRequest): Promise<AuthResponse> => {
+    const response = await axiosClient.post<
+      LoginRequest,
+      AuthResponse
+    >('/auth/login', credentials);
+
     // Lưu tokens và user info
-    tokenStorage.setTokens(access_token, refresh_token);
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-    
-    // Dispatch event để components khác biết
-    window.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
-    
-    return user;
+    if (response.success && response.access_token) {
+      tokenStorage.setTokens(response.access_token, response.refresh_token);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+
+      // Dispatch event để components khác biết
+      window.dispatchEvent(new CustomEvent('auth:login', { detail: response.user }));
+    }
+
+    return response;
   },
 
   /**
    * Đăng ký
+   * POST /auth/register
+   * Body: { full_name, email, password }
+   * Returns: 201 { success: true, message: "..." }
    */
-  register: async (data: RegisterRequest): Promise<User> => {
-    // Demo mode
-    if (DEMO_MODE) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Check if email already exists
-      if (DEMO_ACCOUNTS[data.email.toLowerCase()]) {
-        throw new Error('Email đã được sử dụng');
-      }
-      
-      // Create demo user (in real app, this would be saved to backend)
-      const newUser: User = {
-        id: `demo-user-${Date.now()}`,
-        email: data.email,
-        name: data.name,
-        role: 'user',
-        phone: data.phone,
-        avatar: null,
-      };
-      
-      console.log('Demo: User registered:', newUser);
-      return newUser;
-    }
-    
-    // Production mode
-    const response = await authApi.register(data);
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Đăng ký thất bại');
-    }
-    
-    return response.data.user;
+  register: async (data: RegisterRequest): Promise<BaseResponse> => {
+    const response = await axiosClient.post<
+      RegisterRequest,
+      BaseResponse
+    >('/auth/register', data);
+
+    return response;
   },
 
   /**
    * Đăng xuất
+   * POST /auth/logout
+   * Body: { refresh_token: string }
+   * Returns: BaseResponse
    */
-  logout: async (): Promise<void> => {
+  logout: async (data?: LogoutRequest): Promise<BaseResponse> => {
     try {
-      await authApi.logout();
+      const refreshToken = data?.refresh_token || tokenStorage.getRefreshToken();
+
+      const response = await axiosClient.post<
+        LogoutRequest,
+        BaseResponse
+      >('/auth/logout', {
+        refresh_token: refreshToken || '',
+      });
+
+      return response;
     } catch (error) {
-      // Ignore error, still clear local data
+      // Log error but still clear local data
       console.warn('Logout API failed:', error);
+      throw error;
     } finally {
+      // Always clear local tokens and user data
       tokenStorage.clearTokens();
       localStorage.removeItem(USER_STORAGE_KEY);
       window.dispatchEvent(new CustomEvent('auth:logout'));
     }
+  },
+
+  /**
+   * Refresh access token
+   * POST /auth/refresh
+   * Returns: AuthResponse with new access_token and user
+   */
+  refreshToken: async (): Promise<RefreshTokenResponse> => {
+    const refreshToken = tokenStorage.getRefreshToken();
+
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await axiosClient.post<
+      { refresh_token: string },
+      RefreshTokenResponse
+    >('/auth/refresh', { refresh_token: refreshToken });
+
+    // Lưu tokens mới và update user nếu có
+    if (response.success && response.access_token) {
+      tokenStorage.setTokens(response.access_token, response.refresh_token);
+
+      // Update user in localStorage if returned
+      if (response.user) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+        window.dispatchEvent(new CustomEvent('user:updated', { detail: response.user }));
+      }
+    }
+
+    return response;
   },
 
   /**
@@ -153,7 +135,7 @@ export const authService = {
   getCurrentUser: (): User | null => {
     const userStr = localStorage.getItem(USER_STORAGE_KEY);
     if (!userStr) return null;
-    
+
     try {
       return JSON.parse(userStr) as User;
     } catch {
@@ -162,17 +144,24 @@ export const authService = {
   },
 
   /**
-   * Fetch user mới nhất từ server
+   * Fetch user profile từ server
+   * GET /auth/me
    */
   fetchCurrentUser: async (): Promise<User | null> => {
     const token = tokenStorage.getAccessToken();
     if (!token) return null;
-    
+
     try {
-      const response = await authApi.getCurrentUser();
-      if (response.success && response.data) {
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.data));
-        return response.data;
+      interface UserMeResponse {
+        success: boolean;
+        user: User;
+      }
+
+      const response = await axiosClient.get<never, UserMeResponse>('/auth/me');
+
+      if (response.success && response.user) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+        return response.user;
       }
       return null;
     } catch {
@@ -186,7 +175,7 @@ export const authService = {
   isAuthenticated: (): boolean => {
     const token = tokenStorage.getAccessToken();
     if (!token) return false;
-    
+
     return !tokenStorage.isTokenExpired(token);
   },
 
@@ -208,43 +197,62 @@ export const authService = {
 
   /**
    * Quên mật khẩu
+   * POST /auth/forgot-password
+   * Body: { email }
    */
-  forgotPassword: async (email: string): Promise<string> => {
-    const response = await authApi.forgotPassword({ email });
-    
-    if (!response.success) {
-      throw new Error(response.message || 'Gửi yêu cầu thất bại');
-    }
-    
-    return response.data?.message || 'Đã gửi OTP đến email';
+  forgotPassword: async (email: string): Promise<BaseResponse> => {
+    const response = await axiosClient.post<
+      ForgotPasswordRequest,
+      BaseResponse
+    >('/auth/forgot-password', { email });
+
+    return response;
   },
 
   /**
-   * Reset mật khẩu với OTP
+   * Reset mật khẩu
+   * POST /auth/reset-password
+   * Body: { email, token, new_password }
    */
-  resetPassword: async (data: ResetPasswordRequest): Promise<string> => {
-    const response = await authApi.resetPassword(data);
-    
-    if (!response.success) {
-      throw new Error(response.message || 'Reset mật khẩu thất bại');
-    }
-    
-    return response.data?.message || 'Đổi mật khẩu thành công';
+  resetPassword: async (data: ResetPasswordRequest): Promise<BaseResponse> => {
+    const response = await axiosClient.post<
+      ResetPasswordRequest,
+      BaseResponse
+    >('/auth/reset-password', data);
+
+    return response;
   },
 
   /**
    * Đổi mật khẩu (khi đã đăng nhập)
+   * PUT /users/change-password
+   * Body: { current_password, new_password }
    */
-  changePassword: async (data: ChangePasswordRequest): Promise<string> => {
-    const response = await authApi.changePassword(data);
-    
-    if (!response.success) {
-      throw new Error(response.message || 'Đổi mật khẩu thất bại');
-    }
-    
-    return response.data?.message || 'Đổi mật khẩu thành công';
+  changePassword: async (data: ChangePasswordRequest): Promise<BaseResponse> => {
+    const response = await axiosClient.put<
+      ChangePasswordRequest,
+      BaseResponse
+    >('/users/change-password', data);
+
+    return response;
+  },
+
+  /**
+   * Verify email
+   * GET /auth/verify-email?token=xxx
+   */
+  verifyEmail: async (token: string): Promise<BaseResponse> => {
+    const response = await axiosClient.get<never, BaseResponse>(
+      `/auth/verify-email?token=${encodeURIComponent(token)}`
+    );
+
+    return response;
   },
 };
 
-export default authService;
+// ============================
+// ERROR HELPERS (re-export từ types)
+// ============================
+export { isApiErrorResponse, getValidationErrors };
 
+export default authService;
