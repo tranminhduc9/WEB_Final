@@ -23,6 +23,13 @@ import type {
 } from '../types/models';
 import type { BaseResponse } from '../types/auth';
 
+// Toggle Like Response - per WEB_CK.md spec
+export interface ToggleLikeResponse {
+    success: boolean;
+    likes_count: number;
+    is_liked: boolean;
+}
+
 // ============================
 // POST SERVICE
 // ============================
@@ -62,9 +69,10 @@ export const postService = {
     /**
      * Tạo bài viết mới
      * POST /posts
+     * Returns: BaseResponse per WEB_CK.md (201 Created)
      */
-    createPost: async (data: CreatePostRequest): Promise<SingleResponse<PostDetail>> => {
-        const response = await axiosClient.post<CreatePostRequest, SingleResponse<PostDetail>>(
+    createPost: async (data: CreatePostRequest): Promise<BaseResponse> => {
+        const response = await axiosClient.post<CreatePostRequest, BaseResponse>(
             '/posts',
             data
         );
@@ -74,10 +82,62 @@ export const postService = {
     /**
      * Like/Unlike bài viết
      * POST /posts/:id/like
+     * Returns: { success, likes_count, is_liked } per WEB_CK.md
      */
-    toggleLike: async (id: string): Promise<BaseResponse> => {
-        const response = await axiosClient.post<never, BaseResponse>(
+    toggleLike: async (id: string): Promise<ToggleLikeResponse> => {
+        const response = await axiosClient.post<never, ToggleLikeResponse>(
             `/posts/${id}/like`
+        );
+        return response;
+    },
+
+    /**
+     * Toggle favorite bài viết
+     * POST /posts/{id}/favorite
+     * Returns: { success, is_favorited } per WEB_CK.md
+     */
+    toggleFavoritePost: async (id: string): Promise<{ success: boolean; is_favorited: boolean }> => {
+        const response = await axiosClient.post<never, { success: boolean; is_favorited: boolean }>(
+            `/posts/${id}/favorite`
+        );
+        return response;
+    },
+
+    /**
+     * Add root comment to post
+     * POST /posts/{id}/comments
+     * Body: { content, images? }
+     */
+    addComment: async (postId: string, content: string, images?: string[]): Promise<BaseResponse> => {
+        const response = await axiosClient.post<{ content: string; images?: string[] }, BaseResponse>(
+            `/posts/${postId}/comments`,
+            { content, images }
+        );
+        return response;
+    },
+
+    /**
+     * Reply to a comment
+     * POST /comments/{id}/reply
+     * Body: { content, images? }
+     */
+    replyToComment: async (commentId: string, content: string, images?: string[]): Promise<BaseResponse> => {
+        const response = await axiosClient.post<{ content: string; images?: string[] }, BaseResponse>(
+            `/comments/${commentId}/reply`,
+            { content, images }
+        );
+        return response;
+    },
+
+    /**
+     * Report post
+     * POST /posts/{id}/report
+     * Body: { reason, description? }
+     */
+    reportPost: async (postId: string, reason: string, description?: string): Promise<BaseResponse> => {
+        const response = await axiosClient.post<{ reason: string; description?: string }, BaseResponse>(
+            `/posts/${postId}/report`,
+            { reason, description }
         );
         return response;
     },

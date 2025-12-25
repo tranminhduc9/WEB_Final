@@ -181,18 +181,20 @@ export const authService = {
 
   /**
    * Kiểm tra có phải admin không
+   * role_id: 1 = admin
    */
   isAdmin: (): boolean => {
     const user = authService.getCurrentUser();
-    return user?.role === 'admin';
+    return user?.role_id === 1;
   },
 
   /**
    * Kiểm tra có phải moderator không
+   * role_id: 1 = admin, 2 = moderator
    */
   isModerator: (): boolean => {
     const user = authService.getCurrentUser();
-    return user?.role === 'moderator' || user?.role === 'admin';
+    return user?.role_id === 1 || user?.role_id === 2;
   },
 
   /**

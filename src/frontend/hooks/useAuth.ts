@@ -5,7 +5,7 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../contexts';
-import { authService } from '../services';
+import { getUserRole, hasRole as checkHasRole, hasAnyRole as checkHasAnyRole } from '../types/auth';
 import type { UserRole } from '../types';
 
 /**
@@ -39,43 +39,44 @@ export const useAuth = () => {
    * Kiểm tra user có role cụ thể
    */
   const hasRole = useCallback((role: UserRole): boolean => {
-    return context.user?.role === role;
+    return checkHasRole(context.user, role);
   }, [context.user]);
 
   /**
    * Kiểm tra user có một trong các roles
    */
   const hasAnyRole = useCallback((roles: UserRole[]): boolean => {
-    return !!context.user && roles.includes(context.user.role);
+    return checkHasAnyRole(context.user, roles);
   }, [context.user]);
 
   /**
    * Kiểm tra có phải admin
    */
   const isAdmin = useMemo(() => {
-    return context.user?.role === 'admin';
+    return getUserRole(context.user) === 'admin';
   }, [context.user]);
 
   /**
    * Kiểm tra có phải moderator hoặc admin
    */
   const isModerator = useMemo(() => {
-    return context.user?.role === 'moderator' || context.user?.role === 'admin';
+    const role = getUserRole(context.user);
+    return role === 'moderator' || role === 'admin';
   }, [context.user]);
 
   /**
    * Kiểm tra user có thể access resource
    */
-  const canAccess = useCallback((resourceOwnerId: string): boolean => {
+  const canAccess = useCallback((resourceOwnerId: number): boolean => {
     if (!context.user) return false;
-    if (context.user.role === 'admin') return true;
+    if (getUserRole(context.user) === 'admin') return true;
     return context.user.id === resourceOwnerId;
   }, [context.user]);
 
   return {
     // From context
     ...context,
-    
+
     // Extended methods
     loginAndRedirect,
     logoutAndRedirect,

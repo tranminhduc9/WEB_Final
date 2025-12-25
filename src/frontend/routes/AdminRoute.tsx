@@ -5,6 +5,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../contexts';
+import { getUserRole } from '../types/auth';
 import type { UserRole } from '../types';
 
 interface AdminRouteProps {
@@ -19,8 +20,8 @@ interface AdminRouteProps {
  * - Nếu chưa đăng nhập: redirect về login
  * - Nếu đăng nhập nhưng không đủ quyền: redirect về trang unauthorized
  */
-export const AdminRoute: React.FC<AdminRouteProps> = ({ 
-  children, 
+export const AdminRoute: React.FC<AdminRouteProps> = ({
+  children,
   allowedRoles = ['admin'],
   redirectTo = '/login',
   unauthorizedRedirect = '/'
@@ -42,8 +43,9 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // Kiểm tra quyền
-  if (!user || !allowedRoles.includes(user.role)) {
+  // Kiểm tra quyền - sử dụng getUserRole helper
+  const userRole = getUserRole(user);
+  if (!allowedRoles.includes(userRole)) {
     // Không đủ quyền, redirect về trang chủ hoặc trang unauthorized
     return <Navigate to={unauthorizedRedirect} replace />;
   }

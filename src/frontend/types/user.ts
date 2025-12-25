@@ -1,15 +1,16 @@
 /**
  * User Types - Các types liên quan đến user profile
+ * Synced with database.py Schema v3.1
  */
 
-import type { User, UserRole } from './auth';
+import type { User } from './auth';
 
-// Update profile
+// Update profile request - matches db.md users table
+// Fields that can be updated: full_name, bio, avatar_url
 export interface UpdateProfileRequest {
-  name?: string;
-  phone?: string;
-  address?: string;
-  avatar?: string;
+  full_name?: string;
+  bio?: string;
+  avatar_url?: string;
 }
 
 export interface UpdateProfileResponse {
@@ -17,9 +18,8 @@ export interface UpdateProfileResponse {
   message: string;
 }
 
-// User profile extended
+// User profile extended - bio is now in base User
 export interface UserProfile extends User {
-  bio?: string;
   location?: string;
   website?: string;
   social_links?: {

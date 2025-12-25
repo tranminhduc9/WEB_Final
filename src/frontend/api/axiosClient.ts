@@ -183,7 +183,8 @@ axiosClient.interceptors.response.use(
     // Backend có thể trả về 2 format khác nhau:
     // Format 1: { success: false, message: "...", error_code: "..." }
     // Format 2: { success: false, error: { code: "...", message: "..." } }
-    const responseData = error.response?.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = error.response?.data as any;
 
     const errorObject: ApiErrorObject = {
       code: responseData?.error?.code || responseData?.error_code || 'UNKNOWN_ERROR',
