@@ -8,7 +8,7 @@ import '../../assets/styles/components/Header.css';
 function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
-  
+
   // Sử dụng AuthContext thay vì localStorage trực tiếp
   const { user, isAuthenticated, logout, isLoading } = useAuthContext();
   const navigate = useNavigate();
@@ -74,9 +74,9 @@ function Header() {
       {/* 3. Navigation */}
       <nav className="header-nav">
         <Link to="/blogs" className="nav-link">Blog trải nghiệm</Link>
-        <a href="#" className="nav-link">Chatbot thông minh</a>
+        <Link to="/places" className="nav-link">Khám phá địa điểm</Link>
         <Link to="/trend-places" className="nav-link">Điểm đến phổ biến</Link>
-        
+
         {isLoading ? (
           // Loading state
           <div className="nav-loading">
@@ -85,8 +85,8 @@ function Header() {
         ) : isAuthenticated && user ? (
           // User Menu khi đã đăng nhập
           <div className="user-menu-container">
-            <div 
-              className="user-menu-trigger" 
+            <div
+              className="user-menu-trigger"
               onClick={() => setShowUserMenu(!showUserMenu)}
             >
               <div className="user-avatar-wrapper">
@@ -99,44 +99,44 @@ function Header() {
                     </div>
                   )}
                 </div>
-                <svg 
-                  className="avatar-dropdown-icon" 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="12" 
-                  height="12" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="3" 
-                  strokeLinecap="round" 
+                <svg
+                  className="avatar-dropdown-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                 >
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </div>
             </div>
-            
+
             {showUserMenu && (
               <div className="user-menu-dropdown">
-                <Link 
-                  to="/profile" 
-                  className="user-menu-item" 
+                <Link
+                  to="/profile"
+                  className="user-menu-item"
                   onClick={() => setShowUserMenu(false)}
                 >
                   Hồ sơ
                 </Link>
                 {user.role === 'admin' && (
-                  <Link 
-                    to="/admin" 
-                    className="user-menu-item" 
+                  <Link
+                    to="/admin"
+                    className="user-menu-item"
                     onClick={() => setShowUserMenu(false)}
                   >
                     Quản trị
                   </Link>
                 )}
                 <div className="user-menu-divider"></div>
-                <button 
-                  className="user-menu-item logout-btn" 
+                <button
+                  className="user-menu-item logout-btn"
                   onClick={handleLogout}
                 >
                   Đăng xuất

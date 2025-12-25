@@ -62,42 +62,9 @@ class TimingMiddleware(BaseHTTPMiddleware):
         return response
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Lifecycle management cho FastAPI app
-    - Khởi tạo connections
-    - Setup middleware
-    - Cleanup khi shutdown
-    """
-    # Startup
-    logger.info("🚀 Starting Hanoi Travel API...")
-
-    # Initialize audit log directory
-    if config.ENABLE_AUDIT_LOG and config.AUDIT_LOG_FILE:
-        os.makedirs(os.path.dirname(config.AUDIT_LOG_FILE), exist_ok=True)
-        logger.info(f"📝 Audit log enabled: {config.AUDIT_LOG_FILE}")
-
-    # Initialize upload directory
-    if config.UPLOAD_PATH:
-        os.makedirs(config.UPLOAD_PATH, exist_ok=True)
-        logger.info(f"📁 Upload directory: {config.UPLOAD_PATH}")
-
-    # Log configuration summary
-    logger.info("⚙️  Configuration loaded:")
-    logger.info(f"   • Environment: {config.ENVIRONMENT}")
-    logger.info(f"   • Rate Limiting: {'Enabled' if config.RATE_LIMIT_ENABLED else 'Disabled'}")
-    logger.info(f"   • Audit Logging: {'Enabled' if config.ENABLE_AUDIT_LOG else 'Disabled'}")
-    logger.info(f"   • Search Logging: {'Enabled' if config.ENABLE_SEARCH_LOGGING else 'Disabled'}")
-    logger.info(f"   • File Upload: {'Cloudinary' if config.CLOUDINARY_CLOUD_NAME else 'Local'}")
-    logger.info(f"   • Email: {'Configured' if config.SMTP_USERNAME else 'Not configured'}")
-
-    logger.info("✅ Hanoi Travel API started successfully!")
-
-    yield
-
-    # Shutdown
-    logger.info("🛑 Shutting down Hanoi Travel API...")
+# Lưu ý: Lifespan handler đã được chuyển sang app/main.py
+# để tránh duplicate và tập trung logic khởi tạo database tại một nơi
+# Middleware này chỉ chịu trách nhiệm setup middleware chain
 
 
 def setup_middleware(app: FastAPI) -> None:
@@ -175,18 +142,19 @@ def setup_middleware(app: FastAPI) -> None:
 
 def setup_app(app: FastAPI) -> FastAPI:
     """
-    Setup complete FastAPI app với middleware và lifecycle
+    Thiết lập hoàn chỉnh FastAPI app với middleware
 
     Args:
         app: FastAPI application instance
 
     Returns:
-        FastAPI: Configured application
-    """
-    # Set lifespan handler
-    app.router.lifespan_context = lifespan
+        FastAPI: Ứng dụng đã được cấu hình
 
-    # Setup middleware chain
+    Lưu ý:
+        - Lifespan handler được đặt trong app/main.py
+        - Function này chỉ thiết lập middleware chain
+    """
+    # Thiết lập middleware chain
     setup_middleware(app)
 
     # Add global exception handler
@@ -253,10 +221,10 @@ def setup_app(app: FastAPI) -> FastAPI:
 
 def create_fastapi_app() -> FastAPI:
     """
-    Create và configure FastAPI app với toàn bộ middleware
+    Tạo và cấu hình FastAPI app với toàn bộ middleware
 
     Returns:
-        FastAPI: Configured application
+        FastAPI: Ứng dụng đã được cấu hình
     """
     app = FastAPI(
         title="Hanoi Travel API",
@@ -272,37 +240,37 @@ def create_fastapi_app() -> FastAPI:
 
 # Utility functions cho endpoint integration
 def require_auth():
-    """Get current user dependency"""
+    """Lấy dependency cho user hiện tại"""
     from .auth import get_current_user
     return get_current_user
 
 
 def require_admin():
-    """Require admin role dependency"""
+    """Yêu cầu vai trò admin"""
     from .auth import require_roles
     return require_roles(["admin"])
 
 
 def require_moderator():
-    """Require moderator or admin role dependency"""
+    """Yêu cầu vai trò moderator hoặc admin"""
     from .auth import require_roles
     return require_roles(["admin", "moderator"])
 
 
 def rate_limit_custom(limit_type: str = "medium", window_size: int = 60):
-    """Custom rate limit decorator"""
+    """Decorator tùy chỉnh giới hạn tốc độ"""
     from .rate_limit import rate_limit
     return rate_limit(limit_type=limit_type, window_size=window_size)
 
 
 def audit_action(action_type: str, message: str):
-    """Audit action decorator"""
+    """Decorator ghi log hành động"""
     from .audit_log import audit_action, ActionType, LogLevel
     action_type_enum = getattr(ActionType, action_type.upper(), ActionType.API_CALL)
     return audit_action(action_type_enum, message, LogLevel.INFO)
 
 
-# Export commonly used items
+# Export các mục thường dùng
 __all__ = [
     "create_fastapi_app",
     "setup_app",

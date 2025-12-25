@@ -1,9 +1,8 @@
 """
 Application Settings
 
-C�u h�nh �ng d�ng v�i support cho 2 PostgreSQL databases:
-1. Auth DB (localhost:5432): Users, authentication
-2. Data DB (Docker port 5433): Places, posts, comments (existing data)
+Cấu hình ứng dụng với 1 PostgreSQL database duy nhất:
+- Database Docker (localhost:5433): Tất cả data (users, places, posts, comments, etc.)
 """
 
 import os
@@ -20,11 +19,12 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
-    # ==================== DATABASE 1: AUTH DB (Users) ====================
-    # Database ri�ng cho authentication - Backend s� t� t�o b�ng "users"
-    AUTH_DB_URL: str = os.getenv(
+    # ==================== DATABASE (UNIFIED) ====================
+    # Database Docker chứa TẤT CẢ data
+    # Port 5433 (host) -> 5432 (container)
+    DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:password@localhost:5432/hanoi_travel"
+        "postgresql://admin:123456@localhost:5433/travel_db"
     )
 
     # Database Pool Settings
@@ -32,14 +32,6 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW", "20"))
     DB_POOL_TIMEOUT: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
     DB_POOL_RECYCLE: int = int(os.getenv("DB_POOL_RECYCLE", "3600"))
-
-    # ==================== DATABASE 2: DATA DB (Docker) ====================
-    # Database Docker ch�a data c� s�n (places, posts, comments, hotels, restaurants)
-    # Port 5433 mapped t� container 5432
-    DATA_DB_URL: str = os.getenv(
-        "DATA_DB_URL",
-        "postgresql://admin:123456@localhost:5433/travel_db"
-    )
 
     # ==================== MONGODB ====================
     MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
@@ -71,14 +63,11 @@ class Settings(BaseSettings):
     RATE_LIMIT_STORAGE: str = os.getenv("RATE_LIMIT_STORAGE", "redis")
     RATE_LIMIT_DEFAULT_WINDOW: int = int(os.getenv("RATE_LIMIT_DEFAULT_WINDOW", "60"))
 
-    # ==================== EMAIL (SMTP) ====================
-    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
-    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
-    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    # ==================== EMAIL (SENDGRID) ====================
+    SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
     FROM_EMAIL: str = os.getenv("FROM_EMAIL", "noreply@hanoi-travel.com")
     FROM_NAME: str = os.getenv("FROM_NAME", "Hanoi Travel")
+
 
     # ==================== FILE UPLOAD ====================
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "5242880"))  # 5MB
@@ -129,11 +118,3 @@ class Settings(BaseSettings):
 
 # ==================== SETTINGS INSTANCE ====================
 settings = Settings()
-
-
-# ==================== DATABASE CONNECTION STRINGS ====================
-# Auth DB cho user authentication
-AUTH_DATABASE_URL = settings.AUTH_DB_URL
-
-# Data DB cho existing data (places, posts, comments)
-DATA_DATABASE_URL = settings.DATA_DB_URL

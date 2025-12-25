@@ -4,17 +4,20 @@ Authentication Service
 Service này xử lý logic nghiệp vụ liên quan đến authentication bao gồm:
 - User registration với email validation
 - User login
-- Token management
+- Token management với database storage
 - Password handling
+
+Database Schema v3.1 Compatible
 """
 
 from typing import Dict, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import logging
+import os
 
-from config.database import User, get_db
+from config.database import User, Role, TokenRefresh, get_db
 from middleware.auth import auth_middleware
 from middleware.response import (
     conflict_response,
@@ -26,10 +29,13 @@ from utils.email_validator import validate_user_email
 
 logger = logging.getLogger(__name__)
 
+# Token expiration
+REFRESH_TOKEN_EXPIRATION_DAYS = 7
+
 
 class AuthService:
     """
-    Service xử lý authentication logic
+    Service xử lý authentication logic with database token storage
     """
 
     def __init__(self, db: Session):
@@ -40,6 +46,25 @@ class AuthService:
             db: Database session
         """
         self.db = db
+
+    def _ensure_roles_exist(self):
+        """Đảm bảo các roles mặc định tồn tại"""
+        default_roles = [
+            {"id": 1, "role_name": "admin"},
+            {"id": 2, "role_name": "moderator"},
+            {"id": 3, "role_name": "user"}
+        ]
+        
+        for role_data in default_roles:
+            existing = self.db.query(Role).filter(Role.id == role_data["id"]).first()
+            if not existing:
+                role = Role(**role_data)
+                self.db.add(role)
+        
+        try:
+            self.db.commit()
+        except:
+            self.db.rollback()
 
     async def register_user(
         self,
@@ -59,6 +84,9 @@ class AuthService:
             Tuple: (success: bool, response: dict, user_data: dict or None)
         """
         try:
+            # Ensure default roles exist
+            self._ensure_roles_exist()
+            
             # 1. Validate email với Hunter.io
             is_valid, validation_msg, validation_data = await validate_user_email(
                 email=email,
@@ -93,15 +121,14 @@ class AuthService:
             # 3. Hash mật khẩu
             password_hash = auth_middleware.hash_password(password)
 
-            # 4. Tạo user mới
+            # 4. Tạo user mới với role_id (Schema v3.1)
             new_user = User(
                 full_name=full_name,
                 email=email,
                 password_hash=password_hash,
-                role="user",
+                role_id=3,  # 3 = user role
                 is_active=True,
-                is_verified=False,  # Cần verify email (tính năng sau này)
-                reputation_score=0.0,
+                reputation_score=0,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow()
             )
@@ -113,25 +140,23 @@ class AuthService:
 
             logger.info(f"User registered successfully: {email} (ID: {new_user.id})")
 
-            # 6. Tạo tokens cho user (auto login sau registration)
-            access_token = auth_middleware.create_access_token({
-                "id": new_user.id,
-                "email": new_user.email,
-                "role": new_user.role
-            })
-
-            refresh_token = auth_middleware.create_refresh_token({
-                "id": new_user.id,
-                "email": new_user.email,
-                "role": new_user.role
-            })
+            # 6. Gửi email xác thực
+            try:
+                from middleware.email_service import email_service
+                await email_service.send_verification_email(
+                    email=email,
+                    full_name=full_name,
+                    user_id=new_user.id
+                )
+                logger.info(f"Verification email sent to {email}")
+            except Exception as e:
+                # Không block register nếu gửi email thất bại
+                logger.warning(f"Failed to send verification email to {email}: {str(e)}")
 
             # 7. Return success response
-            # Frontend chỉ cần {success, message} (BaseResponse)
-            # KHÔNG cần user data vì không auto-login sau register
             return True, {
                 "success": True,
-                "message": "Đăng ký thành công"
+                "message": "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản."
             }, new_user.to_dict()
 
         except IntegrityError as e:
@@ -192,7 +217,7 @@ class AuthService:
                     "success": False,
                     "error": {
                         "code": "ACCOUNT_BANNED",
-                        "message": "Tài khoản của bạn đã bị khóa"
+                        "message": user.ban_reason or "Tài khoản của bạn đã bị khóa"
                     }
                 }, None
 
@@ -207,28 +232,38 @@ class AuthService:
                     }
                 }, None
 
-            # 4. Cập nhật last_login
-            user.last_login = datetime.utcnow()
+            # 4. Cập nhật last_login_at
+            user.last_login_at = datetime.utcnow()
             self.db.commit()
 
             # 5. Tạo tokens
             access_token = auth_middleware.create_access_token({
                 "id": user.id,
                 "email": user.email,
-                "role": user.role
+                "role": user.role_name,  # Use role_name property
+                "role_id": user.role_id
             })
 
             refresh_token = auth_middleware.create_refresh_token({
                 "id": user.id,
                 "email": user.email,
-                "role": user.role
+                "role": user.role_name,
+                "role_id": user.role_id
             })
+
+            # 6. Lưu refresh token vào database (Schema v3.1)
+            token_record = TokenRefresh(
+                user_id=user.id,
+                refresh_token=refresh_token,
+                expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRATION_DAYS),
+                revoked=False
+            )
+            self.db.add(token_record)
+            self.db.commit()
 
             logger.info(f"User logged in successfully: {email} (ID: {user.id})")
 
-            # 6. Return success response theo Frontend format
-            # Frontend mong đợi: {success, access_token, refresh_token, user}
-            # KHÔNG wrap trong "data" object
+            # 7. Return success response theo Frontend format
             return True, {
                 "success": True,
                 "message": "Đăng nhập thành công",
@@ -236,12 +271,13 @@ class AuthService:
                 "refresh_token": refresh_token,
                 "expires_in": 3600,
                 "user": {
-                    "id": str(user.id),  # Convert int to string cho frontend
+                    "id": str(user.id),
                     "full_name": user.full_name,
                     "email": user.email,
-                    "name": user.full_name,  # Thêm "name" field cho frontend compatibility
-                    "role": user.role,
-                    "avatar": user.avatar
+                    "name": user.full_name,
+                    "role": user.role_name,
+                    "role_id": user.role_id,
+                    "avatar": user.avatar_url
                 }
             }, user.to_dict(include_sensitive=True)
 
@@ -261,6 +297,7 @@ class AuthService:
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Refresh access token sử dụng refresh token
+        Kiểm tra trong database xem token có hợp lệ và chưa bị revoke
 
         Args:
             refresh_token: Refresh token hiện tại
@@ -269,11 +306,41 @@ class AuthService:
             Tuple: (success: bool, response: dict)
         """
         try:
-            # 1. Verify refresh token
+            # 1. Kiểm tra token trong database (Schema v3.1)
+            token_record = self.db.query(TokenRefresh).filter(
+                TokenRefresh.refresh_token == refresh_token,
+                TokenRefresh.revoked == False
+            ).first()
+
+            if not token_record:
+                logger.warning("Refresh token not found in database or revoked")
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "INVALID_TOKEN",
+                        "message": "Refresh token không hợp lệ hoặc đã bị thu hồi"
+                    }
+                }
+
+            # 2. Kiểm tra token hết hạn
+            if token_record.expires_at < datetime.utcnow():
+                logger.warning(f"Refresh token expired for user_id={token_record.user_id}")
+                # Revoke expired token
+                token_record.revoked = True
+                self.db.commit()
+                return False, {
+                    "success": False,
+                    "error": {
+                        "code": "TOKEN_EXPIRED",
+                        "message": "Refresh token đã hết hạn"
+                    }
+                }
+
+            # 3. Verify JWT token
             payload = await auth_middleware.verify_token(refresh_token, "refresh")
 
-            # 2. Lấy user từ database
-            user = self.db.query(User).filter(User.id == int(payload["sub"])).first()
+            # 4. Lấy user từ database
+            user = self.db.query(User).filter(User.id == token_record.user_id).first()
 
             if not user:
                 return False, {
@@ -284,29 +351,43 @@ class AuthService:
                     }
                 }
 
-            # 3. Kiểm tra user có bị khóa không
+            # 5. Kiểm tra user có bị khóa không
             if not user.is_active:
                 return False, {
                     "success": False,
                     "error": {
                         "code": "ACCOUNT_BANNED",
-                        "message": "Tài khoản của bạn đã bị khóa"
+                        "message": user.ban_reason or "Tài khoản của bạn đã bị khóa"
                     }
                 }
 
-            # 4. Tạo access token mới
+            # 6. Revoke old token (Token Rotation)
+            token_record.revoked = True
+
+            # 7. Tạo tokens mới
             new_access_token = auth_middleware.create_access_token({
                 "id": user.id,
                 "email": user.email,
-                "role": user.role
+                "role": user.role_name,
+                "role_id": user.role_id
             })
 
-            # Tạo refresh token mới (rotate tokens)
             new_refresh_token = auth_middleware.create_refresh_token({
                 "id": user.id,
                 "email": user.email,
-                "role": user.role
+                "role": user.role_name,
+                "role_id": user.role_id
             })
+
+            # 8. Lưu new refresh token vào database
+            new_token_record = TokenRefresh(
+                user_id=user.id,
+                refresh_token=new_refresh_token,
+                expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRATION_DAYS),
+                revoked=False
+            )
+            self.db.add(new_token_record)
+            self.db.commit()
 
             logger.info(f"Token refreshed for user: {user.email} (ID: {user.id})")
 
@@ -327,19 +408,36 @@ class AuthService:
                 }
             }
 
-    async def logout_user(self, user_id: int) -> Tuple[bool, Dict[str, Any]]:
+    async def logout_user(self, user_id: int, refresh_token: str = None) -> Tuple[bool, Dict[str, Any]]:
         """
-        Đăng xuất user (client-side token removal)
+        Đăng xuất user - Revoke tokens trong database
 
         Args:
             user_id: ID của user
+            refresh_token: Refresh token cần revoke (optional)
 
         Returns:
             Tuple: (success: bool, response: dict)
         """
         try:
-            # Logout chủ yếu là client-side responsibility (xóa tokens)
-            # Server-side có thể thêm blacklist tokens trong production
+            if refresh_token:
+                # Revoke specific token
+                token_record = self.db.query(TokenRefresh).filter(
+                    TokenRefresh.user_id == user_id,
+                    TokenRefresh.refresh_token == refresh_token
+                ).first()
+                
+                if token_record:
+                    token_record.revoked = True
+                    self.db.commit()
+            else:
+                # Revoke all tokens for user
+                self.db.query(TokenRefresh).filter(
+                    TokenRefresh.user_id == user_id,
+                    TokenRefresh.revoked == False
+                ).update({"revoked": True})
+                self.db.commit()
+            
             logger.info(f"User logged out: ID {user_id}")
 
             return True, {
@@ -380,18 +478,19 @@ class AuthService:
                 }, None
 
             # Return success response theo Frontend format
-            # Frontend expects: {success, user} với user object lồng trong "user" key
             return True, {
                 "success": True,
                 "user": {
-                    "id": str(user.id),  # Convert int to string
+                    "id": str(user.id),
                     "full_name": user.full_name,
-                    "name": user.full_name,  # Thêm "name" field
+                    "name": user.full_name,
                     "email": user.email,
-                    "avatar": user.avatar,
-                    "role": user.role,
+                    "avatar": user.avatar_url,
+                    "avatar_url": user.avatar_url,
+                    "role": user.role_name,
+                    "role_id": user.role_id,
                     "bio": user.bio,
-                    "phone": user.phone,
+                    "reputation_score": user.reputation_score,
                     "created_at": user.created_at.isoformat() if user.created_at else None,
                     "updated_at": user.updated_at.isoformat() if user.updated_at else None,
                     "is_active": user.is_active

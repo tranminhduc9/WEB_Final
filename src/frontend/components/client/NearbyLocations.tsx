@@ -9,7 +9,8 @@ export default function NearbyLocations() {
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Hồ Gươm - Quận Hoàn Kiếm',
             address: 'Phường Hoàn Kiếm - Thành phố Hà Nội',
-            tags: ['Phố đi bộ', 'Du lịch - Văn hóa'],
+            priceMin: 0,
+            priceMax: 0,
             rating: 4.5,
             reviewCount: '360'
         },
@@ -18,7 +19,8 @@ export default function NearbyLocations() {
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Phố Cổ Hà Nội',
             address: 'Phường Hàng Bồ - Quận Hoàn Kiếm',
-            tags: ['Ẩm thực', 'Giải trí'],
+            priceMin: 50000,
+            priceMax: 200000,
             rating: 4.2,
             reviewCount: '1.2K+'
         },
@@ -27,7 +29,8 @@ export default function NearbyLocations() {
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Văn Miếu - Quốc Tử Giám',
             address: 'Phường Văn Miếu - Quận Đống Đa',
-            tags: ['Thiên nhiên', 'Thư giãn'],
+            priceMin: 30000,
+            priceMax: 50000,
             rating: 4.8,
             reviewCount: '5.0K+'
         },
@@ -36,7 +39,8 @@ export default function NearbyLocations() {
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Chùa Một Cột',
             address: 'Phường Đội Cấn - Quận Ba Đình',
-            tags: ['Tâm linh', 'Lịch sử'],
+            priceMin: 0,
+            priceMax: 0,
             rating: 4.3,
             reviewCount: '890'
         },
@@ -45,7 +49,8 @@ export default function NearbyLocations() {
             imageSrc: 'https://dulichnewtour.vn/ckfinder/images/Tours/langbac/lang-bac%20(2).jpg',
             title: 'Lăng Chủ tịch Hồ Chí Minh',
             address: 'Phường Điện Biên - Quận Ba Đình',
-            tags: ['Lịch sử', 'Tham quan'],
+            priceMin: 0,
+            priceMax: 0,
             rating: 4.7,
             reviewCount: '2.8K+'
         },
@@ -60,7 +65,8 @@ export default function NearbyLocations() {
                         imageSrc={location.imageSrc}
                         title={location.title}
                         address={location.address}
-                        tags={location.tags}
+                        priceMin={location.priceMin}
+                        priceMax={location.priceMax}
                         rating={location.rating}
                         reviewCount={location.reviewCount}
                     />

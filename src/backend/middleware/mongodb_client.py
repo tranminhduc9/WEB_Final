@@ -32,8 +32,7 @@ class MongoConfig:
         "post_likes": "post_likes_mongo",
         "post_comments": "post_comments_mongo",
         "chatbot_logs": "chatbot_logs_mongo",
-        "reports": "reports_mongo",
-        "audit_logs": "audit_logs_mongo"  # NEW
+        "reports": "reports_mongo"
     }
 
     # Index configurations
@@ -56,8 +55,6 @@ class MongoConfig:
             [("post_id", ASCENDING)],
             [("user_id", ASCENDING)],
             [("parent_id", ASCENDING)],  # For nested comments
-            [("depth", ASCENDING)],  # NEW: For comment tree queries
-            [("path", ASCENDING)],  # NEW: For nested comment path queries
             [("created_at", DESCENDING)]
         ],
         "chatbot_logs_mongo": [
@@ -70,15 +67,6 @@ class MongoConfig:
             [("target_id", ASCENDING)],
             [("reporter_id", ASCENDING)],
             [("created_at", DESCENDING)]
-        ],
-        "audit_logs_mongo": [  # NEW
-            [("user_id", ASCENDING)],
-            [("action", ASCENDING)],
-            [("resource_type", ASCENDING)],
-            [("resource_id", ASCENDING)],
-            [("timestamp", DESCENDING)],
-            [("user_id", ASCENDING), ("timestamp", DESCENDING)],  # Compound index
-            [("resource_type", ASCENDING), ("resource_id", ASCENDING)]  # Compound index
         ]
     }
 
@@ -446,23 +434,21 @@ class MongoDBClient:
         """
         return await self.insert_one("post_comments", comment_data)
 
-    async def create_nested_reply(
+    async def create_reply(
         self,
         parent_id: str,
         user_id: int,
         content: str,
-        post_id: str = None,
-        images: List[str] = None
+        post_id: str = None
     ) -> str:
         """
-        Tạo nested reply cho comment (Tree structure)
+        Tạo reply cho comment
 
         Args:
             parent_id: ID của parent comment
             user_id: ID user
             content: Nội dung reply
             post_id: ID bài viết (optional, sẽ tự động lấy từ parent)
-            images: List ảnh (optional)
 
         Returns:
             str: Reply comment ID
@@ -476,10 +462,7 @@ class MongoDBClient:
             "post_id": post_id or parent.get("post_id"),
             "user_id": user_id,
             "content": content,
-            "parent_id": parent_id,  # Nested reply
-            "images": images or [],
-            "depth": (parent.get("depth", 0) + 1),  # Track depth for nesting
-            "path": parent.get("path", []) + [parent_id]  # Track path for queries
+            "parent_id": parent_id
         }
 
         return await self.insert_one("post_comments", reply_data)
@@ -509,14 +492,14 @@ class MongoDBClient:
 
         return await self.find_many("post_comments", query, sort=sort, limit=limit, skip=skip)
 
-    async def get_nested_replies(
+    async def get_replies(
         self,
         parent_id: str,
         limit: int = 10,
         skip: int = 0
     ) -> List[Dict[str, Any]]:
         """
-        Lấy nested replies cho một comment (Tree structure)
+        Lấy replies cho một comment
 
         Args:
             parent_id: ID parent comment
@@ -524,49 +507,12 @@ class MongoDBClient:
             skip: Số replies bỏ qua
 
         Returns:
-            List: Danh sách nested replies
+            List: Danh sách replies
         """
         query = {"parent_id": parent_id}
         sort = [("created_at", ASCENDING)]  # Oldest first for replies
 
         return await self.find_many("post_comments", query, sort=sort, limit=limit, skip=skip)
-
-    async def get_comment_tree(
-        self,
-        post_id: str,
-        max_depth: int = 3
-    ) -> List[Dict[str, Any]]:
-        """
-        Lấy toàn bộ comment tree của bài viết (Root + Nested replies)
-
-        Args:
-            post_id: ID bài viết
-            max_depth: Độ sâu tối đa của nesting
-
-        Returns:
-            List: Comment tree structure
-        """
-        # Lấy tất cả comments của post
-        query = {"post_id": post_id, "depth": {"$lte": max_depth}}
-        sort = [("created_at", DESCENDING)]
-
-        all_comments = await self.find_many("post_comments", query, sort=sort)
-
-        # Build tree structure
-        def build_tree(comments, parent_id=None):
-            """Recursive function để build comment tree"""
-            tree = []
-            for comment in comments:
-                if comment.get("parent_id") == parent_id:
-                    # Tạo node con
-                    node = {
-                        **comment,
-                        "replies": build_tree(comments, comment.get("_id"))
-                    }
-                    tree.append(node)
-            return tree
-
-        return build_tree(all_comments)
 
     async def get_comments(self, post_id: str, limit: int = 10, skip: int = 0) -> List[Dict[str, Any]]:
         """
@@ -646,168 +592,6 @@ class MongoDBClient:
             str: Report ID
         """
         return await self.insert_one("reports", report_data)
-
-    # Specialized methods for Audit Logs
-    async def create_audit_log(
-        self,
-        user_id: int,
-        action: str,
-        resource_type: str,
-        resource_id: str = None,
-        details: Dict[str, Any] = None,
-        ip_address: str = None,
-        user_agent: str = None
-    ) -> str:
-        """
-        Tạo audit log
-
-        Args:
-            user_id: ID user
-            action: Hành động (create, update, delete, login, logout, etc.)
-            resource_type: Loại resource (post, comment, place, user, etc.)
-            resource_id: ID của resource
-            details: Chi tiết bổ sung
-            ip_address: IP address của user
-            user_agent: User agent string
-
-        Returns:
-            str: Log ID
-        """
-        log_data = {
-            "user_id": user_id,
-            "action": action,
-            "resource_type": resource_type,
-            "resource_id": resource_id,
-            "details": details or {},
-            "ip_address": ip_address,
-            "user_agent": user_agent,
-            "timestamp": datetime.utcnow()
-        }
-
-        return await self.insert_one("audit_logs", log_data)
-
-    async def get_audit_logs(
-        self,
-        user_id: int = None,
-        action: str = None,
-        resource_type: str = None,
-        resource_id: str = None,
-        start_date: datetime = None,
-        end_date: datetime = None,
-        limit: int = 100,
-        skip: int = 0
-    ) -> List[Dict[str, Any]]:
-        """
-        Lấy audit logs với filters
-
-        Args:
-            user_id: Filter theo user
-            action: Filter theo hành động
-            resource_type: Filter theo loại resource
-            resource_id: Filter theo resource ID
-            start_date: Lọc logs từ ngày
-            end_date: Lọc logs đến ngày
-            limit: Số logs tối đa
-            skip: Số logs bỏ qua
-
-        Returns:
-            List: Danh sách audit logs
-        """
-        query = {}
-
-        if user_id:
-            query["user_id"] = user_id
-        if action:
-            query["action"] = action
-        if resource_type:
-            query["resource_type"] = resource_type
-        if resource_id:
-            query["resource_id"] = resource_id
-        if start_date or end_date:
-            query["timestamp"] = {}
-            if start_date:
-                query["timestamp"]["$gte"] = start_date
-            if end_date:
-                query["timestamp"]["$lte"] = end_date
-
-        sort = [("timestamp", DESCENDING)]
-
-        return await self.find_many("audit_logs", query, sort=sort, limit=limit, skip=skip)
-
-    async def get_user_activity_summary(
-        self,
-        user_id: int,
-        days: int = 30
-    ) -> Dict[str, Any]:
-        """
-        Lấy tổng hợp hoạt động của user
-
-        Args:
-            user_id: ID user
-            days: Số ngày cần phân tích
-
-        Returns:
-            Dict: Activity summary
-        """
-        from datetime import timedelta
-
-        start_date = datetime.utcnow() - timedelta(days=days)
-
-        # Lấy tất cả logs của user trong khoảng thời gian
-        logs = await self.get_audit_logs(
-            user_id=user_id,
-            start_date=start_date,
-            limit=10000
-        )
-
-        # Aggregate data
-        summary = {
-            "user_id": user_id,
-            "period_days": days,
-            "total_actions": len(logs),
-            "actions_by_type": {},
-            "resources_by_type": {},
-            "daily_activity": {}
-        }
-
-        for log in logs:
-            # Count by action type
-            action = log.get("action", "unknown")
-            summary["actions_by_type"][action] = summary["actions_by_type"].get(action, 0) + 1
-
-            # Count by resource type
-            resource_type = log.get("resource_type", "unknown")
-            summary["resources_by_type"][resource_type] = summary["resources_by_type"].get(resource_type, 0) + 1
-
-            # Daily activity
-            timestamp = log.get("timestamp")
-            if timestamp:
-                date_key = timestamp.strftime("%Y-%m-%d")
-                summary["daily_activity"][date_key] = summary["daily_activity"].get(date_key, 0) + 1
-
-        return summary
-
-    async def cleanup_old_audit_logs(self, retention_days: int = 90) -> int:
-        """
-        Xóa audit logs cũ (theo retention policy)
-
-        Args:
-            retention_days: Số ngày giữ logs
-
-        Returns:
-            int: Số logs đã xóa
-        """
-        from datetime import timedelta
-
-        cutoff_date = datetime.utcnow() - timedelta(days=retention_days)
-
-        collection_name = "audit_logs"
-        coll = self.db[collection_name]
-
-        result = await coll.delete_many({"timestamp": {"$lt": cutoff_date}})
-
-        logger.info(f"Cleaned up {result.deleted_count} audit logs older than {retention_days} days")
-        return result.deleted_count
 
 
 # Global MongoDB client instance

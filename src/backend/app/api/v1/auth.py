@@ -197,7 +197,108 @@ async def register(
         return server_error_response()
 
 
+@router.get(
+    "/verify-email",
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Email verified"},
+        400: {"model": ErrorResponse, "description": "Bad Request - Invalid or expired token"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    },
+    summary="Verify Email",
+    description="Xác thực email với token được gửi qua email"
+)
+async def verify_email(
+    request: Request,
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Xác thực email
+    
+    **Flow:**
+    1. Decode và verify token
+    2. Tìm user theo token
+    3. Cập nhật email_verified = True
+    4. Return success
+    
+    **Query Parameters:**
+    - token: Token xác thực từ email
+    
+    **Responses:**
+    - 200: Xác thực thành công
+    - 400: Token không hợp lệ hoặc hết hạn
+    - 500: Internal server error
+    """
+    try:
+        from config.database import User
+        import jwt
+        import os
+        
+        if not token:
+            return error_response(
+                message="Token không được để trống",
+                error_code="MISSING_TOKEN",
+                status_code=400
+            )
+        
+        # Decode token
+        secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+        
+        try:
+            payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+            user_id = payload.get("user_id")
+            token_type = payload.get("type")
+            
+            if token_type != "email_verification":
+                return error_response(
+                    message="Token không hợp lệ",
+                    error_code="INVALID_TOKEN",
+                    status_code=400
+                )
+                
+        except jwt.ExpiredSignatureError:
+            return error_response(
+                message="Token đã hết hạn",
+                error_code="TOKEN_EXPIRED",
+                status_code=400
+            )
+        except jwt.InvalidTokenError:
+            return error_response(
+                message="Token không hợp lệ",
+                error_code="INVALID_TOKEN",
+                status_code=400
+            )
+        
+        # Find user
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return error_response(
+                message="Người dùng không tồn tại",
+                error_code="USER_NOT_FOUND",
+                status_code=400
+            )
+        
+        # Check if already verified
+        if user.email_verified:
+            return success_response(message="Email đã được xác thực trước đó")
+        
+        # Update user
+        user.email_verified = True
+        db.commit()
+        
+        logger.info(f"Email verified for user {user.id}")
+        
+        return success_response(message="Xác thực email thành công")
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in verify_email: {str(e)}")
+        return server_error_response()
+
+
 @router.post(
+
     "/login",
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(apply_rate_limit)],
@@ -450,6 +551,209 @@ async def get_current_user_auth(
     except Exception as e:
         logger.error(f"Unexpected error in get_current_user (auth/me) endpoint: {str(e)}")
         return server_error_response()
+
+
+@router.post(
+    "/forgot-password",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(apply_rate_limit)],
+    responses={
+        200: {"description": "Email sent"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    },
+    summary="Request Password Reset",
+    description="Gửi email reset password. Rate limit: 3 requests/minute"
+)
+async def forgot_password(
+    request: Request,
+    email_data: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Yêu cầu reset password
+    
+    **Flow:**
+    1. Validate email
+    2. Kiểm tra email tồn tại
+    3. Tạo reset token (JWT, 1h expiry)
+    4. Gửi email với reset link
+    
+    **Note:** Luôn return success để tránh email enumeration
+    """
+    try:
+        from config.database import User
+        from middleware.email_service import email_service
+        import jwt
+        import os
+        from datetime import datetime, timedelta
+        
+        email = email_data.get("email", "")
+        
+        # Find user (không báo lỗi nếu không tìm thấy để tránh email enumeration)
+        user = db.query(User).filter(User.email == email).first()
+        
+        if user:
+            # Generate reset token (1 hour expiry)
+            secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+            payload = {
+                "user_id": user.id,
+                "email": email,
+                "type": "password_reset",
+                "exp": datetime.utcnow() + timedelta(hours=1)
+            }
+            reset_token = jwt.encode(payload, secret_key, algorithm="HS256")
+            
+            # Build reset URL
+            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+            reset_url = f"{frontend_url}/reset-password?token={reset_token}&email={email}"
+            
+            # Send email with reset link
+            try:
+                await email_service.send_custom_email(
+                    to_email=email,
+                    subject="Đặt lại mật khẩu - Hanoi Travel",
+                    message=f"""
+                    <h2>Yêu cầu đặt lại mật khẩu</h2>
+                    <p>Xin chào {user.full_name},</p>
+                    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
+                    <p><a href="{reset_url}" style="background:#3498db;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;">Đặt lại mật khẩu</a></p>
+                    <p>Hoặc copy link: {reset_url}</p>
+                    <p><strong>Lưu ý:</strong> Link có hiệu lực trong 1 giờ.</p>
+                    <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+                    """,
+                    is_html=True
+                )
+                logger.info(f"Password reset email sent to {email}")
+            except Exception as e:
+                logger.warning(f"Failed to send reset email: {str(e)}")
+        
+        # Always return success
+        return success_response(
+            message="Nếu email tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in forgot_password: {str(e)}")
+        return server_error_response()
+
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(apply_rate_limit)],
+    responses={
+        200: {"description": "Password reset"},
+        400: {"model": ErrorResponse, "description": "Bad Request"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    },
+    summary="Reset Password",
+    description="Reset password với token từ email. Rate limit: 3 requests/minute"
+)
+async def reset_password(
+    request: Request,
+    reset_data: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Reset password với token từ email
+    
+    **Flow:**
+    1. Validate email, token, new_password
+    2. Decode và verify JWT token
+    3. Verify email khớp với token
+    4. Update password
+    
+    **Required fields (per Swagger v1.0.5):**
+    - email: Email của user
+    - token: JWT token từ email link
+    - new_password: Mật khẩu mới (min 6 ký tự)
+    """
+
+    try:
+        from config.database import User
+        from middleware.auth import auth_middleware
+        import jwt
+        import os
+        
+        email = reset_data.get("email", "")
+        token = reset_data.get("token", "")
+        new_password = reset_data.get("new_password", "")
+        
+        # Validate inputs (Swagger: email, token, new_password required)
+        if not email or not token or not new_password:
+            return error_response(
+                message="Thiếu thông tin bắt buộc (email, token, new_password)",
+                error_code="BAD_REQUEST",
+                status_code=400
+            )
+        
+        if len(new_password) < 6:
+            return error_response(
+                message="Mật khẩu phải có ít nhất 6 ký tự",
+                error_code="INVALID_PASSWORD",
+                status_code=400
+            )
+        
+        # Verify JWT token
+        secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+        
+        try:
+            payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+            user_id = payload.get("user_id")
+            token_email = payload.get("email")
+            token_type = payload.get("type")
+            
+            if token_type != "password_reset":
+                return error_response(
+                    message="Token không hợp lệ",
+                    error_code="INVALID_TOKEN",
+                    status_code=400
+                )
+            
+            # Verify email matches token
+            if token_email and token_email != email:
+                return error_response(
+                    message="Email không khớp với token",
+                    error_code="INVALID_TOKEN",
+                    status_code=400
+                )
+                
+        except jwt.ExpiredSignatureError:
+            return error_response(
+                message="Link đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới.",
+                error_code="TOKEN_EXPIRED",
+                status_code=400
+            )
+        except jwt.InvalidTokenError:
+            return error_response(
+                message="Token không hợp lệ",
+                error_code="INVALID_TOKEN",
+                status_code=400
+            )
+        
+        # Find user
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return error_response(
+                message="Người dùng không tồn tại",
+                error_code="USER_NOT_FOUND",
+                status_code=400
+            )
+        
+        # Update password
+        user.password_hash = auth_middleware.hash_password(new_password)
+        db.commit()
+        
+        logger.info(f"Password reset successfully for user {user.id}")
+        
+        return success_response(message="Đặt lại mật khẩu thành công. Vui lòng đăng nhập với mật khẩu mới.")
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in reset_password: {str(e)}")
+        return server_error_response()
+
 
 
 # ==================== END OF AUTH ROUTES ====================

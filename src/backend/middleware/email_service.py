@@ -2,12 +2,11 @@
 Email Service Middleware
 
 Module này xử lý gửi email cho các chức năng như
-forgot password, OTP, verification, notifications.
+forgot password, verification, notifications.
+
+Sử dụng SendGrid API (HTTP) để gửi email.
 """
 
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any, Optional
 import logging
 import os
@@ -18,23 +17,25 @@ logger = logging.getLogger(__name__)
 
 
 class EmailConfig:
-    """Cấu hình cho email service"""
+    """
+    Cấu hình cho email service (SendGrid)
+    
+    Env vars:
+        SENDGRID_API_KEY: API key từ SendGrid
+        FROM_EMAIL: Email gửi đi (phải verify trên SendGrid)
+        FROM_NAME: Tên hiển thị
+        FRONTEND_URL: URL frontend cho các link trong email
+    """
 
-    # SMTP settings
-    SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
-
-    # Authentication
-    SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
-    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-
+    # SendGrid API Key
+    SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
+    
     # From settings
     FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@hanoi-travel.com")
     FROM_NAME = os.getenv("FROM_NAME", "Hanoi Travel")
 
     # Frontend URLs
-    FRONTEND_URL = os.getenv("FRONTEND_URL", "https://hanoi-travel.com")
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
 class EmailTemplate:
@@ -271,34 +272,97 @@ class EmailTemplate:
             """
         }
 
+    @staticmethod
+    def email_verification(full_name: str, verification_url: str) -> Dict[str, str]:
+        """Template cho email xác thực"""
+        return {
+            "subject": "Xác thực email của bạn - Hanoi Travel",
+            "html": f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Xác thực Email - Hanoi Travel</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: #3498db; color: white; padding: 20px; text-align: center; }}
+                    .content {{ padding: 30px; background: #f9f9f9; }}
+                    .footer {{ text-align: center; padding: 20px; color: #666; font-size: 14px; }}
+                    .btn {{ display: inline-block; padding: 15px 30px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }}
+                    .btn:hover {{ background: #219a52; }}
+                    .warning {{ color: #e74c3c; font-size: 14px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✉️ Xác thực Email</h1>
+                        <p>Hanoi Travel - Khám phá thủ đô</p>
+                    </div>
+
+                    <div class="content">
+                        <h2>Xin chào {html.escape(full_name)},</h2>
+                        <p>Cảm ơn bạn đã đăng ký tài khoản tại Hanoi Travel!</p>
+                        
+                        <p>Vui lòng click vào nút bên dưới để xác thực email của bạn:</p>
+                        
+                        <center>
+                            <a href="{verification_url}" class="btn">Xác thực Email</a>
+                        </center>
+                        
+                        <p style="margin-top: 20px;"><strong>Hoặc copy link sau vào trình duyệt:</strong></p>
+                        <p style="word-break: break-all; background: #eee; padding: 10px; border-radius: 5px;">{verification_url}</p>
+                        
+                        <p class="warning"><strong>Lưu ý:</strong> Link xác thực có hiệu lực trong 24 giờ.</p>
+                        
+                        <p>Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.</p>
+                    </div>
+
+                    <div class="footer">
+                        <p>&copy; 2024 Hanoi Travel. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """,
+            "text": f"""
+            Xác thực Email - Hanoi Travel
+
+            Xin chào {full_name},
+
+            Cảm ơn bạn đã đăng ký tài khoản tại Hanoi Travel!
+
+            Vui lòng click vào link sau để xác thực email:
+            {verification_url}
+
+            Lưu ý: Link xác thực có hiệu lực trong 24 giờ.
+
+            Nếu bạn không đăng ký tài khoản này, vui lòng bỏ qua email này.
+
+            Trân trọng,
+            Đội ngũ Hanoi Travel
+            """
+        }
+
 
 class EmailService:
+
     """
     Service gửi email
 
     Cung cấp các phương thức gửi email với templates khác nhau.
     """
 
-    def __init__(self, smtp_username: str = None, smtp_password: str = None,
-                 smtp_host: str = None, smtp_port: int = None):
-        """Khởi tạo email service"""
-        # Use provided parameters or fall back to environment
+    def __init__(self):
+        """Khởi tạo email service với SendGrid"""
         self.config = EmailConfig()
-        self.config.SMTP_USERNAME = smtp_username or self.config.SMTP_USERNAME
-        self.config.SMTP_PASSWORD = smtp_password or self.config.SMTP_PASSWORD
-        self.config.SMTP_HOST = smtp_host or self.config.SMTP_HOST
-        self.config.SMTP_PORT = smtp_port or self.config.SMTP_PORT
-
-        self.is_configured = bool(
-            self.config.SMTP_USERNAME and
-            self.config.SMTP_PASSWORD and
-            self.config.SMTP_HOST
-        )
+        self.is_configured = bool(self.config.SENDGRID_API_KEY)
 
         if self.is_configured:
-            logger.info("Email service configured successfully")
+            logger.info(f"✅ Email service configured (SendGrid)")
         else:
-            logger.warning("Email service not properly configured")
+            logger.warning("⚠️ Email service not configured - set SENDGRID_API_KEY in .env")
 
     async def send_email(
         self,
@@ -308,7 +372,7 @@ class EmailService:
         text_content: str = None
     ) -> bool:
         """
-        Gửi email
+        Gửi email qua SendGrid API
 
         Args:
             to_email: Email người nhận
@@ -324,36 +388,37 @@ class EmailService:
             return True  # Return True để không block flow
 
         try:
-            # Create message
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = f"{self.config.FROM_NAME} <{self.config.FROM_EMAIL}>"
-            msg['To'] = to_email
-
-            # Add text content
-            if text_content:
-                msg.attach(MIMEText(text_content, 'plain', 'utf-8'))
-
-            # Add HTML content
+            from sendgrid import SendGridAPIClient
+            from sendgrid.helpers.mail import Mail, Email, To, Content
+            
+            message = Mail(
+                from_email=Email(self.config.FROM_EMAIL, self.config.FROM_NAME),
+                to_emails=To(to_email),
+                subject=subject
+            )
+            
             if html_content:
-                msg.attach(MIMEText(html_content, 'html', 'utf-8'))
-
-            # Send email
-            with smtplib.SMTP(self.config.SMTP_HOST, self.config.SMTP_PORT) as server:
-                if self.config.SMTP_USE_TLS:
-                    server.starttls()
-
-                if self.config.SMTP_USERNAME and self.config.SMTP_PASSWORD:
-                    server.login(self.config.SMTP_USERNAME, self.config.SMTP_PASSWORD)
-
-                server.send_message(msg)
-
-            logger.info(f"Email sent successfully to {to_email}")
-            return True
-
+                message.add_content(Content("text/html", html_content))
+            if text_content:
+                message.add_content(Content("text/plain", text_content))
+            
+            sg = SendGridAPIClient(self.config.SENDGRID_API_KEY)
+            response = sg.send(message)
+            
+            if response.status_code in [200, 201, 202]:
+                logger.info(f"Email sent to {to_email} (status: {response.status_code})")
+                return True
+            else:
+                logger.error(f"SendGrid error: {response.status_code} - {response.body}")
+                return False
+                
+        except ImportError:
+            logger.error("sendgrid package not installed. Run: pip install sendgrid")
+            return False
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             return False
+
 
     async def send_forgot_password_otp(self, email: str, otp: str) -> bool:
         """
@@ -404,6 +469,43 @@ class EmailService:
             bool: True nếu gửi thành công
         """
         template = EmailTemplate.password_changed_notification(email)
+        return await self.send_email(
+            to_email=email,
+            subject=template["subject"],
+            html_content=template["html"],
+            text_content=template["text"]
+        )
+
+    async def send_verification_email(self, email: str, full_name: str, user_id: int) -> bool:
+        """
+        Gửi email xác thực
+
+        Args:
+            email: Email người nhận
+            full_name: Tên đầy đủ
+            user_id: ID của user
+
+        Returns:
+            bool: True nếu gửi thành công
+        """
+        import jwt
+        from datetime import datetime, timedelta
+        
+        # Generate verification token (valid 24h)
+        secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+        payload = {
+            "user_id": user_id,
+            "type": "email_verification",
+            "exp": datetime.utcnow() + timedelta(hours=24)
+        }
+        token = jwt.encode(payload, secret_key, algorithm="HS256")
+        
+        # Build verification URL
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        verification_url = f"{frontend_url}/verify-email?token={token}"
+        
+        # Send email
+        template = EmailTemplate.email_verification(full_name, verification_url)
         return await self.send_email(
             to_email=email,
             subject=template["subject"],

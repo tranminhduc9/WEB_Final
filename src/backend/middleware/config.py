@@ -51,12 +51,8 @@ class MiddlewareConfig:
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "")
     CLOUDINARY_FOLDER = os.getenv("CLOUDINARY_FOLDER", "hanoi-travel")
 
-    # Email
-    SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
-    SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
-    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+    # Email (SendGrid)
+    SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
     FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@hanoi-travel.com")
     FROM_NAME = os.getenv("FROM_NAME", "Hanoi Travel")
 
@@ -67,12 +63,7 @@ class MiddlewareConfig:
     CORS_CREDENTIALS = os.getenv("CORS_CREDENTIALS", "true").lower() == "true"
     CORS_MAX_AGE = int(os.getenv("CORS_MAX_AGE", "86400"))
 
-    # OTP
-    OTP_LENGTH = int(os.getenv("OTP_LENGTH", "6"))
-    OTP_EXPIRY = int(os.getenv("OTP_EXPIRY", "10"))
-    MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "3"))
-    COOLDOWN_PERIOD = int(os.getenv("COOLDOWN_PERIOD", "15"))
-    OTP_ENCRYPTION_KEY = os.getenv("OTP_ENCRYPTION_KEY", "otp-encryption-key-change-in-production")
+
 
     # Security
     BCRYPT_ROUNDS = int(os.getenv("BCRYPT_ROUNDS", "12"))
@@ -127,8 +118,7 @@ class MiddlewareConfig:
             if cls.JWT_SECRET_KEY == "hanoi-travel-super-secret-key-change-in-production-2024":
                 warnings.append("⚠️  Production: Please change JWT_SECRET_KEY")
 
-            if cls.OTP_ENCRYPTION_KEY == "otp-encryption-key-change-in-production":
-                warnings.append("⚠️  Production: Please change OTP_ENCRYPTION_KEY")
+
 
             if cls.SESSION_SECRET == "session-secret-change-in-production":
                 warnings.append("⚠️  Production: Please change SESSION_SECRET")
@@ -140,8 +130,8 @@ class MiddlewareConfig:
         if not cls.CLOUDINARY_CLOUD_NAME:
             warnings.append("⚠️  Cloudinary not configured - file upload will use local storage")
 
-        if not cls.SMTP_USERNAME:
-            warnings.append("⚠️  SMTP not configured - email features will be disabled")
+        if not cls.SENDGRID_API_KEY:
+            warnings.append("⚠️  SendGrid not configured - email features will be disabled")
 
         if cls.REDIS_HOST == "localhost" and cls.ENVIRONMENT == "production":
             warnings.append("⚠️  Production: Consider using external Redis service")
@@ -277,19 +267,15 @@ class MiddlewareConfig:
         }
 
     @classmethod
-    def get_smtp_config(cls) -> Dict[str, Any]:
+    def get_email_config(cls) -> Dict[str, Any]:
         """
-        Get SMTP configuration
+        Get Email (SendGrid) configuration
 
         Returns:
-            Dict: SMTP config
+            Dict: Email config
         """
         return {
-            "host": cls.SMTP_HOST,
-            "port": cls.SMTP_PORT,
-            "use_tls": cls.SMTP_USE_TLS,
-            "username": cls.SMTP_USERNAME,
-            "password": cls.SMTP_PASSWORD,
+            "api_key": cls.SENDGRID_API_KEY,
             "from_email": cls.FROM_EMAIL,
             "from_name": cls.FROM_NAME
         }

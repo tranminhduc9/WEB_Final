@@ -1,7 +1,7 @@
 """
 Centralized Environment Loader
 
-Module này đảm bảo load file .env từ root directory (WEB_Final/.env)
+Module này đảm bảo load file .env từ src/ directory
 một cách nhất quán cho toàn bộ application.
 
 IMPORTANT: Đây là module đầu tiên phải được import trong toàn bộ application.
@@ -16,49 +16,55 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def find_root_dir() -> Path:
+def find_src_dir() -> Path:
     """
-    Tìm root directory của project (WEB_Final)
+    Tìm src directory của project
 
-    Root directory được xác định bằng cách:
-    1. Từ file hiện tại, ngược lên 3 cấp: config/ -> backend/ -> src/ -> WEB_Final/
-    2. Hoặc từ sys.path[0] (working directory khi chạy app)
+    Src directory được xác định bằng cách:
+    1. Từ file hiện tại (config/load_env.py), ngược lên 3 cấp: config/ -> backend/ -> src/
+    2. Hoặc từ working directory khi chạy app
 
     Returns:
-        Path: Root directory path
+        Path: Src directory path
     """
     # Method 1: Từ file hiện tại
+    # load_env.py nằm ở: src/backend/config/load_env.py
+    # Đi lên 3 cấp: config/ -> backend/ -> src/
     current_file = Path(__file__).resolve()
-    root_dir = current_file.parent.parent.parent.parent  # config/backend/src/WEB_Final
+    src_dir = current_file.parent.parent.parent  # config/backend/src
 
-    # Method 2: Từ working directory (nếu method 1 fail)
-    if not (root_dir / ".env").exists():
-        # Thử từ current working directory
+    # Verify src directory có .env file
+    if not (src_dir / ".env").exists():
+        # Method 2: Thử từ current working directory
         cwd = Path.cwd()
-        # Nếu đang ở src/backend/, đi lên 2 cấp
+
+        # Nếu đang ở src/backend/, đi lên 1 cấp
         if cwd.name == "backend":
-            root_dir = cwd.parent.parent
-        # Nếu đang ở src/, đi lên 1 cấp
+            src_dir = cwd.parent
+        # Nếu đang ở src/, giữ nguyên
         elif cwd.name == "src":
-            root_dir = cwd.parent
-        # Nếu đang ở WEB_Final/, giữ nguyên
-        elif (cwd / ".env").exists():
-            root_dir = cwd
+            src_dir = cwd
+        # Nếu đang ở WEB_Final/, vào src/
+        elif (cwd / "src" / ".env").exists():
+            src_dir = cwd / "src"
+        # Fallback: dùng sys.path[0]
         else:
-            # Fallback: dùng sys.path[0]
             sys_path = Path(sys.path[0])
-            if (sys_path / ".env").exists():
-                root_dir = sys_path
+            if (sys_path / "src" / ".env").exists():
+                src_dir = sys_path / "src"
+            elif (sys_path / ".env").exists():
+                # sys.path[0] chính là src/
+                src_dir = sys_path
             else:
                 # Last resort: từ current file đi lên
-                root_dir = current_file.parent.parent.parent.parent
+                src_dir = current_file.parent.parent.parent
 
-    return root_dir.resolve()
+    return src_dir.resolve()
 
 
 def load_environment(force_reload: bool = False) -> bool:
     """
-    Load file .env từ root directory
+    Load file .env từ src/ directory
 
     Args:
         force_reload: Force reload lại environment variables (mặc định: False)
@@ -67,18 +73,18 @@ def load_environment(force_reload: bool = False) -> bool:
         bool: True nếu load thành công, False nếu fail
     """
     try:
-        # Tìm root directory
-        root_dir = find_root_dir()
-        env_file = root_dir / ".env"
+        # Tìm src directory
+        src_dir = find_src_dir()
+        env_file = src_dir / ".env"
 
         # Log thông tin
-        logger.info(f"Root directory: {root_dir}")
+        logger.info(f"Src directory: {src_dir}")
         logger.info(f"Looking for .env at: {env_file}")
 
         # Kiểm tra file .env tồn tại
         if not env_file.exists():
             logger.error(f".env file not found at: {env_file}")
-            logger.error("Please create .env file in root directory (WEB_Final/)")
+            logger.error("Please create .env file in src/ directory")
             return False
 
         # Load .env file
@@ -161,5 +167,5 @@ __all__ = [
     "load_environment",
     "get_env_var",
     "is_loaded",
-    "find_root_dir"
+    "find_src_dir"
 ]
