@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # ==============================================
-  # SERVICE 1: PostgreSQL Database
+  # SERVICE 1: PostgreSQL Database (Giữ nguyên)
   # ==============================================
   db:
     build:
@@ -22,12 +22,9 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
 
     ports:
-      # [CRITICAL] Map 5433 (host) -> 5432 (container)
-      # Tránh conflict với PostgreSQL local
       - "${DB_PORT}:5432"
 
     volumes:
-      # Volume lưu trữ data persistently
       - pg_data:/var/lib/postgresql/data
 
       # (Optional) Backup mount point
@@ -54,7 +51,7 @@ services:
           memory: 512M
 
   # ==============================================
-  # SERVICE 2: pgAdmin 4 Web Interface
+  # SERVICE 2: pgAdmin 4 (Giữ nguyên)
   # ==============================================
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -62,7 +59,6 @@ services:
     restart: unless-stopped
 
     environment:
-      # Credentials để login vào web pgAdmin
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
 
@@ -71,11 +67,9 @@ services:
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
 
     ports:
-      # Truy cập web qua http://localhost:5050
       - "${PGADMIN_PORT}:80"
 
     volumes:
-      # Lưu cấu hình pgAdmin
       - pgadmin_data:/var/lib/pgadmin
 
     networks:
@@ -92,6 +86,39 @@ services:
           cpus: '1'
           memory: 1G
 
+  # ==============================================
+  # SERVICE 3: Backend API (THÊM MỚI)
+  # ==============================================
+  backend:
+    # Giả định Dockerfile của bạn nằm trong thư mục 'backend'
+    # Nếu nằm ngay ở root cùng file docker-compose thì đổi thành context: .
+    build:
+      context: ./backend 
+      dockerfile: Dockerfile
+    container_name: travel_backend_container
+    restart: unless-stopped
+
+    volumes:
+      # [QUAN TRỌNG] Map folder ảnh từ máy thật vào trong container
+      # Cấu trúc: ./folder_máy_thật : /folder_trong_container
+      # Container sẽ thấy ảnh tại /app/static/uploads
+      - ./uploads:/app/static/uploads
+    
+    ports:
+      # Map port để team truy cập API (Ví dụ: localhost:8000)
+      - "${BACKEND_PORT:-8000}:8000"
+
+    environment:
+      # Kết nối DB dùng tên service 'db' thay vì localhost
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    
+    networks:
+      - travel_network
+    
+    depends_on:
+      db:
+        condition: service_healthy
+
 # ==============================================
 # VOLUMES DEFINITION
 # ==============================================
@@ -102,15 +129,10 @@ volumes:
 
   pgadmin_data:
     driver: local
-    name: travel_pgadmin_data
 
 # ==============================================
-# NETWORK DEFINITION
+# NETWORKS DEFINITION
 # ==============================================
 networks:
   travel_network:
     driver: bridge
-    name: travel_network
-    ipam:
-      config:
-        - subnet: 172.25.0.0/16
