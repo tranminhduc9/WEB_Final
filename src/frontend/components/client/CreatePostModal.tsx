@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icons } from '../../config/constants';
+import { placeService } from '../../services';
+import type { PlaceCompact } from '../../types/models';
 import '../../assets/styles/components/CreatePostModal.css';
 
 interface CreatePostModalProps {
@@ -7,6 +9,7 @@ interface CreatePostModalProps {
   onClose: () => void;
   onSubmit?: (data: {
     location: string;
+    related_place_id?: number;
     rating: number;
     content: string;
     images: File[];
@@ -19,9 +22,53 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   onSubmit,
 }) => {
   const [location, setLocation] = useState('');
+  const [selectedPlaceId, setSelectedPlaceId] = useState<number | undefined>();
   const [rating, setRating] = useState<number | ''>('');
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
+
+  // Location picker state
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [places, setPlaces] = useState<PlaceCompact[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
+
+  // Fetch places when location picker opens
+  useEffect(() => {
+    if (showLocationPicker) {
+      const fetchPlaces = async () => {
+        setIsLoadingPlaces(true);
+        try {
+          const response = await placeService.getPlaces({ page: 1, limit: 20 });
+          setPlaces(response.data || []);
+        } catch (error) {
+          console.error('Error fetching places:', error);
+        } finally {
+          setIsLoadingPlaces(false);
+        }
+      };
+      fetchPlaces();
+    }
+  }, [showLocationPicker]);
+
+  // Search places
+  useEffect(() => {
+    if (showLocationPicker && searchKeyword.trim()) {
+      const searchPlaces = async () => {
+        setIsLoadingPlaces(true);
+        try {
+          const response = await placeService.searchPlaces({ keyword: searchKeyword });
+          setPlaces(response.data || []);
+        } catch (error) {
+          console.error('Error searching places:', error);
+        } finally {
+          setIsLoadingPlaces(false);
+        }
+      };
+      const timeoutId = setTimeout(searchPlaces, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchKeyword, showLocationPicker]);
 
   if (!isOpen) return null;
 
@@ -29,6 +76,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     if (onSubmit && content.trim()) {
       onSubmit({
         location,
+        related_place_id: selectedPlaceId,
         rating: Number(rating) || 0,
         content,
         images,
@@ -36,10 +84,18 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     }
     // Reset form
     setLocation('');
+    setSelectedPlaceId(undefined);
     setRating('');
     setContent('');
     setImages([]);
     onClose();
+  };
+
+  const handleSelectPlace = (place: PlaceCompact) => {
+    setLocation(place.name);
+    setSelectedPlaceId(place.id);
+    setShowLocationPicker(false);
+    setSearchKeyword('');
   };
 
   const handleImageSelect = () => {
@@ -77,9 +133,24 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
         {/* Options bar */}
         <div className="create-post__options">
-          <div className="create-post__option">
+          <div
+            className="create-post__option create-post__option--clickable"
+            onClick={() => setShowLocationPicker(!showLocationPicker)}
+          >
             <Icons.Location className="create-post__option-icon" />
-            <span>Chọn địa điểm</span>
+            <span>{location || 'Chọn địa điểm'}</span>
+            {location && (
+              <button
+                className="create-post__clear-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLocation('');
+                  setSelectedPlaceId(undefined);
+                }}
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           <div className="create-post__option">
@@ -106,6 +177,38 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </div>
         </div>
 
+        {/* Location Picker Dropdown */}
+        {showLocationPicker && (
+          <div className="create-post__location-picker">
+            <input
+              type="text"
+              className="create-post__location-search"
+              placeholder="Tìm kiếm địa điểm..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              autoFocus
+            />
+            <div className="create-post__location-list">
+              {isLoadingPlaces ? (
+                <div className="create-post__location-loading">Đang tải...</div>
+              ) : places.length === 0 ? (
+                <div className="create-post__location-empty">Không tìm thấy địa điểm</div>
+              ) : (
+                places.map((place) => (
+                  <div
+                    key={place.id}
+                    className="create-post__location-item"
+                    onClick={() => handleSelectPlace(place)}
+                  >
+                    <Icons.Location className="create-post__location-item-icon" />
+                    <span>{place.name}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Content textarea */}
         <div className="create-post__content">
           <textarea
@@ -126,6 +229,3 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 };
 
 export default CreatePostModal;
-
-
-
