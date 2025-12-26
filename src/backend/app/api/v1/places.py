@@ -41,13 +41,6 @@ router = APIRouter(prefix="/places", tags=["Places"])
 
 # ==================== HELPER FUNCTIONS ====================
 
-def format_review_count(count: int) -> str:
-    """Format số lượng reviews thành dạng ngắn gọn (1.2K, 3.6K...)"""
-    if count >= 1000:
-        return f"{count/1000:.1f}K"
-    return str(count)
-
-
 def get_place_type_name(place_type_id: int, db: Session) -> str:
     """Lấy tên loại địa điểm từ ID"""
     place_type = db.query(PlaceType).filter(PlaceType.id == place_type_id).first()
@@ -58,49 +51,48 @@ def get_place_type_name(place_type_id: int, db: Session) -> str:
     return type_mapping.get(place_type_id, "Khác")
 
 
-def get_place_tags(place_type_id: int, rating: float) -> List[str]:
-    """Tạo tags dựa trên loại địa điểm và rating"""
-    tags = []
+def get_main_image_url(place_id: int, db: Session = None) -> str:
+    """
+    Lấy ảnh chính của địa điểm.
+    Priority:
+    1. Database place_images table (is_main=True)
+    2. Local uploads folder: /uploads/places/place_{id}_0.{ext}
+    3. Default placeholder
+    """
+    import os
     
-    # Tags theo loại
-    type_tags = {
-        1: "Du lịch - Văn hóa",
-        2: "Lưu trú",
-        3: "Ẩm thực"
-    }
-    if place_type_id in type_tags:
-        tags.append(type_tags[place_type_id])
+    # 1. Tìm trong database
+    if db:
+        main_image = db.query(PlaceImage).filter(
+            PlaceImage.place_id == place_id,
+            PlaceImage.is_main == True
+        ).first()
+        
+        if main_image and main_image.image_url:
+            return main_image.image_url
+        
+        # Lấy ảnh đầu tiên nếu không có ảnh chính
+        first_image = db.query(PlaceImage).filter(
+            PlaceImage.place_id == place_id
+        ).first()
+        
+        if first_image and first_image.image_url:
+            return first_image.image_url
     
-    # Tags theo rating
-    if rating >= 4.0:
-        tags.append("Nổi bật")
-    if rating >= 4.5:
-        tags.append("Phải đến")
+    # 2. Tìm trong local uploads folder
+    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 
+                               "..", "uploads", "places")
     
-    return tags
-
-
-def get_main_image_url(place_id: int, db: Session) -> str:
-    """Lấy ảnh chính của địa điểm từ place_images table"""
-    # Tìm ảnh chính
-    main_image = db.query(PlaceImage).filter(
-        PlaceImage.place_id == place_id,
-        PlaceImage.is_main == True
-    ).first()
+    # Thử các extension phổ biến
+    for ext in ['jpg', 'jpeg', 'png', 'webp']:
+        local_file = f"place_{place_id}_0.{ext}"
+        local_path = os.path.join(uploads_dir, local_file)
+        if os.path.exists(local_path):
+            # Trả về URL tương đối để frontend có thể access
+            return f"/uploads/places/{local_file}"
     
-    if main_image:
-        return main_image.image_url
-    
-    # Nếu không có ảnh chính, lấy ảnh đầu tiên
-    first_image = db.query(PlaceImage).filter(
-        PlaceImage.place_id == place_id
-    ).first()
-    
-    if first_image:
-        return first_image.image_url
-    
-    # Default image
-    return "https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg"
+    # 3. Default placeholder
+    return f"/uploads/places/place_{place_id}_0.jpg"
 
 
 def paginate_query(page: int, limit: int, total_items: int):
@@ -119,89 +111,57 @@ def paginate_query(page: int, limit: int, total_items: int):
 
 
 def place_row_to_compact(row, db: Session = None) -> Dict[str, Any]:
-    """Chuyển đổi row từ database sang compact format cho Frontend (Schema v3.1)"""
+    """
+    Chuyển đổi row từ database sang compact format theo Swagger PlaceCompact schema.
+    
+    Swagger PlaceCompact chỉ có 8 fields:
+    - id, name, district_id, place_type_id
+    - rating_average, price_min, price_max, main_image_url
+    """
     place_id = row.id
-    name = row.name
-    place_type_id = row.place_type_id
-    district_id = row.district_id
-    description = row.description or ""
-    address_detail = row.address_detail or ""
-    latitude = float(row.latitude) if row.latitude else None
-    longitude = float(row.longitude) if row.longitude else None
     rating_average = float(row.rating_average) if row.rating_average else 0.0
-    rating_count = row.rating_count or 0
     price_min = float(row.price_min) if row.price_min else 0
     price_max = float(row.price_max) if row.price_max else 0
     
-    # Lấy district name
-    district_name = None
-    if hasattr(row, 'district_name'):
-        district_name = row.district_name
-    elif db:
-        district = db.query(District).filter(District.id == district_id).first()
-        if district:
-            district_name = district.name
+    # Lấy ảnh từ database hoặc local uploads
+    image_url = get_main_image_url(place_id, db)
     
-    # Tạo địa chỉ
-    address = address_detail if address_detail else (f"Quận {district_name}, Hà Nội" if district_name else f"Hà Nội")
-    
-    tags = get_place_tags(place_type_id, rating_average)
-    
-    # Lấy ảnh
-    image_url = get_main_image_url(place_id, db) if db else "https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg"
-    
+    # Chỉ trả về 8 fields theo Swagger spec
     return {
-        # Swagger spec fields
         "id": place_id,
-        "name": name,
-        "district_id": district_id,
-        "place_type_id": place_type_id,
+        "name": row.name,
+        "district_id": row.district_id,
+        "place_type_id": row.place_type_id,
         "rating_average": rating_average,
-        "review_count": format_review_count(rating_count),
         "price_min": price_min,
         "price_max": price_max,
-        "main_image_url": image_url,
-        "address_detail": address,
-        "tags": tags,
-        # Frontend alias fields for LocationCard
-        "title": name,
-        "address": address,
-        "imageSrc": image_url,
-        "rating": rating_average,
-        "reviewCount": format_review_count(rating_count),
-        # Extra fields
-        "description": description,
-        "latitude": latitude,
-        "longitude": longitude
+        "main_image_url": image_url
     }
 
 
 def place_row_to_horizontal(row, db: Session = None, user_lat: float = None, user_long: float = None) -> Dict[str, Any]:
-    """Chuyển đổi row sang horizontal format cho Frontend LocationCardHorizontal"""
-    latitude = float(row.latitude) if row.latitude else None
-    longitude = float(row.longitude) if row.longitude else None
+    """
+    Chuyển đổi row sang horizontal format - trả về PlaceCompact theo Swagger.
+    Nearby places endpoint vẫn trả về PlaceCompact format.
+    """
+    place_id = row.id
+    rating_average = float(row.rating_average) if row.rating_average else 0.0
+    price_min = float(row.price_min) if row.price_min else 0
+    price_max = float(row.price_max) if row.price_max else 0
     
-    distance = "N/A"
-    if user_lat and user_long and latitude and longitude:
-        lat_diff = abs(latitude - user_lat)
-        long_diff = abs(longitude - user_long)
-        dist_km = math.sqrt(lat_diff**2 + long_diff**2) * 111
-        distance = f"{dist_km:.1f}km"
+    # Lấy ảnh
+    image_url = get_main_image_url(place_id, db)
     
-    rating = float(row.rating_average) if row.rating_average else 0.0
-    rating_count = row.rating_count or 0
-    description = row.description or ""
-    
-    image_url = get_main_image_url(row.id, db) if db else "https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg"
-    
+    # Trả về PlaceCompact format theo Swagger
     return {
-        "id": row.id,
-        "imageSrc": image_url,
-        "title": row.name,
-        "description": description[:100] + "..." if len(description) > 100 else description,
-        "rating": rating,
-        "likeCount": format_review_count(rating_count),
-        "distance": distance
+        "id": place_id,
+        "name": row.name,
+        "district_id": row.district_id,
+        "place_type_id": row.place_type_id,
+        "rating_average": rating_average,
+        "price_min": price_min,
+        "price_max": price_max,
+        "main_image_url": image_url
     }
 
 
@@ -574,60 +534,43 @@ async def get_place_detail(
             UserPlaceFavorite.place_id == place_id
         ).count()
         
-        # Build response data
+        # Build response data theo Swagger PlaceDetailResponse
         address = row.address_detail or (f"Quận {row.district_name}, Hà Nội" if row.district_name else "Hà Nội")
-        open_hours = f"{row.open_hour} - {row.close_hour}" if row.open_hour and row.close_hour else "8:00 - 22:00"
         
-        data = {
-            "id": row.id,
-            "name": row.name,
-            "rating": rating,
-            "rating_average": rating,
-            "reviewCount": format_review_count(rating_count),
-            "review_count": format_review_count(rating_count),
-            "address": address,
-            "address_detail": address,
-            "images": images,
-            "openingHours": open_hours,
-            "opening_hours": open_hours,
-            "description": row.description or "",
-            "fullDescription": row.description or "",
-            "full_description": row.description or "",
-            "district_id": row.district_id,
-            "district_name": row.district_name or "",
-            "place_type_id": row.place_type_id,
-            "place_type_name": row.place_type_name or "",
-            "latitude": latitude,
-            "longitude": longitude,
-            "price_min": float(row.price_min) if row.price_min else 0,
-            "price_max": float(row.price_max) if row.price_max else 0,
-            "tags": get_place_tags(row.place_type_id, rating),
-            "is_favorited": is_favorited,
-            "favorites_count": favorites_count,
-            "nearby": nearby_places,
-            "related_posts": []
-        }
-
-        # Add subtype info
+        # details object cho thông tin chi tiết theo Swagger
+        details = {}
         if row.cuisine_type or row.avg_price_per_person:
-            data["restaurant_info"] = {
+            details["restaurant_info"] = {
                 "cuisine_type": row.cuisine_type,
                 "avg_price_per_person": float(row.avg_price_per_person) if row.avg_price_per_person else None
             }
-        
         if row.star_rating or row.price_per_night:
-            data["hotel_info"] = {
+            details["hotel_info"] = {
                 "star_rating": row.star_rating,
                 "price_per_night": float(row.price_per_night) if row.price_per_night else None,
                 "check_in_time": str(row.check_in_time) if row.check_in_time else None,
                 "check_out_time": str(row.check_out_time) if row.check_out_time else None
             }
-            
         if row.ticket_price is not None:
-             data["tourist_attraction_info"] = {
+            details["tourist_attraction_info"] = {
                 "ticket_price": float(row.ticket_price) if row.ticket_price else 0,
                 "is_ticket_required": row.is_ticket_required
-             }
+            }
+        
+        # Response theo Swagger PlaceDetailResponse schema
+        data = {
+            "id": row.id,
+            "name": row.name,
+            "description": row.description or "",
+            "address_detail": address,
+            "rating_average": rating,
+            "latitude": latitude,
+            "longitude": longitude,
+            "details": details,
+            "images": images,
+            "nearby": nearby_places,
+            "related_posts": []
+        }
 
         # Log visit
         try:
