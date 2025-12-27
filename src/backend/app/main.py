@@ -34,6 +34,7 @@ else:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from config.database import init_db, test_connection
@@ -59,42 +60,26 @@ log_dir.mkdir(exist_ok=True)
 class UTF8FileHandler(logging.FileHandler):
     """FileHandler with UTF-8 encoding"""
     def __init__(self, filename, *args, **kwargs):
-        super().__init__(filename, *args, **kwargs)
-        # Set UTF-8 encoding for Windows
-        import sys
-        if sys.platform == 'win32':
-            self.stream = open(filename, encoding='utf-8', mode='a')
+        super().__init__(filename, encoding='utf-8', *args, **kwargs)
 
 class UTF8StreamHandler(logging.StreamHandler):
-    """StreamHandler with UTF-8 encoding"""
+    """StreamHandler with UTF-8 encoding - handles uvicorn reload safely"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Use UTF-8 wrapper for stdout
-        import sys
-        if sys.platform == 'win32' and hasattr(sys.stdout, 'buffer'):
-            import io
-            self.stream = io.TextIOWrapper(
-                sys.stdout.buffer,
-                encoding='utf-8',
-                errors='replace',
-                line_buffering=True
-            )
 
-# Cấu hình logging với UTF-8 handlers - DEBUG level để hiện tất cả logs
+# Cấu hình logging - INFO level for cleaner output
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         UTF8FileHandler(log_dir / "app.log"),
-        UTF8StreamHandler()
+        logging.StreamHandler()
     ]
 )
 
-# Đảm bảo tất cả các loggers hiển thị logs
-for logger_name in ['uvicorn', 'uvicorn.access', 'uvicorn.error', 'fastapi', 'sqlalchemy.engine', 'httpx']:
-    logging.getLogger(logger_name).setLevel(logging.DEBUG)
-    logging.getLogger(logger_name).handlers = []  # Xóa handlers mặc định
-    logging.getLogger(logger_name).addHandler(UTF8StreamHandler())
+# Giảm noise từ các thư viện khác
+for logger_name in ['uvicorn', 'uvicorn.access', 'sqlalchemy.engine', 'httpx', 'pymongo']:
+    logging.getLogger(logger_name).setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
@@ -232,6 +217,19 @@ app.include_router(posts_router, prefix="/api/v1")
 app.include_router(chatbot_router, prefix="/api/v1")
 app.include_router(upload_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
+
+# ==================== STATIC FILES ====================
+# Mount uploads directory để serve ảnh địa điểm
+# Database lưu URLs: /static/uploads/places/place_1_0.jpg
+uploads_path = Path(__file__).parent.parent.parent / "uploads"
+if uploads_path.exists():
+    # Mount /static/uploads để khớp với URLs trong database
+    app.mount("/static/uploads", StaticFiles(directory=str(uploads_path)), name="static_uploads")
+    # Mount /uploads cho các uploads mới
+    app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
+    logger.info(f"[OK] Mounted static files from: {uploads_path}")
+else:
+    logger.warning(f"[WARN] Uploads directory not found: {uploads_path}")
 
 
 # ==================== ERROR HANDLERS ====================

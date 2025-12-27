@@ -25,6 +25,7 @@ from config.database import (
     get_db, Place, PlaceImage, PlaceType, District, UserPlaceFavorite,
     Restaurant, Hotel, TouristAttraction, VisitLog
 )
+from app.utils.image_helpers import get_main_image_url
 from middleware.auth import get_current_user, get_optional_user
 from middleware.response import (
     success_response,
@@ -50,49 +51,6 @@ def get_place_type_name(place_type_id: int, db: Session) -> str:
     type_mapping = {1: "Du lịch", 2: "Khách sạn", 3: "Nhà hàng"}
     return type_mapping.get(place_type_id, "Khác")
 
-
-def get_main_image_url(place_id: int, db: Session = None) -> str:
-    """
-    Lấy ảnh chính của địa điểm.
-    Priority:
-    1. Database place_images table (is_main=True)
-    2. Local uploads folder: /uploads/places/place_{id}_0.{ext}
-    3. Default placeholder
-    """
-    import os
-    
-    # 1. Tìm trong database
-    if db:
-        main_image = db.query(PlaceImage).filter(
-            PlaceImage.place_id == place_id,
-            PlaceImage.is_main == True
-        ).first()
-        
-        if main_image and main_image.image_url:
-            return main_image.image_url
-        
-        # Lấy ảnh đầu tiên nếu không có ảnh chính
-        first_image = db.query(PlaceImage).filter(
-            PlaceImage.place_id == place_id
-        ).first()
-        
-        if first_image and first_image.image_url:
-            return first_image.image_url
-    
-    # 2. Tìm trong local uploads folder
-    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 
-                               "..", "uploads", "places")
-    
-    # Thử các extension phổ biến
-    for ext in ['jpg', 'jpeg', 'png', 'webp']:
-        local_file = f"place_{place_id}_0.{ext}"
-        local_path = os.path.join(uploads_dir, local_file)
-        if os.path.exists(local_path):
-            # Trả về URL tương đối để frontend có thể access
-            return f"/uploads/places/{local_file}"
-    
-    # 3. Default placeholder
-    return f"/uploads/places/place_{place_id}_0.jpg"
 
 
 def paginate_query(page: int, limit: int, total_items: int):
@@ -123,6 +81,10 @@ def place_row_to_compact(row, db: Session = None) -> Dict[str, Any]:
     price_min = float(row.price_min) if row.price_min else 0
     price_max = float(row.price_max) if row.price_max else 0
     
+    # Auto-swap nếu giá trị bị đảo ngược trong database
+    if price_min > price_max and price_max > 0:
+        price_min, price_max = price_max, price_min
+    
     # Lấy ảnh từ database hoặc local uploads
     image_url = get_main_image_url(place_id, db)
     
@@ -148,6 +110,10 @@ def place_row_to_horizontal(row, db: Session = None, user_lat: float = None, use
     rating_average = float(row.rating_average) if row.rating_average else 0.0
     price_min = float(row.price_min) if row.price_min else 0
     price_max = float(row.price_max) if row.price_max else 0
+    
+    # Auto-swap nếu giá trị bị đảo ngược trong database
+    if price_min > price_max and price_max > 0:
+        price_min, price_max = price_max, price_min
     
     # Lấy ảnh
     image_url = get_main_image_url(place_id, db)
@@ -494,7 +460,22 @@ async def get_place_detail(
             ORDER BY is_main DESC, id ASC
         """)
         images_result = db.execute(images_query, {"place_id": place_id}).fetchall()
-        images = [img.image_url for img in images_result] if images_result else [get_main_image_url(place_id, db)]
+        
+        # Transform relative URLs to full URLs
+        import os
+        backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
+        backend_port = os.getenv("BACKEND_PORT", "8080")
+        base_url = f"http://{backend_host}:{backend_port}"
+        
+        if images_result:
+            images = []
+            for img in images_result:
+                url = img.image_url
+                if url and not url.startswith('http'):
+                    url = f"{base_url}{url}"
+                images.append(url)
+        else:
+            images = [get_main_image_url(place_id, db)]
         
         # Lấy nearby places
         nearby_places = []

@@ -25,7 +25,7 @@ from middleware.response import (
     invalid_password_response,
     not_found_response
 )
-from utils.email_validator import validate_user_email
+from app.utils.email_validator import validate_user_email
 
 logger = logging.getLogger(__name__)
 
