@@ -64,6 +64,31 @@ class ReportRequest(BaseModel):
 
 # ==================== HELPER FUNCTIONS ====================
 
+def get_main_image_url(place_id: int, db) -> str:
+    """Get main image URL for a place"""
+    from config.database import PlaceImage
+    
+    # Try database first
+    main_image = db.query(PlaceImage).filter(
+        PlaceImage.place_id == place_id,
+        PlaceImage.is_main == True
+    ).first()
+    
+    if main_image and main_image.image_url:
+        return main_image.image_url
+    
+    # Get first image if no main
+    first_image = db.query(PlaceImage).filter(
+        PlaceImage.place_id == place_id
+    ).first()
+    
+    if first_image and first_image.image_url:
+        return first_image.image_url
+    
+    # Default placeholder
+    return f"/uploads/places/place_{place_id}_0.jpg"
+
+
 def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
     """Lấy thông tin user compact"""
     user = db.query(User).filter(User.id == user_id).first()
@@ -78,7 +103,7 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
 
 
 def get_place_compact(place_id: int, db: Session) -> Optional[Dict]:
-    """Lấy thông tin place compact"""
+    """Lấy thông tin place compact theo Swagger PlaceCompact schema"""
     place = db.query(Place).filter(Place.id == place_id).first()
     if place:
         return {
@@ -86,7 +111,10 @@ def get_place_compact(place_id: int, db: Session) -> Optional[Dict]:
             "name": place.name,
             "district_id": place.district_id,
             "place_type_id": place.place_type_id,
-            "rating_average": float(place.rating_average) if place.rating_average else 0
+            "rating_average": float(place.rating_average) if place.rating_average else 0,
+            "price_min": float(place.price_min) if place.price_min else 0,
+            "price_max": float(place.price_max) if place.price_max else 0,
+            "main_image_url": get_main_image_url(place_id, db)
         }
     return None
 

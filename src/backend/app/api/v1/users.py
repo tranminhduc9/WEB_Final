@@ -16,13 +16,41 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 import logging
 
-from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place
+from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place, PlaceImage
 from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
+from middleware.mongodb_client import mongo_client, get_mongodb
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+# ==================== HELPER FUNCTIONS ====================
+
+def get_main_image_url(place_id: int, db) -> str:
+    """Get main image URL for a place"""
+    import os
+    
+    # Try database first
+    main_image = db.query(PlaceImage).filter(
+        PlaceImage.place_id == place_id,
+        PlaceImage.is_main == True
+    ).first()
+    
+    if main_image and main_image.image_url:
+        return main_image.image_url
+    
+    # Get first image if no main
+    first_image = db.query(PlaceImage).filter(
+        PlaceImage.place_id == place_id
+    ).first()
+    
+    if first_image and first_image.image_url:
+        return first_image.image_url
+    
+    # Default placeholder
+    return f"/uploads/places/place_{place_id}_0.jpg"
 
 
 # ==================== REQUEST SCHEMAS ====================
@@ -52,12 +80,14 @@ async def get_user_profile(
     Lấy thông tin profile của user hiện tại
     
     Returns:
-        - user: Thông tin user
+        - user: Thông tin user (theo Swagger UserDetailResponse)
         - stats: Thống kê (số bài viết, etc.)
         - recent_favorites: Địa điểm yêu thích gần đây
         - recent_posts: Bài viết gần đây
     """
     try:
+        await get_mongodb()  # Ensure MongoDB connection
+        
         user_id = current_user.get("user_id")
         
         # Lấy user từ database
@@ -86,15 +116,36 @@ async def get_user_profile(
                     "rating_average": float(place.rating_average) if place.rating_average else 0,
                     "price_min": float(place.price_min) if place.price_min else 0,
                     "price_max": float(place.price_max) if place.price_max else 0,
-                    "main_image_url": None  # TODO: Get from place_images
+                    "main_image_url": get_main_image_url(place.id, db)
                 })
         
-        # TODO: Get posts from MongoDB
+        # Get recent posts from MongoDB
         recent_posts = []
+        try:
+            user_posts = await mongo_client.find_many(
+                "posts", 
+                {"author_id": user_id, "status": "approved"},
+                sort=[("created_at", -1)],
+                limit=5
+            )
+            for post in user_posts:
+                recent_posts.append({
+                    "_id": str(post.get("_id")),
+                    "title": post.get("title"),
+                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                })
+        except Exception as e:
+            logger.warning(f"Error getting user posts: {e}")
         
-        # Stats
+        # Stats with MongoDB posts count
+        posts_count = 0
+        try:
+            posts_count = await mongo_client.count("posts", {"author_id": user_id})
+        except Exception as e:
+            logger.warning(f"Error counting posts: {e}")
+        
         stats = {
-            "posts_count": 0,  # TODO: Count from MongoDB
+            "posts_count": posts_count,
             "favorites_count": db.query(UserPlaceFavorite).filter(
                 UserPlaceFavorite.user_id == user_id
             ).count()
@@ -104,10 +155,11 @@ async def get_user_profile(
             message="Lấy thông tin profile thành công",
             data={
                 "user": {
-                    # Swagger UserDetailResponse.data.user: id, full_name, email, bio, reputation_score
+                    # Swagger UserDetailResponse.data.user fields
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
+                    "avatar_url": user.avatar_url,  # Added per Swagger spec
                     "bio": user.bio,
                     "reputation_score": user.reputation_score
                 },
