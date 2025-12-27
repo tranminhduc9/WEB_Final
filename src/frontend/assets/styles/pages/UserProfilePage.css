@@ -17,10 +17,12 @@
 /* ==================== */
 .profile-hero {
   display: flex;
-  align-items: center; /* Căn giữa theo chiều dọc */
+  align-items: center;
+  /* Căn giữa theo chiều dọc */
   gap: 40px;
   padding: 24px;
-  padding-left: 13.75%; /* left: 13.75% từ Figma */
+  padding-left: 13.75%;
+  /* left: 13.75% từ Figma */
   padding-right: 5%;
   margin-bottom: 40px;
   min-height: 257px;
@@ -28,9 +30,11 @@
 
 /* Avatar */
 .profile-avatar {
-  width: 180px; /* Giảm từ 257px */
+  width: 180px;
+  /* Giảm từ 257px */
   height: 180px;
-  border-radius: 90px; /* Tròn */
+  border-radius: 90px;
+  /* Tròn */
   background: #f6f5f5;
   overflow: hidden;
   flex-shrink: 0;
@@ -57,10 +61,12 @@
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 700;
-  font-size: 36px; /* Giảm từ 50px */
+  font-size: 36px;
+  /* Giảm từ 50px */
   line-height: 44px;
   color: #000000;
-  white-space: nowrap; /* Không ngắt dòng */
+  white-space: nowrap;
+  /* Không ngắt dòng */
 }
 
 /* Độ uy tín */
@@ -69,15 +75,18 @@
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 400;
-  font-size: 20px; /* Giảm từ 30px */
+  font-size: 20px;
+  /* Giảm từ 30px */
   line-height: 26px;
   color: #000000;
-  white-space: nowrap; /* Không ngắt dòng */
+  white-space: nowrap;
+  /* Không ngắt dòng */
 }
 
 /* Chỉnh sửa thông tin cá nhân */
 .profile-edit-btn {
-  margin-left: 40px; /* Khoảng cách cố định thay vì auto */
+  margin-left: 40px;
+  /* Khoảng cách cố định thay vì auto */
   display: flex;
   align-items: center;
   gap: 8px;
@@ -92,7 +101,8 @@
   color: #000000;
   cursor: pointer;
   flex-shrink: 0;
-  white-space: nowrap; /* Không ngắt dòng */
+  white-space: nowrap;
+  /* Không ngắt dòng */
 }
 
 /* Settings icon */
@@ -114,7 +124,8 @@
 /* ==================== */
 .profile-section {
   margin-bottom: 48px;
-  padding-left: 2.57%; /* left: 2.57% từ Figma cho thanh cam */
+  padding-left: 2.57%;
+  /* left: 2.57% từ Figma cho thanh cam */
 }
 
 .profile-section__header {
@@ -132,7 +143,8 @@
   font-size: 40px;
   line-height: 48px;
   color: #000000;
-  margin: 0 0 32px 0; /* Thêm khoảng cách với cards */
+  margin: 0 0 32px 0;
+  /* Thêm khoảng cách với cards */
   padding-left: 14px;
   position: relative;
 }
@@ -158,10 +170,12 @@
 /* ==================== */
 .profile-locations-scroll {
   display: flex;
-  gap: 30px; /* Tăng 50% từ 20px */
+  gap: 30px;
+  /* Tăng 50% từ 20px */
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding-left: 2.78%; /* Offset thêm từ left section */
+  padding-left: 2.78%;
+  /* Offset thêm từ left section */
   padding-bottom: 10px;
   padding-right: 24px;
   scrollbar-width: none;
@@ -172,7 +186,7 @@
   display: none;
 }
 
-.profile-locations-scroll > * {
+.profile-locations-scroll>* {
   flex: 0 0 auto;
 }
 
@@ -183,9 +197,11 @@
 .profile-posts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 40px 75px; /* Gap giữa các PostCard */
+  gap: 40px 75px;
+  /* Gap giữa các PostCard */
   max-width: 1221px;
-  margin-left: 2.78%; /* Offset thêm từ left section */
+  margin-left: 2.78%;
+  /* Offset thêm từ left section */
   padding-right: 24px;
 }
 
@@ -438,4 +454,219 @@
   margin: 0;
   font-size: 16px;
   color: #666;
+}
+
+/* ==================== */
+/* Bio */
+/* ==================== */
+.profile-bio {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #666;
+  max-width: 400px;
+}
+
+/* ==================== */
+/* Empty State */
+/* ==================== */
+.profile-empty {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #999;
+  padding: 24px;
+  margin: 0;
+}
+
+/* ==================== */
+/* Editable Avatar */
+/* ==================== */
+.profile-avatar--editable {
+  cursor: pointer;
+}
+
+.profile-avatar--editable:hover .avatar-overlay {
+  opacity: 1;
+}
+
+/* ==================== */
+/* Edit Profile Modal */
+/* ==================== */
+.profile-edit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.profile-edit-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.profile-edit-modal h3 {
+  margin: 0 0 24px 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1E1E1E;
+}
+
+.profile-edit-field {
+  margin-bottom: 20px;
+}
+
+.profile-edit-field label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.profile-edit-field input,
+.profile-edit-field textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #333;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.profile-edit-field input:focus,
+.profile-edit-field textarea:focus {
+  outline: none;
+  border-color: #F88622;
+}
+
+.profile-edit-field input:disabled,
+.profile-edit-field textarea:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.profile-edit-field textarea {
+  resize: none;
+  min-height: 80px;
+}
+
+.profile-edit-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.profile-edit-actions button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.profile-edit-actions button:first-child {
+  background: #eee;
+  color: #333;
+}
+
+.profile-edit-actions button:first-child:hover {
+  background: #ddd;
+}
+
+.profile-edit-actions button:last-child {
+  background: #F88622;
+  color: white;
+}
+
+.profile-edit-actions button:last-child:hover:not(:disabled) {
+  background: #e07520;
+}
+
+.profile-edit-actions button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ==================== */
+/* Loading & Error States */
+/* ==================== */
+.profile-page--loading,
+.profile-page--error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.profile-loading,
+.profile-error {
+  text-align: center;
+  padding: 40px;
+}
+
+.profile-loading .loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #F88622;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.profile-loading p,
+.profile-error h2 {
+  font-family: 'Inter', sans-serif;
+  color: #666;
+}
+
+.profile-error h2 {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.profile-back-link {
+  display: inline-block;
+  padding: 12px 24px;
+  background: #F88622;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  transition: background 0.2s ease;
+}
+
+.profile-back-link:hover {
+  background: #e07520;
 }

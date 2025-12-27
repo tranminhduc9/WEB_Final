@@ -114,6 +114,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * Login
    */
   const login = useCallback(async (credentials: LoginRequest) => {
+    // Guard against concurrent login attempts
+    if (isLoading) {
+      console.warn('Login already in progress');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -132,16 +138,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         message = err.message;
       }
       setError(message);
-      throw err;
+      // Don't re-throw - let the component handle the error through context.error
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isLoading]);
 
   /**
    * Register
    */
   const register = useCallback(async (data: RegisterRequest) => {
+    // Guard against concurrent register attempts
+    if (isLoading) {
+      console.warn('Registration already in progress');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -157,11 +169,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         message = err.message;
       }
       setError(message);
-      throw err;
+      // Don't re-throw - let the component handle the error through context.error
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isLoading]);
 
   /**
    * Logout

@@ -4,6 +4,7 @@ import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
 import LocationCard from '../../components/common/LocationCard';
 import { placeService } from '../../services';
+import { Icons } from '../../config/constants';
 import type { PlaceCompact } from '../../types/models';
 import '../../assets/styles/pages/SearchResultsPage.css';
 
@@ -226,7 +227,7 @@ const SearchResultsPage: React.FC = () => {
           <section className="search-section location-section">
             <div className="search-section__header">
               <h2 className="search-section__title">
-                Địa điểm lân cận <span className="icon-location">📍</span>
+                Địa điểm lân cận <Icons.Location className="title-icon" />
               </h2>
             </div>
 
@@ -237,7 +238,7 @@ const SearchResultsPage: React.FC = () => {
           <section className="search-section location-section">
             <div className="search-section__header">
               <h2 className="search-section__title">
-                Có thể bạn sẽ thích <span className="icon-location">📍</span>
+                Có thể bạn sẽ thích <Icons.Location className="title-icon" />
               </h2>
             </div>
 

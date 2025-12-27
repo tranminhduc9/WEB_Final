@@ -1,10 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Icons } from '../../config/constants';
 import '../../assets/styles/components/BlogCard.css';
 
 interface BlogCardProps {
-  id: number; // Thêm id để link đến trang chi tiết
+  id: string | number; // Support both string (API) and number
+  authorId?: number;   // User ID for profile link
   avatarSrc: string;
   username: string;
   timeAgo: string;
@@ -19,6 +20,7 @@ interface BlogCardProps {
 
 const BlogCard: React.FC<BlogCardProps> = ({
   id,
+  authorId,
   avatarSrc,
   username,
   timeAgo,
@@ -32,18 +34,35 @@ const BlogCard: React.FC<BlogCardProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleCardClick = () => {
     navigate(`/blog/${id}`);
   };
 
+  const handleUserClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    if (authorId) {
+      navigate(`/user/${authorId}`);
+    }
+  };
+
   return (
-    <div className="blog-card" onClick={handleClick} style={{ cursor: 'pointer' }}>
+    <div className="blog-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       {/* Header */}
       <div className="blog-card__header">
         <div className="blog-card__user">
-          <img src={avatarSrc} alt={username} className="blog-card__avatar" />
+          <img
+            src={avatarSrc}
+            alt={username}
+            className={`blog-card__avatar ${authorId ? 'blog-card__avatar--clickable' : ''}`}
+            onClick={handleUserClick}
+          />
           <div className="blog-card__user-info">
-            <span className="blog-card__username">{username} • {timeAgo}</span>
+            <span
+              className={`blog-card__username ${authorId ? 'blog-card__username--clickable' : ''}`}
+              onClick={handleUserClick}
+            >
+              {username} • {timeAgo}
+            </span>
             <div className="blog-card__location">
               <Icons.Location className="blog-card__location-icon" />
               <span>{location}</span>
@@ -82,4 +101,3 @@ const BlogCard: React.FC<BlogCardProps> = ({
 };
 
 export default BlogCard;
-

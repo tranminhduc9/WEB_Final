@@ -3,10 +3,13 @@
 .blog-card {
   background: #FFFFFF;
   width: 100%;
-  max-width: 1055px; /* 1241 * 0.85 */
-  padding: 20px; /* 24 * 0.85 */
+  max-width: 1055px;
+  /* 1241 * 0.85 */
+  padding: 20px;
+  /* 24 * 0.85 */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  overflow: hidden; /* Không cho tràn */
+  overflow: hidden;
+  /* Không cho tràn */
 }
 
 /* ==================== */
@@ -16,18 +19,21 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 17px; /* 20 * 0.85 */
+  margin-bottom: 17px;
+  /* 20 * 0.85 */
 }
 
 .blog-card__user {
   display: flex;
   align-items: flex-start;
-  gap: 14px; /* 16 * 0.85 */
+  gap: 14px;
+  /* 16 * 0.85 */
 }
 
 /* Avatar */
 .blog-card__avatar {
-  width: 75px; /* 88 * 0.85 */
+  width: 75px;
+  /* 88 * 0.85 */
   height: 75px;
   border-radius: 100px;
   object-fit: cover;
@@ -37,7 +43,8 @@
 .blog-card__user-info {
   display: flex;
   flex-direction: column;
-  gap: 7px; /* 8 * 0.85 */
+  gap: 7px;
+  /* 8 * 0.85 */
 }
 
 /* Username */
@@ -45,7 +52,8 @@
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 600;
-  font-size: 17px; /* 20 * 0.85 */
+  font-size: 17px;
+  /* 20 * 0.85 */
   line-height: 100%;
   color: #000000;
 }
@@ -58,7 +66,8 @@
 }
 
 .blog-card__location-icon {
-  font-size: 20px; /* 24 * 0.85 */
+  font-size: 20px;
+  /* 24 * 0.85 */
   color: #000000;
 }
 
@@ -67,7 +76,8 @@
   font-family: 'Roboto', sans-serif;
   font-style: normal;
   font-weight: 700;
-  font-size: 20px; /* 24 * 0.85 */
+  font-size: 20px;
+  /* 24 * 0.85 */
   line-height: 24px;
   color: #000000;
 }
@@ -75,12 +85,15 @@
 /* Rating badge */
 .blog-card__rating {
   background: #F88622;
-  border-radius: 17px 4px; /* 20px 5px * 0.85 */
-  padding: 7px 14px; /* 8px 16px * 0.85 */
+  border-radius: 17px 4px;
+  /* 20px 5px * 0.85 */
+  padding: 7px 14px;
+  /* 8px 16px * 0.85 */
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 700;
-  font-size: 24px; /* 28 * 0.85 */
+  font-size: 24px;
+  /* 28 * 0.85 */
   line-height: 120%;
   letter-spacing: -0.02em;
   color: #FFFFFF;
@@ -91,17 +104,22 @@
 /* ==================== */
 .blog-card__images {
   display: flex;
-  gap: 10px; /* 12 * 0.85 */
-  margin-bottom: 14px; /* 16 * 0.85 */
+  gap: 10px;
+  /* 12 * 0.85 */
+  margin-bottom: 14px;
+  /* 16 * 0.85 */
   overflow: hidden;
   border-radius: 7px;
 }
 
 .blog-card__image {
   flex: 1;
-  min-width: 0; /* Cho phép co lại */
-  max-width: 50%; /* Không vượt quá 50% */
-  height: 353px; /* 415 * 0.85 */
+  min-width: 0;
+  /* Cho phép co lại */
+  max-width: 50%;
+  /* Không vượt quá 50% */
+  height: 353px;
+  /* 415 * 0.85 */
   object-fit: cover;
   border-radius: 7px;
 }
@@ -112,7 +130,8 @@
 .blog-card__actions {
   display: flex;
   align-items: center;
-  gap: 20px; /* 24 * 0.85 */
+  gap: 20px;
+  /* 24 * 0.85 */
   margin-bottom: 10px;
   padding-left: 7px;
 }
@@ -124,7 +143,8 @@
 }
 
 .blog-card__icon {
-  font-size: 20px; /* 24 * 0.85 */
+  font-size: 20px;
+  /* 24 * 0.85 */
 }
 
 .blog-card__icon svg {
@@ -155,7 +175,8 @@
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 400;
-  font-size: 17px; /* 20 * 0.85 */
+  font-size: 17px;
+  /* 20 * 0.85 */
   line-height: 20px;
   color: #000000;
 }
@@ -167,7 +188,8 @@
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 400;
-  font-size: 17px; /* 20 * 0.85 */
+  font-size: 17px;
+  /* 20 * 0.85 */
   line-height: 20px;
   color: #000000;
   margin: 0;
@@ -292,4 +314,26 @@
   .blog-card__description {
     font-size: 12px;
   }
+}
+
+/* ==================== */
+/* Clickable User Elements */
+/* ==================== */
+.blog-card__avatar--clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.blog-card__avatar--clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.blog-card__username--clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.blog-card__username--clickable:hover {
+  color: #F88622;
 }

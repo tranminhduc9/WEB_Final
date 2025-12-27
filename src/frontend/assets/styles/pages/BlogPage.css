@@ -3,9 +3,11 @@
 .blog-page {
   background: #FFFFFF;
   min-height: 100vh;
-  max-width: 1224px; /* 1440 * 0.85 */
+  max-width: 1224px;
+  /* 1440 * 0.85 */
   margin: 0 auto;
-  padding: 20px 0 41px; /* 24px 0 48px * 0.85 */
+  padding: 20px 0 41px;
+  /* 24px 0 48px * 0.85 */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -13,7 +15,8 @@
 /* Chia sẻ trải nghiệm Section */
 /* ==================== */
 .blog-page__share-section {
-  padding: 0 32px; /* Giảm 50% */
+  padding: 0 32px;
+  /* Giảm 50% */
   margin-bottom: 34px;
 }
 
@@ -25,8 +28,10 @@
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 700;
-  font-size: 34px; /* 40 * 0.85 */
-  line-height: 41px; /* 48 * 0.85 */
+  font-size: 34px;
+  /* 40 * 0.85 */
+  line-height: 41px;
+  /* 48 * 0.85 */
   color: #000000;
   margin: 0 0 20px 0;
   padding-left: 12px;
@@ -38,7 +43,8 @@
   content: '';
   position: absolute;
   left: 0;
-  width: 5px; /* 6 * 0.85 */
+  width: 5px;
+  /* 6 * 0.85 */
   height: 41px;
   background: #F88622;
   border-radius: 4px;
@@ -48,7 +54,8 @@
 .blog-page__input-box {
   background: #ECEAEA;
   padding: 24px 34px;
-  margin-left: 17px; /* Giảm 50% */
+  margin-left: 17px;
+  /* Giảm 50% */
   max-width: 989px;
 }
 
@@ -56,7 +63,8 @@
   font-family: 'Inter', sans-serif;
   font-style: normal;
   font-weight: 300;
-  font-size: 26px; /* 30 * 0.85 */
+  font-size: 26px;
+  /* 30 * 0.85 */
   line-height: 31px;
   color: #000000;
 }
@@ -65,7 +73,8 @@
 /* Newfeed Section */
 /* ==================== */
 .blog-page__newfeed-section {
-  padding: 0 32px; /* Giảm 50% */
+  padding: 0 32px;
+  /* Giảm 50% */
 }
 
 /* Section title */
@@ -79,7 +88,8 @@
   font-size: 34px;
   line-height: 41px;
   color: #000000;
-  margin: 0 0 27px 0; /* 32 * 0.85 */
+  margin: 0 0 27px 0;
+  /* 32 * 0.85 */
   padding-left: 12px;
   position: relative;
 }
@@ -98,7 +108,8 @@
 .blog-page__posts {
   display: flex;
   flex-direction: column;
-  gap: 34px; /* 40 * 0.85 */
+  gap: 34px;
+  /* 40 * 0.85 */
 }
 
 /* ==================== */
@@ -108,13 +119,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 14px; /* 16 * 0.85 */
+  gap: 14px;
+  /* 16 * 0.85 */
   margin-top: 41px;
   padding: 20px 0;
 }
 
 .blog-page__pagination-btn {
-  width: 56px; /* 66 * 0.85 */
+  width: 56px;
+  /* 66 * 0.85 */
   height: 56px;
   display: flex;
   justify-content: center;
@@ -125,7 +138,8 @@
   font-family: 'Roboto', sans-serif;
   font-style: normal;
   font-weight: 700;
-  font-size: 34px; /* 40 * 0.85 */
+  font-size: 34px;
+  /* 40 * 0.85 */
   line-height: 140%;
   color: #000000;
   cursor: pointer;
@@ -142,7 +156,8 @@
 }
 
 .blog-page__pagination-arrow {
-  width: 37px; /* 44 * 0.85 */
+  width: 37px;
+  /* 44 * 0.85 */
   height: 37px;
   display: flex;
   justify-content: center;
@@ -150,7 +165,8 @@
   background: transparent;
   border: none;
   font-family: 'Roboto', sans-serif;
-  font-size: 27px; /* 32 * 0.85 */
+  font-size: 27px;
+  /* 32 * 0.85 */
   color: #000000;
   cursor: pointer;
 }
@@ -168,9 +184,47 @@
 }
 
 /* ==================== */
+/* Loading State */
+/* ==================== */
+.blog-page__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.blog-page__loading .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #F88622;
+  border-radius: 50%;
+  animation: blog-spin 0.8s linear infinite;
+}
+
+@keyframes blog-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.blog-page__loading p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ==================== */
 /* Responsive */
 /* ==================== */
 @media (max-width: 1200px) {
+
   .blog-page__share-section,
   .blog-page__newfeed-section {
     padding: 0 34px;
@@ -198,6 +252,7 @@
 }
 
 @media (max-width: 900px) {
+
   .blog-page__share-section,
   .blog-page__newfeed-section {
     padding: 0 20px;

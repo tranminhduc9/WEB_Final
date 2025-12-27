@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../../contexts';
 import logo from '../../assets/images/logo.png';
@@ -8,14 +8,21 @@ import '../../assets/styles/pages/LoginPage.css';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const { login, error, clearError, isLoading } = useAuthContext();
+  const { login, error, clearError, isLoading, isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Lấy redirect URL từ state (nếu có)
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+
+  // Redirect on successful authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const validateForm = (): string | null => {
     if (!email.trim()) {
@@ -35,34 +42,27 @@ export default function Login() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
+    setLocalError(null);
 
     const validationError = validateForm();
     if (validationError) {
+      setLocalError(validationError);
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      await login({ email: email.trim(), password });
-      // Redirect về trang trước đó hoặc trang chủ
-      navigate(from, { replace: true });
-    } catch (err) {
-      // Error đã được xử lý trong AuthContext
-      console.error('Login failed:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Login will set error in context if it fails
+    await login({ email: email.trim(), password });
+    // Redirect is handled by useEffect above when isAuthenticated changes
   };
 
-  const displayError = error || (validateForm() && isSubmitting ? validateForm() : null);
+  const displayError = localError || error;
 
   return (
     <div className="login-container">
       <div className="login-form-section">
         <div className="form-wrapper">
           <h2>ĐĂNG NHẬP TÀI KHOẢN</h2>
-          <img src={logo} alt="login" className="login-logo" />
+          <Link to="/"><img src={logo} alt="login" className="login-logo" /></Link>
 
           <form onSubmit={onSubmit}>
             <div className="input-group subheading">
@@ -103,9 +103,9 @@ export default function Login() {
             <button
               type="submit"
               className="login-button"
-              disabled={isLoading || isSubmitting}
+              disabled={isLoading}
             >
-              {isLoading || isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
 
             <div className="forgot-password">

@@ -262,3 +262,57 @@ export interface NearbyQueryParams {
     long: number;
     radius?: number;
 }
+
+// ============================
+// CHATBOT DOMAIN - Synced with WEB_CK.md & db.md
+// ============================
+
+// Chatbot Response - from WEB_CK.md ChatbotResponse schema
+export interface ChatbotResponse {
+    success: boolean;
+    conversation_id: string;
+    bot_response: string;
+    suggested_places?: PlaceCompact[];
+}
+
+// Chatbot Message Request
+export interface ChatbotMessageRequest {
+    conversation_id?: string | null;
+    message: string;
+}
+
+// Chatbot Log - from db.md chatbot_logs_mongo
+export interface ChatbotLog {
+    _id: string;
+    conversation_id: string;
+    user_id: number;
+    user_message: string;
+    bot_response?: string;
+    entities?: Record<string, unknown>;
+    created_at?: string;
+}
+
+// Chatbot History Response
+export interface ChatbotHistoryResponse {
+    success: boolean;
+    data: ChatbotLog[];
+}
+
+// ============================
+// REPORT DOMAIN - Synced with db.md reports_mongo
+// ============================
+
+export interface Report {
+    _id: string;
+    target_type: string;  // 'post' | 'comment'
+    target_id: string;
+    reporter_id: number;
+    reason: string;
+    description?: string;
+    created_at?: string;
+}
+
+export interface ReportRequest {
+    reason: string;
+    description?: string;
+}

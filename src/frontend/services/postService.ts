@@ -141,6 +141,19 @@ export const postService = {
         );
         return response;
     },
+
+    /**
+     * Report comment
+     * POST /comments/{id}/report
+     * Body: { reason, description? }
+     */
+    reportComment: async (commentId: string, reason: string, description?: string): Promise<BaseResponse> => {
+        const response = await axiosClient.post<{ reason: string; description?: string }, BaseResponse>(
+            `/comments/${commentId}/report`,
+            { reason, description }
+        );
+        return response;
+    },
 };
 
 export default postService;
