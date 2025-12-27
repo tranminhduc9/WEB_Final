@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place, PlaceImage
+from app.utils.image_helpers import get_main_image_url
 from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
@@ -25,32 +26,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
-
-# ==================== HELPER FUNCTIONS ====================
-
-def get_main_image_url(place_id: int, db) -> str:
-    """Get main image URL for a place"""
-    import os
-    
-    # Try database first
-    main_image = db.query(PlaceImage).filter(
-        PlaceImage.place_id == place_id,
-        PlaceImage.is_main == True
-    ).first()
-    
-    if main_image and main_image.image_url:
-        return main_image.image_url
-    
-    # Get first image if no main
-    first_image = db.query(PlaceImage).filter(
-        PlaceImage.place_id == place_id
-    ).first()
-    
-    if first_image and first_image.image_url:
-        return first_image.image_url
-    
-    # Default placeholder
-    return f"/uploads/places/place_{place_id}_0.jpg"
 
 
 # ==================== REQUEST SCHEMAS ====================

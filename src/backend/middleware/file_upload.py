@@ -338,7 +338,7 @@ class CloudinaryUploader:
                 await f.write(content)
 
             # Return local URL
-            local_url = f"/static/uploads/{folder or FileUploadConfig.DEFAULT_FOLDER}/{filename}"
+            local_url = f"/uploads/{folder or FileUploadConfig.DEFAULT_FOLDER}/{filename}"
 
             return {
                 "url": local_url,
