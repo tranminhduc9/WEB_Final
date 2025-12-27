@@ -94,7 +94,7 @@ export default function Register() {
         <div className="register-form-section">
           <div className="form-wrapper" style={{ textAlign: 'center' }}>
             <h2>ĐĂNG KÝ THÀNH CÔNG!</h2>
-            <img src={logo} alt="register" className="register-logo" />
+            <Link to="/"><img src={logo} alt="register" className="register-logo" /></Link>
             <p style={{ marginTop: '1rem', color: '#4CAF50' }}>
               Tài khoản của bạn đã được tạo thành công.
             </p>
@@ -115,7 +115,7 @@ export default function Register() {
       <div className="register-form-section">
         <div className="form-wrapper">
           <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
-          <img src={logo} alt="register" className="register-logo" />
+          <Link to="/"><img src={logo} alt="register" className="register-logo" /></Link>
 
           <form onSubmit={onSubmit}>
             <div className="input-group subheading">

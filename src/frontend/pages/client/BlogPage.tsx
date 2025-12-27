@@ -15,6 +15,7 @@ const defaultAvatar = 'https://i.pravatar.cc/88';
 const mockBlogPosts = [
   {
     id: '1',
+    authorId: 1,
     avatarSrc: 'https://i.pravatar.cc/88?img=1',
     username: 'user_name',
     timeAgo: '20 giờ',
@@ -28,6 +29,7 @@ const mockBlogPosts = [
   },
   {
     id: '2',
+    authorId: 2,
     avatarSrc: 'https://i.pravatar.cc/88?img=2',
     username: 'traveler_vn',
     timeAgo: '1 ngày',
@@ -123,6 +125,7 @@ const BlogPage: React.FC = () => {
   // Map PostDetail to BlogCard props
   const mapPostToCard = (post: PostDetail) => ({
     id: post._id,
+    authorId: post.author?.id,
     avatarSrc: post.author?.avatar_url || defaultAvatar,
     username: post.author?.full_name || 'Người dùng',
     timeAgo: formatTimeAgo(post.created_at),
@@ -241,6 +244,7 @@ const BlogPage: React.FC = () => {
                 <BlogCard
                   key={post.id}
                   id={post.id}
+                  authorId={post.authorId}
                   avatarSrc={post.avatarSrc}
                   username={post.username}
                   timeAgo={post.timeAgo}

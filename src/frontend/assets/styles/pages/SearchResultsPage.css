@@ -58,6 +58,21 @@
   vertical-align: middle;
 }
 
+/* Title icon - SVG location */
+.title-icon {
+  width: 28px;
+  height: 28px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.title-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: #1E1E1E;
+}
+
 /* --- Grid System --- */
 .search-grid {
   display: grid;

@@ -11,6 +11,8 @@ import { ProtectedRoute, PublicRoute } from './routes'
 // Pages
 import Login from './pages/client/Login'
 import Register from './pages/client/Register'
+import ForgotPassword from './pages/client/ForgotPassword'
+import ResetPassword from './pages/client/ResetPassword'
 import SearchResultsPage from './pages/client/SearchResultsPage'
 import TrendPlacesPage from './pages/client/TrendPlacesPage'
 import PlacesPage from './pages/client/PlacesPage'
@@ -58,6 +60,22 @@ const router = createBrowserRouter([
       </PublicRoute>
     )
   },
+  {
+    path: '/forgot-password',
+    element: (
+      <PublicRoute>
+        <ForgotPassword />
+      </PublicRoute>
+    )
+  },
+  {
+    path: '/reset-password',
+    element: (
+      <PublicRoute>
+        <ResetPassword />
+      </PublicRoute>
+    )
+  },
 
   // Protected routes (require authentication)
   {
@@ -68,6 +86,9 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
+
+  // Public user profile route (view other users)
+  { path: '/user/:id', element: <UserProfilePage /> },
 
   // Admin routes
   { path: '/admin', element: <AdminHomePage /> },
