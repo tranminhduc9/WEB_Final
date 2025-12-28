@@ -30,10 +30,11 @@ def get_place_compact(place_id: int, db: Session) -> Optional[Dict]:
     
     place = db.query(Place).filter(Place.id == place_id).first()
     if place:
-        # Auto-swap price nếu bị đảo ngược
+        # Auto-swap price nếu bị đảo ngược trong database
         price_min = float(place.price_min) if place.price_min else 0
         price_max = float(place.price_max) if place.price_max else 0
-        if price_min > price_max and price_max > 0:
+        # Swap khi price_min > price_max (dữ liệu bị lưu ngược)
+        if price_min > price_max:
             price_min, price_max = price_max, price_min
         
         return {
@@ -42,6 +43,7 @@ def get_place_compact(place_id: int, db: Session) -> Optional[Dict]:
             "district_id": place.district_id,
             "place_type_id": place.place_type_id,
             "rating_average": float(place.rating_average) if place.rating_average else 0,
+            "rating_count": place.rating_count or 0,
             "price_min": price_min,
             "price_max": price_max,
             "main_image_url": get_main_image_url(place_id, db)

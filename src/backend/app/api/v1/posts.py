@@ -133,12 +133,14 @@ async def get_posts(
         
         return success_response(
             message="Lấy danh sách bài viết thành công",
-            data=formatted_posts,
-            pagination={
-                "page": page,
-                "limit": limit,
-                "total_items": total,
-                "total_pages": (total + limit - 1) // limit
+            data={
+                "posts": formatted_posts,
+                "pagination": {
+                    "page": page,
+                    "limit": limit,
+                    "total_items": total,
+                    "total_pages": (total + limit - 1) // limit
+                }
             }
         )
         

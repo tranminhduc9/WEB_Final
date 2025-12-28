@@ -140,7 +140,7 @@ class MongoDBClient:
 
     async def _setup_indexes(self):
         """Setup indexes cho collections"""
-        if not self.db:
+        if self.db is None:
             return
 
         try:

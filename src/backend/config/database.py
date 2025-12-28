@@ -243,6 +243,13 @@ class Place(Base):
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
+        # Auto-swap price nếu bị đảo ngược trong database
+        price_min = float(self.price_min) if self.price_min else 0
+        price_max = float(self.price_max) if self.price_max else 0
+        # Swap khi price_min > price_max (dữ liệu bị lưu ngược)
+        if price_min > price_max:
+            price_min, price_max = price_max, price_min
+        
         return {
             "id": self.id,
             "name": self.name,
@@ -254,8 +261,8 @@ class Place(Base):
             "longitude": float(self.longitude) if self.longitude else None,
             "rating_average": float(self.rating_average) if self.rating_average else 0,
             "rating_count": self.rating_count or 0,
-            "price_min": float(self.price_min) if self.price_min else 0,
-            "price_max": float(self.price_max) if self.price_max else 0,
+            "price_min": price_min,
+            "price_max": price_max,
             "open_hour": str(self.open_hour) if self.open_hour else None,
             "close_hour": str(self.close_hour) if self.close_hour else None,
         }

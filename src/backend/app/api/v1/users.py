@@ -16,7 +16,7 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 import logging
 
-from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place, PlaceImage
+from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place, PlaceImage, District
 from app.utils.image_helpers import get_main_image_url
 from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
@@ -83,14 +83,21 @@ async def get_user_profile(
         for fav in favorites:
             place = db.query(Place).filter(Place.id == fav.place_id).first()
             if place:
+                # Auto-swap nếu giá trị bị đảo ngược trong database
+                price_min = float(place.price_min) if place.price_min else 0
+                price_max = float(place.price_max) if place.price_max else 0
+                # Swap khi price_min > price_max (dữ liệu bị lưu ngược)
+                if price_min > price_max:
+                    price_min, price_max = price_max, price_min
+                
                 recent_favorites.append({
                     "id": place.id,
                     "name": place.name,
                     "district_id": place.district_id,
                     "place_type_id": place.place_type_id,
                     "rating_average": float(place.rating_average) if place.rating_average else 0,
-                    "price_min": float(place.price_min) if place.price_min else 0,
-                    "price_max": float(place.price_max) if place.price_max else 0,
+                    "price_min": price_min,
+                    "price_max": price_max,
                     "main_image_url": get_main_image_url(place.id, db)
                 })
         
@@ -301,6 +308,372 @@ async def remove_favorite_place(
         logger.error(f"Error removing favorite: {str(e)}")
         return error_response(
             message="Lỗi xóa địa điểm yêu thích",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+# ==================== ALIAS ENDPOINTS (For Frontend Compatibility) ====================
+
+@router.get("/profile", summary="Get Profile (Alias)")
+async def get_profile_alias(
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Alias cho GET /users/me - Tương thích với frontend
+    Returns data directly as UserProfile (not nested in 'user')
+    """
+    try:
+        await get_mongodb()
+        
+        user_id = current_user.get("user_id")
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return error_response(
+                message="User không tồn tại",
+                error_code="USER_NOT_FOUND",
+                status_code=404
+            )
+        
+        # Lấy favorites
+        favorites = db.query(UserPlaceFavorite).filter(
+            UserPlaceFavorite.user_id == user_id
+        ).order_by(UserPlaceFavorite.created_at.desc()).limit(5).all()
+        
+        recent_favorites = []
+        for fav in favorites:
+            place = db.query(Place).filter(Place.id == fav.place_id).first()
+            if place:
+                price_min = float(place.price_min) if place.price_min else 0
+                price_max = float(place.price_max) if place.price_max else 0
+                if price_min > price_max:
+                    price_min, price_max = price_max, price_min
+                
+                # Get district name
+                district = db.query(District).filter(District.id == place.district_id).first()
+                district_name = district.name if district else f"Quận {place.district_id}"
+                
+                recent_favorites.append({
+                    "id": place.id,
+                    "name": place.name,
+                    "district_id": place.district_id,
+                    "district_name": district_name,
+                    "address": place.address_detail or f"Quận {district_name}, Hà Nội",
+                    "place_type_id": place.place_type_id,
+                    "rating_average": float(place.rating_average) if place.rating_average else 0,
+                    "rating_count": place.rating_count or 0,
+                    "price_min": price_min,
+                    "price_max": price_max,
+                    "main_image_url": get_main_image_url(place.id, db)
+                })
+        
+        # Get recent posts from MongoDB
+        recent_posts = []
+        try:
+            user_posts = await mongo_client.find_many(
+                "posts", 
+                {"author_id": user_id, "status": "approved"},
+                sort=[("created_at", -1)],
+                limit=5
+            )
+            for post in user_posts:
+                recent_posts.append({
+                    "_id": str(post.get("_id")),
+                    "author": {
+                        "id": user.id,
+                        "full_name": user.full_name,
+                        "avatar_url": user.avatar_url,
+                        "role_id": user.role_id
+                    },
+                    "title": post.get("title"),
+                    "content": post.get("content", ""),
+                    "images": post.get("images", []),
+                    "likes_count": post.get("likes_count", 0),
+                    "comments_count": post.get("comments_count", 0),
+                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                })
+        except Exception as e:
+            logger.warning(f"Error getting user posts: {e}")
+        
+        # Return flat structure matching frontend UserDetailResponse type
+        return success_response(
+            message="Lấy thông tin profile thành công",
+            data={
+                "id": user.id,
+                "full_name": user.full_name,
+                "email": user.email,
+                "avatar_url": user.avatar_url,
+                "bio": user.bio,
+                "role_id": user.role_id,
+                "reputation_score": user.reputation_score,
+                "is_active": user.is_active,
+                "recent_favorites": recent_favorites,
+                "recent_posts": recent_posts
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting user profile: {str(e)}")
+        return error_response(
+            message="Lỗi lấy thông tin profile",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.put("/profile", summary="Update Profile (Alias)")
+async def update_profile_alias(
+    request: Request,
+    update_data: UpdateProfileRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Alias cho PUT /users/me - Tương thích với frontend
+    """
+    try:
+        user_id = current_user.get("user_id")
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return error_response(
+                message="User không tồn tại",
+                error_code="USER_NOT_FOUND",
+                status_code=404
+            )
+        
+        if update_data.full_name is not None:
+            user.full_name = update_data.full_name
+        if update_data.bio is not None:
+            user.bio = update_data.bio
+        if update_data.avatar_url is not None:
+            user.avatar_url = update_data.avatar_url
+        
+        db.commit()
+        db.refresh(user)
+        
+        return success_response(
+            message="Cập nhật profile thành công",
+            data={
+                "user": {
+                    "id": user.id,
+                    "full_name": user.full_name,
+                    "email": user.email,
+                    "avatar_url": user.avatar_url,
+                    "bio": user.bio,
+                    "reputation_score": user.reputation_score
+                }
+            }
+        )
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating profile: {str(e)}")
+        return error_response(
+            message="Lỗi cập nhật profile",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.get("/{user_id}", summary="Get User by ID")
+async def get_user_by_id(
+    request: Request,
+    user_id: int = Path(..., description="ID của user"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy thông tin public của user khác
+    """
+    try:
+        await get_mongodb()
+        
+        user = db.query(User).filter(User.id == user_id, User.deleted_at == None).first()
+        if not user:
+            return error_response(
+                message="User không tồn tại",
+                error_code="USER_NOT_FOUND",
+                status_code=404
+            )
+        
+        # Get recent posts from MongoDB
+        recent_posts = []
+        try:
+            user_posts = await mongo_client.find_many(
+                "posts", 
+                {"author_id": user_id, "status": "approved"},
+                sort=[("created_at", -1)],
+                limit=5
+            )
+            for post in user_posts:
+                recent_posts.append({
+                    "_id": str(post.get("_id")),
+                    "author": {
+                        "id": user.id,
+                        "full_name": user.full_name,
+                        "avatar_url": user.avatar_url,
+                        "role_id": user.role_id
+                    },
+                    "title": post.get("title"),
+                    "content": post.get("content", ""),
+                    "images": post.get("images", []),
+                    "likes_count": post.get("likes_count", 0),
+                    "comments_count": post.get("comments_count", 0),
+                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                })
+        except Exception as e:
+            logger.warning(f"Error getting user posts: {e}")
+        
+        return success_response(
+            message="Lấy thông tin user thành công",
+            data={
+                "id": user.id,
+                "full_name": user.full_name,
+                "avatar_url": user.avatar_url,
+                "bio": user.bio,
+                "role_id": user.role_id,
+                "reputation_score": user.reputation_score,
+                "recent_posts": recent_posts
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting user by id: {str(e)}")
+        return error_response(
+            message="Lỗi lấy thông tin user",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.post("/avatar", summary="Upload Avatar")
+async def upload_avatar(
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Upload avatar mới cho user
+    """
+    from fastapi import File, UploadFile
+    import os
+    import uuid
+    
+    try:
+        user_id = current_user.get("user_id")
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return error_response(
+                message="User không tồn tại",
+                error_code="USER_NOT_FOUND",
+                status_code=404
+            )
+        
+        # Get form data
+        form = await request.form()
+        avatar_file = form.get("avatar")
+        
+        if not avatar_file:
+            return error_response(
+                message="Không tìm thấy file avatar",
+                error_code="NO_FILE",
+                status_code=400
+            )
+        
+        # Validate file type
+        content_type = avatar_file.content_type
+        if content_type not in ["image/jpeg", "image/png", "image/gif", "image/webp"]:
+            return error_response(
+                message="Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)",
+                error_code="INVALID_FILE_TYPE",
+                status_code=400
+            )
+        
+        # Read file content
+        content = await avatar_file.read()
+        
+        # Validate file size (5MB max)
+        if len(content) > 5 * 1024 * 1024:
+            return error_response(
+                message="File quá lớn. Tối đa 5MB",
+                error_code="FILE_TOO_LARGE",
+                status_code=400
+            )
+        
+        # Generate filename
+        ext = content_type.split("/")[-1]
+        if ext == "jpeg":
+            ext = "jpg"
+        filename = f"avatar_{user_id}_{uuid.uuid4().hex[:8]}.{ext}"
+        
+        # Save file
+        upload_dir = os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads", "avatars")
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        filepath = os.path.join(upload_dir, filename)
+        with open(filepath, "wb") as f:
+            f.write(content)
+        
+        # Update user avatar_url
+        backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
+        backend_port = os.getenv("BACKEND_PORT", "8080")
+        avatar_url = f"http://{backend_host}:{backend_port}/uploads/avatars/{filename}"
+        
+        user.avatar_url = avatar_url
+        db.commit()
+        
+        return success_response(
+            message="Upload avatar thành công",
+            data={
+                "url": avatar_url
+            }
+        )
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error uploading avatar: {str(e)}")
+        return error_response(
+            message="Lỗi upload avatar",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.delete("/avatar", summary="Delete Avatar")
+async def delete_avatar(
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Xóa avatar của user
+    """
+    try:
+        user_id = current_user.get("user_id")
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return error_response(
+                message="User không tồn tại",
+                error_code="USER_NOT_FOUND",
+                status_code=404
+            )
+        
+        # Clear avatar_url
+        user.avatar_url = None
+        db.commit()
+        
+        return success_response(message="Đã xóa avatar")
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting avatar: {str(e)}")
+        return error_response(
+            message="Lỗi xóa avatar",
             error_code="INTERNAL_ERROR",
             status_code=500
         )
