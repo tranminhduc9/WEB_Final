@@ -784,14 +784,21 @@ async def get_admin_places(
         
         place_list = []
         for place in places:
+            # Auto-swap nếu giá trị bị đảo ngược trong database
+            price_min = float(place.price_min) if place.price_min else 0
+            price_max = float(place.price_max) if place.price_max else 0
+            # Swap khi price_min > price_max (dữ liệu bị lưu ngược)
+            if price_min > price_max:
+                price_min, price_max = price_max, price_min
+            
             place_list.append({
                 "id": place.id,
                 "name": place.name,
                 "district_id": place.district_id,
                 "place_type_id": place.place_type_id,
                 "rating_average": float(place.rating_average) if place.rating_average else 0,
-                "price_min": float(place.price_min) if place.price_min else 0,
-                "price_max": float(place.price_max) if place.price_max else 0,
+                "price_min": price_min,
+                "price_max": price_max,
                 "created_at": place.created_at.isoformat() if place.created_at else None
             })
         

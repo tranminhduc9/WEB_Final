@@ -72,114 +72,205 @@ def place_row_to_compact(row, db: Session = None) -> Dict[str, Any]:
     """
     Chuyển đổi row từ database sang compact format theo Swagger PlaceCompact schema.
     
-    Swagger PlaceCompact chỉ có 8 fields:
-    - id, name, district_id, place_type_id
-    - rating_average, price_min, price_max, main_image_url
+    Extended fields for frontend display:
+    - id, name, district_id, district_name, address, place_type_id
+    - rating_average, price_min, price_max, main_image_url, favorites_count
     """
+    from config.database import UserPlaceFavorite
+    
     place_id = row.id
     rating_average = float(row.rating_average) if row.rating_average else 0.0
     price_min = float(row.price_min) if row.price_min else 0
     price_max = float(row.price_max) if row.price_max else 0
     
     # Auto-swap nếu giá trị bị đảo ngược trong database
-    if price_min > price_max and price_max > 0:
+    # Swap khi price_min > price_max (dữ liệu bị lưu ngược)
+    if price_min > price_max:
         price_min, price_max = price_max, price_min
     
     # Lấy ảnh từ database hoặc local uploads
     image_url = get_main_image_url(place_id, db)
     
-    # Chỉ trả về 8 fields theo Swagger spec
+    # Get district_name from row (requires LEFT JOIN in query)
+    district_name = getattr(row, 'district_name', None) or f"Quận {row.district_id}"
+    address = getattr(row, 'address_detail', None) or f"Quận {district_name}, Hà Nội"
+    
+    # Safely get rating_count using getattr (may not exist in all query results)
+    rating_count = getattr(row, 'rating_count', 0) or 0
+    
+    # Get favorites_count
+    favorites_count = 0
+    if db is not None:
+        try:
+            favorites_count = db.query(UserPlaceFavorite).filter(
+                UserPlaceFavorite.place_id == place_id
+            ).count()
+        except Exception:
+            favorites_count = 0
+    
+    # Debug log for rating_count issue
+    logger.debug(f"[PLACES] place_row_to_compact - place_id={place_id}, rating_count={rating_count}")
+    
     return {
         "id": place_id,
         "name": row.name,
         "district_id": row.district_id,
+        "district_name": district_name,
+        "address": address,
         "place_type_id": row.place_type_id,
         "rating_average": rating_average,
+        "rating_count": rating_count,
         "price_min": price_min,
         "price_max": price_max,
-        "main_image_url": image_url
+        "main_image_url": image_url,
+        "favorites_count": favorites_count
     }
 
 
 def place_row_to_horizontal(row, db: Session = None, user_lat: float = None, user_long: float = None) -> Dict[str, Any]:
     """
-    Chuyển đổi row sang horizontal format - trả về PlaceCompact theo Swagger.
-    Nearby places endpoint vẫn trả về PlaceCompact format.
+    Chuyển đổi row sang horizontal format - trả về PlaceCompact với district_name.
+    Nearby places endpoint vẫn trả về PlaceCompact format kèm distance và favorites_count.
     """
+    from config.database import UserPlaceFavorite
+    
     place_id = row.id
     rating_average = float(row.rating_average) if row.rating_average else 0.0
     price_min = float(row.price_min) if row.price_min else 0
     price_max = float(row.price_max) if row.price_max else 0
     
     # Auto-swap nếu giá trị bị đảo ngược trong database
-    if price_min > price_max and price_max > 0:
+    # Swap khi price_min > price_max (dữ liệu bị lưu ngược)
+    if price_min > price_max:
         price_min, price_max = price_max, price_min
     
     # Lấy ảnh
     image_url = get_main_image_url(place_id, db)
     
-    # Trả về PlaceCompact format theo Swagger
+    # Get district_name from row (requires LEFT JOIN in query)
+    district_name = getattr(row, 'district_name', None) or f"Quận {row.district_id}"
+    address = getattr(row, 'address_detail', None) or f"Quận {district_name}, Hà Nội"
+    
+    # Safely get rating_count using getattr
+    rating_count = getattr(row, 'rating_count', 0) or 0
+    
+    # Get distance from query result if available (distance_km column)
+    distance_km = getattr(row, 'distance_km', None)
+    distance_str = None
+    if distance_km is not None:
+        if distance_km < 1:
+            distance_str = f"{int(distance_km * 1000)}m"
+        else:
+            distance_str = f"{distance_km:.1f}km"
+    
+    # Get favorites_count
+    favorites_count = 0
+    if db is not None:
+        try:
+            favorites_count = db.query(UserPlaceFavorite).filter(
+                UserPlaceFavorite.place_id == place_id
+            ).count()
+        except Exception:
+            favorites_count = 0
+    
+    # Trả về PlaceCompact format với district_name, distance và favorites_count
     return {
         "id": place_id,
         "name": row.name,
         "district_id": row.district_id,
+        "district_name": district_name,
+        "address": address,
         "place_type_id": row.place_type_id,
         "rating_average": rating_average,
+        "rating_count": rating_count,
         "price_min": price_min,
         "price_max": price_max,
-        "main_image_url": image_url
+        "main_image_url": image_url,
+        "distance": distance_str,
+        "favorites_count": favorites_count
     }
 
 
 # ==================== ENDPOINTS ====================
 
-@router.get("", summary="Get Outstanding Places")
-async def get_outstanding_places(
+@router.get("", summary="Get Places with Filters")
+async def get_places(
     request: Request,
     page: int = Query(1, ge=1, description="Số trang"),
     limit: int = Query(10, ge=1, le=50, description="Số lượng mỗi trang"),
+    district_id: Optional[int] = Query(None, description="ID quận/huyện"),
+    place_type_id: Optional[int] = Query(None, description="ID loại địa điểm"),
     db: Session = Depends(get_db)
 ):
     """
-    Lấy danh sách địa điểm nổi bật cho Homepage (rating_average >= 4.0)
+    Lấy danh sách địa điểm với bộ lọc
+    - Nếu không có filter: trả về places có rating_average >= 4.0 (outstanding)
+    - Nếu có filter: trả về tất cả places match với filter
     """
     try:
-        # Count total outstanding places
-        count_query = text("""
+        # Build dynamic WHERE clause
+        conditions = ["p.deleted_at IS NULL"]
+        params = {"limit": limit}
+        
+        # Nếu có filter, không giới hạn rating
+        if district_id:
+            conditions.append("p.district_id = :district_id")
+            params["district_id"] = district_id
+        
+        if place_type_id:
+            conditions.append("p.place_type_id = :place_type_id")
+            params["place_type_id"] = place_type_id
+        
+        # Nếu không có filter nào, chỉ lấy outstanding places
+        if not district_id and not place_type_id:
+            conditions.append("p.rating_average >= 4.0")
+        
+        where_clause = " AND ".join(conditions)
+        
+        # Count total
+        count_query = text(f"""
             SELECT COUNT(*) as total 
-            FROM places 
-            WHERE rating_average >= 4.0 AND deleted_at IS NULL
+            FROM places p
+            WHERE {where_clause}
         """)
-        count_result = db.execute(count_query).fetchone()
+        count_result = db.execute(count_query, params).fetchone()
         total_items = count_result.total if count_result else 0
         
         offset, pagination = paginate_query(page, limit, total_items)
+        params["offset"] = offset
         
         # Lấy places với district name
-        query = text("""
+        query = text(f"""
             SELECT p.*, d.name as district_name
             FROM places p
             LEFT JOIN districts d ON p.district_id = d.id
-            WHERE p.rating_average >= 4.0 AND p.deleted_at IS NULL
+            WHERE {where_clause}
             ORDER BY p.rating_average DESC, p.name ASC
             LIMIT :limit OFFSET :offset
         """)
         
-        result = db.execute(query, {"limit": limit, "offset": offset}).fetchall()
+        result = db.execute(query, params).fetchall()
         
         data = [place_row_to_compact(row, db) for row in result]
         
-        logger.info(f"[PLACES] Get outstanding places - Found {len(data)} places (page {page})")
+        filter_info = []
+        if district_id:
+            filter_info.append(f"district_id={district_id}")
+        if place_type_id:
+            filter_info.append(f"place_type_id={place_type_id}")
+        filter_str = ", ".join(filter_info) if filter_info else "outstanding only"
+        
+        logger.info(f"[PLACES] Get places - {filter_str}, found {len(data)} places (page {page})")
         
         return {
             "success": True,
             "data": data,
             "pagination": pagination,
-            "message": "Lấy danh sách địa điểm nổi bật thành công"
+            "message": f"Tìm thấy {total_items} địa điểm"
         }
         
     except Exception as e:
-        logger.error(f"[PLACES] Error getting outstanding places: {str(e)}")
+        logger.error(f"[PLACES] Error getting places: {str(e)}")
         return server_error_response()
 
 
@@ -538,15 +629,49 @@ async def get_place_detail(
                 "is_ticket_required": row.is_ticket_required
             }
         
+        # Get price values with auto-swap logic
+        price_min = float(row.price_min) if row.price_min else 0
+        price_max = float(row.price_max) if row.price_max else 0
+        
+        # Auto-swap nếu giá trị bị đảo ngược trong database
+        if price_min > price_max:
+            price_min, price_max = price_max, price_min
+        
+        # Build opening_hours from open_hour and close_hour columns
+        opening_hours = ""
+        if row.open_hour and row.close_hour:
+            opening_hours = f"{str(row.open_hour)[:5]} - {str(row.close_hour)[:5]}"
+        elif row.open_hour:
+            opening_hours = f"Mở cửa từ {str(row.open_hour)[:5]}"
+        elif row.close_hour:
+            opening_hours = f"Đóng cửa lúc {str(row.close_hour)[:5]}"
+        
         # Response theo Swagger PlaceDetailResponse schema
+        # PlaceDetail extends PlaceCompact nên cần đầy đủ các trường
         data = {
+            # PlaceCompact fields (required by frontend)
             "id": row.id,
             "name": row.name,
-            "description": row.description or "",
-            "address_detail": address,
+            "district_id": row.district_id,
+            "place_type_id": row.place_type_id,
             "rating_average": rating,
+            "price_min": price_min,
+            "price_max": price_max,
+            "main_image_url": images[0] if images else get_main_image_url(place_id, db),
+            
+            # PlaceDetail extended fields
+            "description": row.description or "",
+            "address": address,
+            "address_detail": address,
             "latitude": latitude,
             "longitude": longitude,
+            "opening_hours": opening_hours,
+            "open_hour": str(row.open_hour)[:5] if row.open_hour else None,
+            "close_hour": str(row.close_hour)[:5] if row.close_hour else None,
+            "reviews_count": rating_count,
+            "rating_count": rating_count,
+            
+            # Extended data
             "details": details,
             "images": images,
             "nearby": nearby_places,
