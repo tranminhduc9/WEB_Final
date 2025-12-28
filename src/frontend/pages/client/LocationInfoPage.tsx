@@ -179,15 +179,22 @@ const LocationInfoPage: React.FC = () => {
 
     // ============================
     // FETCH SUGGESTIONS
-    // GET /places (outstanding places)
+    // GET /places/nearby (to get distance info)
     // ============================
-    const fetchSuggestions = useCallback(async () => {
+    const fetchSuggestions = useCallback(async (lat?: number, long?: number) => {
         setIsLoadingSuggestions(true);
         try {
-            const response = await placeService.getPlaces({ page: 1, limit: 5 });
+            const coords = {
+                lat: lat || 21.0285,  // Default to Hanoi center
+                long: long || 105.8542
+            };
+            const response = await placeService.getNearbyPlaces(coords);
             if (response.success && response.data.length > 0) {
-                // Filter out current place
-                const filtered = response.data.filter(p => p.id !== Number(id));
+                // Filter out current place and nearby places to avoid duplicates
+                const nearbyIds = new Set(nearbyPlaces.map(p => p.id));
+                const filtered = response.data.filter(p =>
+                    p.id !== Number(id) && !nearbyIds.has(p.id)
+                );
                 setSuggestions(filtered.slice(0, 5));
             } else {
                 setSuggestions(MOCK_NEARBY);
@@ -198,7 +205,7 @@ const LocationInfoPage: React.FC = () => {
         } finally {
             setIsLoadingSuggestions(false);
         }
-    }, [id]);
+    }, [id, nearbyPlaces]);
 
     // ============================
     // TOGGLE FAVORITE
@@ -232,8 +239,16 @@ const LocationInfoPage: React.FC = () => {
     // ============================
     useEffect(() => {
         fetchPlaceDetails();
-        fetchSuggestions();
-    }, [fetchPlaceDetails, fetchSuggestions]);
+    }, [fetchPlaceDetails]);
+
+    // Fetch suggestions after place is loaded (to use its coordinates)
+    useEffect(() => {
+        if (place?.latitude && place?.longitude) {
+            fetchSuggestions(place.latitude, place.longitude);
+        } else if (place) {
+            fetchSuggestions();
+        }
+    }, [place, fetchSuggestions]);
 
     // ============================
     // RENDER HELPERS
@@ -293,8 +308,8 @@ const LocationInfoPage: React.FC = () => {
                         title={loc.name}
                         description=""
                         rating={loc.rating_average}
-                        likeCount="0"
-                        distance="~"
+                        likeCount={String(loc.favorites_count || 0)}
+                        distance={loc.distance || '~'}
                     />
                 ))}
             </div>

@@ -1,179 +1,233 @@
 /**
- * Admin Service - Business logic cho Admin Dashboard
+ * Admin Service - API calls cho Admin module
+ * Base URL: http://localhost:8080/api/v1
+ * 
+ * Endpoints theo WEB_CK.md:
+ * - POST /admin/login, /admin/logout
+ * - GET /admin/dashboard
+ * - GET /admin/users, DELETE /admin/users/{id}, PATCH /admin/users/{id}/ban, /admin/users/{id}/unban
+ * - GET /admin/posts, POST /admin/posts, PUT /admin/posts/{id}, DELETE /admin/posts/{id}, PATCH /admin/posts/{id}/status
+ * - GET /admin/comments, DELETE /admin/comments/{id}
+ * - GET /admin/reports
+ * - GET /admin/places, POST /admin/places, PUT /admin/places/{id}, DELETE /admin/places/{id}
  */
 
-import { adminApi } from '../api';
+import axiosClient from '../api/axiosClient';
 import type {
-  AdminUserListParams,
-  AdminUserListResponse,
+  DashboardResponse,
   AdminUser,
-  CreateUserRequest,
-  UpdateUserRequest,
-  DashboardStats,
-  AuditLogListResponse,
-  UserRole,
-} from '../types';
+  AdminComment,
+  AdminReport,
+  PlaceCreateRequest,
+  AdminUserListParams,
+  AdminPostListParams,
+} from '../types/admin';
+import type {
+  ListResponse,
+  PostDetail,
+  CreatePostRequest,
+  PlaceDetail,
+} from '../types/models';
+import type {
+  AuthResponse,
+  BaseResponse,
+  LoginRequest,
+} from '../types/auth';
+
+// ============================
+// ADMIN SERVICE
+// ============================
 
 export const adminService = {
+  // ===== AUTH =====
   /**
-   * Lấy danh sách users với phân trang và filter
+   * Admin đăng nhập
+   * POST /admin/login
    */
-  getUsers: async (params: AdminUserListParams = {}): Promise<AdminUserListResponse> => {
-    const response = await adminApi.getUsers({
-      page: params.page || 1,
-      limit: params.limit || 10,
-      ...params,
-    });
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Không thể tải danh sách users');
-    }
-    
-    return response.data;
+  login: async (credentials: LoginRequest): Promise<AuthResponse> => {
+    return axiosClient.post<LoginRequest, AuthResponse>('/admin/login', credentials);
   },
 
   /**
-   * Tìm kiếm users
+   * Admin đăng xuất
+   * POST /admin/logout
    */
-  searchUsers: async (
-    query: string,
-    options: { role?: UserRole | 'all'; isActive?: boolean | 'all' } = {}
-  ): Promise<AdminUserListResponse> => {
-    return adminService.getUsers({
-      search: query,
-      role: options.role,
-      is_active: options.isActive,
-    });
+  logout: async (refreshToken: string): Promise<BaseResponse> => {
+    return axiosClient.post<{ refresh_token: string }, BaseResponse>(
+      '/admin/logout',
+      { refresh_token: refreshToken }
+    );
   },
 
+  // ===== DASHBOARD =====
   /**
-   * Lấy thông tin chi tiết 1 user
+   * Lấy thống kê dashboard
+   * GET /admin/dashboard
    */
-  getUserById: async (userId: string): Promise<AdminUser> => {
-    const response = await adminApi.getUserById(userId);
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Không tìm thấy user');
-    }
-    
-    return response.data;
+  getDashboardStats: async (): Promise<DashboardResponse> => {
+    return axiosClient.get<never, DashboardResponse>('/admin/dashboard');
   },
 
+  // ===== USER MANAGEMENT =====
   /**
-   * Tạo user mới
+   * Lấy danh sách users
+   * GET /admin/users?status=active|banned&page=1
    */
-  createUser: async (data: CreateUserRequest): Promise<AdminUser> => {
-    // Validate
-    if (!data.email || !data.password || !data.name) {
-      throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc');
-    }
-    
-    const response = await adminApi.createUser(data);
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Tạo user thất bại');
-    }
-    
-    return response.data;
-  },
-
-  /**
-   * Cập nhật user
-   */
-  updateUser: async (userId: string, data: UpdateUserRequest): Promise<AdminUser> => {
-    const response = await adminApi.updateUser(userId, data);
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Cập nhật user thất bại');
-    }
-    
-    return response.data;
+  getUsers: async (params?: AdminUserListParams): Promise<ListResponse<AdminUser>> => {
+    const query = new URLSearchParams();
+    if (params?.status) query.append('status', params.status);
+    if (params?.page) query.append('page', String(params.page));
+    const queryString = query.toString();
+    return axiosClient.get<never, ListResponse<AdminUser>>(
+      queryString ? `/admin/users?${queryString}` : '/admin/users'
+    );
   },
 
   /**
    * Xóa user
+   * DELETE /admin/users/{id}
    */
-  deleteUser: async (userId: string): Promise<void> => {
-    const response = await adminApi.deleteUser(userId);
-    
-    if (!response.success) {
-      throw new Error(response.message || 'Xóa user thất bại');
-    }
+  deleteUser: async (id: number): Promise<BaseResponse> => {
+    return axiosClient.delete<never, BaseResponse>(`/admin/users/${id}`);
   },
 
   /**
-   * Kích hoạt user
+   * Ban user
+   * PATCH /admin/users/{id}/ban
+   * Body: { reason: string }
    */
-  activateUser: async (userId: string): Promise<AdminUser> => {
-    const response = await adminApi.toggleUserStatus(userId, true);
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Kích hoạt user thất bại');
-    }
-    
-    return response.data;
+  banUser: async (id: number, reason: string): Promise<BaseResponse> => {
+    return axiosClient.patch<{ reason: string }, BaseResponse>(
+      `/admin/users/${id}/ban`,
+      { reason }
+    );
   },
 
   /**
-   * Vô hiệu hóa user
+   * Unban user
+   * PATCH /admin/users/{id}/unban
    */
-  deactivateUser: async (userId: string): Promise<AdminUser> => {
-    const response = await adminApi.toggleUserStatus(userId, false);
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Vô hiệu hóa user thất bại');
-    }
-    
-    return response.data;
+  unbanUser: async (id: number): Promise<BaseResponse> => {
+    return axiosClient.patch<never, BaseResponse>(`/admin/users/${id}/unban`);
+  },
+
+  // ===== POST MANAGEMENT =====
+  /**
+   * Lấy danh sách posts
+   * GET /admin/posts?status=pending|published|rejected&page=1
+   */
+  getPosts: async (params?: AdminPostListParams): Promise<ListResponse<PostDetail>> => {
+    const query = new URLSearchParams();
+    if (params?.status) query.append('status', params.status);
+    if (params?.page) query.append('page', String(params.page));
+    const queryString = query.toString();
+    return axiosClient.get<never, ListResponse<PostDetail>>(
+      queryString ? `/admin/posts?${queryString}` : '/admin/posts'
+    );
   },
 
   /**
-   * Đổi role của user
+   * Tạo bài viết (Admin)
+   * POST /admin/posts
    */
-  changeUserRole: async (userId: string, role: UserRole): Promise<AdminUser> => {
-    return adminService.updateUser(userId, { role });
+  createPost: async (data: CreatePostRequest): Promise<BaseResponse> => {
+    return axiosClient.post<CreatePostRequest, BaseResponse>('/admin/posts', data);
   },
 
   /**
-   * Lấy thống kê dashboard
+   * Cập nhật bài viết
+   * PUT /admin/posts/{id}
    */
-  getDashboardStats: async (): Promise<DashboardStats> => {
-    const response = await adminApi.getDashboardStats();
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Không thể tải thống kê');
-    }
-    
-    return response.data;
+  updatePost: async (id: string, data: CreatePostRequest): Promise<BaseResponse> => {
+    return axiosClient.put<CreatePostRequest, BaseResponse>(`/admin/posts/${id}`, data);
   },
 
   /**
-   * Lấy audit logs
+   * Xóa bài viết
+   * DELETE /admin/posts/{id}
+   * Body: { reason?: string }
    */
-  getAuditLogs: async (params: {
-    page?: number;
-    limit?: number;
-    userId?: string;
-    action?: string;
-    fromDate?: Date;
-    toDate?: Date;
-  } = {}): Promise<AuditLogListResponse> => {
-    const response = await adminApi.getAuditLogs({
-      page: params.page,
-      limit: params.limit,
-      user_id: params.userId,
-      action: params.action,
-      from_date: params.fromDate?.toISOString(),
-      to_date: params.toDate?.toISOString(),
-    });
-    
-    if (!response.success || !response.data) {
-      throw new Error(response.message || 'Không thể tải audit logs');
-    }
-    
-    return response.data;
+  deletePost: async (id: string, reason?: string): Promise<BaseResponse> => {
+    return axiosClient.delete<{ reason?: string }, BaseResponse>(
+      `/admin/posts/${id}`,
+      { data: { reason } }
+    );
+  },
+
+  /**
+   * Duyệt/Từ chối bài viết
+   * PATCH /admin/posts/{id}/status
+   * Body: { status: 'published'|'rejected', reason?: string }
+   */
+  updatePostStatus: async (
+    id: string,
+    status: 'published' | 'rejected',
+    reason?: string
+  ): Promise<BaseResponse> => {
+    return axiosClient.patch<{ status: string; reason?: string }, BaseResponse>(
+      `/admin/posts/${id}/status`,
+      { status, reason }
+    );
+  },
+
+  // ===== COMMENT MANAGEMENT =====
+  /**
+   * Lấy danh sách comments
+   * GET /admin/comments
+   */
+  getComments: async (): Promise<ListResponse<AdminComment>> => {
+    return axiosClient.get<never, ListResponse<AdminComment>>('/admin/comments');
+  },
+
+  /**
+   * Xóa comment
+   * DELETE /admin/comments/{id}
+   */
+  deleteComment: async (id: string): Promise<BaseResponse> => {
+    return axiosClient.delete<never, BaseResponse>(`/admin/comments/${id}`);
+  },
+
+  // ===== REPORT MANAGEMENT =====
+  /**
+   * Lấy danh sách reports
+   * GET /admin/reports
+   */
+  getReports: async (): Promise<ListResponse<AdminReport>> => {
+    return axiosClient.get<never, ListResponse<AdminReport>>('/admin/reports');
+  },
+
+  // ===== PLACE MANAGEMENT =====
+  /**
+   * Lấy danh sách places
+   * GET /admin/places
+   */
+  getPlaces: async (): Promise<ListResponse<PlaceDetail>> => {
+    return axiosClient.get<never, ListResponse<PlaceDetail>>('/admin/places');
+  },
+
+  /**
+   * Tạo địa điểm mới
+   * POST /admin/places
+   */
+  createPlace: async (data: PlaceCreateRequest): Promise<BaseResponse> => {
+    return axiosClient.post<PlaceCreateRequest, BaseResponse>('/admin/places', data);
+  },
+
+  /**
+   * Cập nhật địa điểm
+   * PUT /admin/places/{id}
+   */
+  updatePlace: async (id: number, data: PlaceCreateRequest): Promise<BaseResponse> => {
+    return axiosClient.put<PlaceCreateRequest, BaseResponse>(`/admin/places/${id}`, data);
+  },
+
+  /**
+   * Xóa địa điểm
+   * DELETE /admin/places/{id}
+   */
+  deletePlace: async (id: number): Promise<BaseResponse> => {
+    return axiosClient.delete<never, BaseResponse>(`/admin/places/${id}`);
   },
 };
 
 export default adminService;
-
