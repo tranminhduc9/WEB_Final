@@ -197,11 +197,11 @@ export default function App() {
                   id={String(place.id)}
                   imageSrc={place.main_image_url || ''}
                   title={place.name}
-                  address={(place as typeof MOCK_LOCATIONS[0]).address || 'Hà Nội'}
+                  address={place.address || place.district_name || 'Hà Nội'}
                   priceMin={place.price_min}
                   priceMax={place.price_max}
                   rating={place.rating_average}
-                  reviewCount="0"
+                  reviewCount={place.rating_count || 0}
                 />
               ))}
             </div>

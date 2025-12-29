@@ -52,12 +52,16 @@ export interface PlaceCompact {
     id: number;
     name: string;
     district_id: number;
+    district_name?: string;   // Tên quận từ districts table
+    address?: string;         // Địa chỉ đầy đủ hoặc formatted
     place_type_id: number;
     rating_average: number;
     rating_count?: number;
     price_min: number;
     price_max: number;
     main_image_url?: string;  // From place_images where is_main=true
+    distance?: string;        // Distance from user location (e.g., "500m", "1.5km")
+    favorites_count?: number; // Number of users who favorited this place
 }
 
 // Place Detail (full info) - Synced with db.md places table
@@ -119,7 +123,8 @@ export interface UserDetailResponse {
     ban_reason?: string | null;
     deleted_at?: string | null;
     last_login_at?: string | null;
-    recent_posts?: PostDetail[];  // Bài viết gần đây của user
+    recent_posts?: PostDetail[];       // Bài viết gần đây của user
+    recent_favorites?: PlaceCompact[]; // Địa điểm yêu thích gần đây
     created_at?: string;
     updated_at?: string;
 }

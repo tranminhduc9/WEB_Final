@@ -283,3 +283,196 @@
         font-size: 28px;
     }
 }
+
+/* Filters Section */
+.admin-users-filters {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.admin-users-filter-select {
+    padding: 10px 16px;
+    background: rgba(217, 217, 217, 0.5);
+    border: none;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    min-width: 150px;
+}
+
+.admin-users-filter-select:focus {
+    outline: none;
+    background: rgba(217, 217, 217, 0.7);
+}
+
+/* Status Badges */
+.admin-users-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-users-status--active {
+    background: #D4EDDA;
+    color: #155724;
+}
+
+.admin-users-status--banned {
+    background: #F8D7DA;
+    color: #721C24;
+}
+
+/* Role Badges */
+.admin-users-role {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-users-role--1 {
+    background: #E2D4F0;
+    color: #6F42C1;
+}
+
+.admin-users-role--2 {
+    background: #FFF3CD;
+    color: #856404;
+}
+
+.admin-users-role--3 {
+    background: #E7E7E7;
+    color: #333;
+}
+
+/* Banned Row */
+.admin-users-row--banned {
+    opacity: 0.7;
+    background: #FFF5F5;
+}
+
+/* Action Button Variants */
+.admin-users-action-btn--unban {
+    color: #28A745;
+}
+
+.admin-users-action-btn--delete {
+    color: #DC3545;
+}
+
+.admin-users-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Loading / Empty States */
+.admin-users-loading,
+.admin-users-empty {
+    text-align: center;
+    padding: 40px !important;
+    font-size: 18px;
+    color: #666;
+}
+
+/* Modal Overlay */
+.admin-users-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Modal */
+.admin-users-modal {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.admin-users-modal__title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0 0 12px;
+    color: #000;
+}
+
+.admin-users-modal__desc {
+    font-size: 16px;
+    color: #666;
+    margin: 0 0 20px;
+}
+
+.admin-users-modal__input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #DDD;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    resize: none;
+    box-sizing: border-box;
+}
+
+.admin-users-modal__input:focus {
+    outline: none;
+    border-color: #F88622;
+}
+
+.admin-users-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.admin-users-modal__btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-users-modal__btn--cancel {
+    background: #E7E7E7;
+    color: #333;
+}
+
+.admin-users-modal__btn--cancel:hover {
+    background: #DDD;
+}
+
+.admin-users-modal__btn--confirm {
+    background: #DC3545;
+    color: #FFFFFF;
+}
+
+.admin-users-modal__btn--confirm:hover:not(:disabled) {
+    background: #C82333;
+}
+
+.admin-users-modal__btn--confirm:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

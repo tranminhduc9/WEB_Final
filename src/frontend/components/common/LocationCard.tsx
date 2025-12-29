@@ -10,13 +10,22 @@ interface LocationCardProps {
   priceMin?: number;
   priceMax?: number;
   rating: number;
-  reviewCount: string;
+  reviewCount?: number;  // Changed to optional number
 }
 
 // Format price VND
 const formatPriceVND = (price: number): string => {
   if (price === 0) return '0 VNĐ';
   return `${price.toLocaleString('vi-VN')} VNĐ`;
+};
+
+// Format review count (e.g., 3600 -> "3.6K+")
+const formatReviewCount = (count: number | undefined): string => {
+  if (!count || count === 0) return '0';
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1).replace(/\.0$/, '')}K+`;
+  }
+  return count.toString();
 };
 
 export default function LocationCard({
@@ -58,8 +67,8 @@ export default function LocationCard({
             {renderPrice()}
           </div>
           <div className="place-rating">
-            <span className="rating-value">⭐ {rating}</span>
-            <span className="review-count"> ~ {reviewCount} reviews</span>
+            <span className="rating-value">⭐ {rating.toFixed(1)}</span>
+            <span className="review-count"> ~ {formatReviewCount(reviewCount)} reviews</span>
           </div>
         </div>
       </div>

@@ -1,81 +1,114 @@
 /**
- * Admin Types - Các types cho Admin Dashboard
+ * Admin Types - Types cho Admin module
+ * Theo WEB_CK.md và db.md
  */
 
-import type { User, UserRole } from './auth';
-import type { PaginatedResponse } from './common';
+// ============================
+// DASHBOARD
+// ============================
 
-// User management
-export interface AdminUserListParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  role?: UserRole | 'all';
-  is_active?: boolean | 'all';
-  sort_by?: 'name' | 'email' | 'created_at' | 'role';
-  sort_order?: 'asc' | 'desc';
-}
-
-export interface AdminUser extends User {
-  last_login?: string;
-  login_count?: number;
-  is_verified?: boolean;
-}
-
-export type AdminUserListResponse = PaginatedResponse<AdminUser>;
-
-// Create user (admin)
-export interface CreateUserRequest {
-  email: string;
-  password: string;
-  name: string;
-  role: UserRole;
-  phone?: string;
-  is_active?: boolean;
-}
-
-// Update user (admin)
-export interface UpdateUserRequest {
-  name?: string;
-  email?: string;
-  role?: UserRole;
-  phone?: string;
-  is_active?: boolean;
-}
-
-// Delete user
-export interface DeleteUserResponse {
-  message: string;
-  deleted_user_id: string;
-}
-
-// Dashboard stats
 export interface DashboardStats {
   total_users: number;
-  active_users: number;
-  new_users_today: number;
-  new_users_this_week: number;
   total_posts: number;
-  total_comments: number;
-  user_growth: {
-    date: string;
-    count: number;
-  }[];
+  total_places: number;
+  total_reports: number;
+  pending_posts: number;
+  new_users_today: number;
+  new_posts_today: number;
 }
 
-// Audit logs
-export interface AuditLog {
-  id: string;
-  user_id: string;
-  user_email: string;
-  action: string;
-  resource_type: string;
-  resource_id?: string;
-  ip_address: string;
-  user_agent: string;
-  details?: Record<string, unknown>;
+export interface DashboardResponse {
+  success: boolean;
+  data: DashboardStats;
+}
+
+// ============================
+// USER MANAGEMENT
+// ============================
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  bio?: string | null;
+  role_id: number;           // 1=admin, 2=moderator, 3=user
+  is_active: boolean;
+  ban_reason?: string | null;
+  reputation_score: number;
+  last_login_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface AdminUserListParams {
+  status?: 'active' | 'banned';
+  page?: number;
+}
+
+// ============================
+// COMMENT MANAGEMENT
+// ============================
+
+export interface AdminComment {
+  _id: string;
+  post_id: string;
+  user: {
+    id: number;
+    full_name: string;
+    avatar_url?: string;
+  };
+  content: string;
+  parent_id?: string | null;  // null = root comment, có ID = reply
   created_at: string;
 }
 
-export type AuditLogListResponse = PaginatedResponse<AuditLog>;
+// ============================
+// REPORT MANAGEMENT
+// ============================
 
+export interface AdminReport {
+  _id: string;
+  target_type: 'post' | 'comment';
+  target_id: string;
+  reporter: {
+    id: number;
+    full_name: string;
+  };
+  reason: string;
+  description?: string;
+  created_at: string;
+}
+
+// ============================
+// PLACE MANAGEMENT
+// ============================
+
+export interface PlaceCreateRequest {
+  name: string;
+  district_id: number;
+  place_type_id: number;
+  description?: string;
+  address_detail?: string;
+  latitude: number;
+  longitude: number;
+  open_hour?: string;   // Format: "HH:MM"
+  close_hour?: string;
+  price_min?: number;
+  price_max?: number;
+  images?: string[];
+}
+
+// ============================
+// POST MANAGEMENT
+// ============================
+
+export interface AdminPostListParams {
+  status?: 'pending' | 'published' | 'rejected';
+  page?: number;
+}
+
+export interface UpdatePostStatusRequest {
+  status: 'published' | 'rejected';
+  reason?: string;
+}

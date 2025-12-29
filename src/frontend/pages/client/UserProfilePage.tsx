@@ -126,8 +126,13 @@ const UserProfilePage: React.FC = () => {
         setEditBio(profileData.bio || '');
       }
 
-      // TODO: Fetch favorite places when API is available
-      setFavoritePlaces(mockFavoritePlaces);
+      // Set favorite places from API response
+      if (profileData.recent_favorites && profileData.recent_favorites.length > 0) {
+        setFavoritePlaces(profileData.recent_favorites);
+      } else {
+        // Fallback to mock data if no favorites
+        setFavoritePlaces(mockFavoritePlaces);
+      }
 
     } catch (err) {
       console.error('Error fetching profile, using mock data:', err);
@@ -340,11 +345,11 @@ const UserProfilePage: React.FC = () => {
                   id={String(place.id)}
                   imageSrc={place.main_image_url || ''}
                   title={place.name}
-                  address={`Quận ${place.district_id}`}
+                  address={place.address || place.district_name || `Quận ${place.district_id}`}
                   priceMin={place.price_min}
                   priceMax={place.price_max}
                   rating={place.rating_average}
-                  reviewCount={place.rating_count ? `${(place.rating_count / 1000).toFixed(1)}K+` : '0'}
+                  reviewCount={place.rating_count || 0}
                 />
               ))}
             </div>
