@@ -499,7 +499,38 @@ async def get_user_by_id(
                 status_code=404
             )
         
-        # Get recent posts from MongoDB
+        # Get user's recent favorites
+        favorites = db.query(UserPlaceFavorite).filter(
+            UserPlaceFavorite.user_id == user_id
+        ).order_by(UserPlaceFavorite.created_at.desc()).limit(5).all()
+        
+        recent_favorites = []
+        for fav in favorites:
+            place = db.query(Place).filter(Place.id == fav.place_id).first()
+            if place:
+                price_min = float(place.price_min) if place.price_min else 0
+                price_max = float(place.price_max) if place.price_max else 0
+                if price_min > price_max:
+                    price_min, price_max = price_max, price_min
+                
+                district = db.query(District).filter(District.id == place.district_id).first()
+                district_name = district.name if district else f"Quận {place.district_id}"
+                
+                recent_favorites.append({
+                    "id": place.id,
+                    "name": place.name,
+                    "district_id": place.district_id,
+                    "district_name": district_name,
+                    "address": place.address_detail or f"Quận {district_name}, Hà Nội",
+                    "place_type_id": place.place_type_id,
+                    "rating_average": float(place.rating_average) if place.rating_average else 0,
+                    "rating_count": place.rating_count or 0,
+                    "price_min": price_min,
+                    "price_max": price_max,
+                    "main_image_url": get_main_image_url(place.id, db)
+                })
+        
+        # Get recent posts from MongoDB with image normalization
         recent_posts = []
         try:
             user_posts = await mongo_client.find_many(
@@ -508,7 +539,25 @@ async def get_user_by_id(
                 sort=[("created_at", -1)],
                 limit=5
             )
+            
+            import os
+            backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
+            backend_port = os.getenv("BACKEND_PORT", "8080")
+            base_url = f"http://{backend_host}:{backend_port}"
+            
             for post in user_posts:
+                # Normalize images
+                post_images = post.get("images", [])
+                normalized_images = []
+                for img in post_images:
+                    if img:
+                        if img.startswith('http'):
+                            normalized_images.append(img)
+                        elif img.startswith('/'):
+                            normalized_images.append(f"{base_url}{img}")
+                        else:
+                            normalized_images.append(f"{base_url}/{img}")
+                
                 recent_posts.append({
                     "_id": str(post.get("_id")),
                     "author": {
@@ -519,7 +568,7 @@ async def get_user_by_id(
                     },
                     "title": post.get("title"),
                     "content": post.get("content", ""),
-                    "images": post.get("images", []),
+                    "images": normalized_images,
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
                     "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
@@ -536,6 +585,7 @@ async def get_user_by_id(
                 "bio": user.bio,
                 "role_id": user.role_id,
                 "reputation_score": user.reputation_score,
+                "recent_favorites": recent_favorites,
                 "recent_posts": recent_posts
             }
         )

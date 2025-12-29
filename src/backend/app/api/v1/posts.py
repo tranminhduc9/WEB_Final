@@ -21,6 +21,7 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from datetime import datetime
 import logging
+import os
 
 from config.database import get_db, User, UserPostFavorite, Place
 from app.utils.image_helpers import get_main_image_url
@@ -82,6 +83,25 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
         })
         is_liked = like is not None
     
+    # Get post images and normalize URLs
+    post_images = post.get("images", [])
+    
+    # Normalize image URLs - convert relative paths to full URLs
+    backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
+    backend_port = os.getenv("BACKEND_PORT", "8080")
+    base_url = f"http://{backend_host}:{backend_port}"
+    
+    normalized_images = []
+    for img in post_images:
+        if img:
+            if img.startswith('http://') or img.startswith('https://'):
+                normalized_images.append(img)
+            elif img.startswith('/'):
+                normalized_images.append(f"{base_url}{img}")
+            else:
+                normalized_images.append(f"{base_url}/{img}")
+    post_images = normalized_images
+    
     return {
         "_id": str(post.get("_id")),
         "author": author,
@@ -89,7 +109,7 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
         "content": post.get("content"),
         "rating": post.get("rating"),
         "related_place": related_place,
-        "images": post.get("images", []),
+        "images": post_images,
         "tags": post.get("tags", []),
         "likes_count": post.get("likes_count", 0),
         "comments_count": post.get("comments_count", 0),
@@ -215,9 +235,18 @@ async def get_post_detail(
         await get_mongodb()
         
         from bson import ObjectId
+        from bson.errors import InvalidId
         
-        # Get post
-        post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
+        # Get post - handle both ObjectId and UUID string as _id
+        post = None
+        try:
+            post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
+        except InvalidId:
+            pass
+        
+        if not post:
+            post = await mongo_client.find_one("posts", {"_id": post_id})
+        
         if not post:
             return error_response(
                 message="Bài viết không tồn tại",
