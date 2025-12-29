@@ -20,6 +20,8 @@ import UserProfilePage from './pages/client/UserProfilePage'
 import BlogPage from './pages/client/BlogPage'
 import BlogDetailPage from './pages/client/BlogDetailPage'
 import LocationInfoPage from './pages/client/LocationInfoPage'
+import FavoritePlacesPage from './pages/client/FavoritePlacesPage'
+import UserPostsPage from './pages/client/UserPostsPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminLocationsPage from './pages/admin/AdminLocationsPage'
@@ -83,6 +85,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <UserProfilePage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/places/favourite',
+    element: (
+      <ProtectedRoute>
+        <FavoritePlacesPage />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/posts/user',
+    element: (
+      <ProtectedRoute>
+        <UserPostsPage />
       </ProtectedRoute>
     )
   },
