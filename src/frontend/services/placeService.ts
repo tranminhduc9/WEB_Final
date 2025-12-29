@@ -88,13 +88,14 @@ export const placeService = {
     /**
      * Lấy địa điểm gần đây theo tọa độ
      * GET /places/nearby
-     * Params: lat, long, radius (optional)
+     * Params: lat, long, radius (optional), limit (optional)
      */
     getNearbyPlaces: async (params: NearbyQueryParams): Promise<ListResponse<PlaceCompact>> => {
         const queryParams = new URLSearchParams();
         queryParams.append('lat', String(params.lat));
         queryParams.append('long', String(params.long));
         if (params.radius) queryParams.append('radius', String(params.radius));
+        if (params.limit) queryParams.append('limit', String(params.limit));
 
         const response = await axiosClient.get<never, ListResponse<PlaceCompact>>(
             `/places/nearby?${queryParams.toString()}`
@@ -140,6 +141,18 @@ export const placeService = {
     toggleFavoritePlace: async (id: number): Promise<{ success: boolean; is_favorited: boolean }> => {
         const response = await axiosClient.post<never, { success: boolean; is_favorited: boolean }>(
             `/places/${id}/favorite`
+        );
+        return response;
+    },
+
+    /**
+     * Xóa địa điểm khỏi danh sách yêu thích
+     * DELETE /users/me/favorites/places/{id}
+     * Requires authentication
+     */
+    removeFavoritePlace: async (id: number): Promise<{ success: boolean; message?: string }> => {
+        const response = await axiosClient.delete<never, { success: boolean; message?: string }>(
+            `/users/me/favorites/places/${id}`
         );
         return response;
     },

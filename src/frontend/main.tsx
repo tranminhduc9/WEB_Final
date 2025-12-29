@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom/client'
 import { AuthProvider } from './contexts'
 
 // Route Guards
-import { ProtectedRoute, PublicRoute } from './routes'
+import { ProtectedRoute, PublicRoute, AdminRoute } from './routes'
 
 // Pages
 import Login from './pages/client/Login'
@@ -25,6 +25,7 @@ import UserPostsPage from './pages/client/UserPostsPage'
 import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminLocationsPage from './pages/admin/AdminLocationsPage'
+import AdminAddPlacePage from './pages/admin/AdminAddPlacePage'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
 import AdminSQLPage from './pages/admin/AdminSQLPage'
 
@@ -108,13 +109,63 @@ const router = createBrowserRouter([
   // Public user profile route (view other users)
   { path: '/user/:id', element: <UserProfilePage /> },
 
-  // Admin routes
-  { path: '/admin', element: <AdminHomePage /> },
-  { path: '/admin/statistics', element: <AdminHomePage /> },
-  { path: '/admin/users', element: <AdminUsersPage /> },
-  { path: '/admin/locations', element: <AdminLocationsPage /> },
-  { path: '/admin/reports', element: <AdminReportsPage /> },
-  { path: '/admin/sql', element: <AdminSQLPage /> },
+  // Admin routes (require admin role)
+  {
+    path: '/admin',
+    element: (
+      <AdminRoute>
+        <AdminHomePage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/statistics',
+    element: (
+      <AdminRoute>
+        <AdminHomePage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/users',
+    element: (
+      <AdminRoute>
+        <AdminUsersPage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/locations',
+    element: (
+      <AdminRoute>
+        <AdminLocationsPage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/locations/add',
+    element: (
+      <AdminRoute>
+        <AdminAddPlacePage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/reports',
+    element: (
+      <AdminRoute>
+        <AdminReportsPage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/sql',
+    element: (
+      <AdminRoute>
+        <AdminSQLPage />
+      </AdminRoute>
+    )
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

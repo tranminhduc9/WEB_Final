@@ -33,6 +33,26 @@
     margin: 0;
 }
 
+/* Results Count */
+.admin-reports-count {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 100%;
+    color: #000000;
+    margin: 0 0 24px 24px;
+}
+
+/* Loading/Empty states */
+.admin-reports-loading,
+.admin-reports-empty {
+    text-align: center;
+    padding: 40px;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    color: #666;
+}
+
 /* Table Container */
 .admin-reports-table-container {
     background: #FFFFFF;

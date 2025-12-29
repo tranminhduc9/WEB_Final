@@ -1,28 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../../components/admin/AdminHeader';
 import Footer from '../../components/client/Footer';
 import { Icons } from '../../config/constants';
+import { adminService } from '../../services';
+import type { PlaceDetail } from '../../types/models';
 import '../../assets/styles/pages/AdminLocationsPage.css';
 
-// Mock data for locations
+// Mock data fallback
 const mockLocations = [
-    { id: 1, name: 'Hồ Hoàn Kiếm', rating: 4.5, lat: 21.0285, lng: 105.8542, isHidden: false },
-    { id: 2, name: 'Văn Miếu - Quốc Tử Giám', rating: 4.7, lat: 21.0267, lng: 105.8355, isHidden: false },
-    { id: 3, name: 'Lăng Chủ Tịch Hồ Chí Minh', rating: 4.8, lat: 21.0369, lng: 105.8344, isHidden: false },
-    { id: 4, name: 'Chùa Một Cột', rating: 4.3, lat: 21.0359, lng: 105.8334, isHidden: true },
-    { id: 5, name: 'Hồ Tây', rating: 4.2, lat: 21.0538, lng: 105.8194, isHidden: false },
-    { id: 6, name: 'Phố cổ Hà Nội', rating: 4.6, lat: 21.0333, lng: 105.8500, isHidden: false },
-    { id: 7, name: 'Bảo tàng Dân tộc học', rating: 4.4, lat: 21.0401, lng: 105.7989, isHidden: false },
-    { id: 8, name: 'Nhà hát lớn Hà Nội', rating: 4.5, lat: 21.0245, lng: 105.8570, isHidden: false },
-    { id: 9, name: 'Cầu Long Biên', rating: 4.1, lat: 21.0436, lng: 105.8594, isHidden: false },
-    { id: 10, name: 'Hoàng Thành Thăng Long', rating: 4.6, lat: 21.0354, lng: 105.8400, isHidden: false },
+    { id: 1, name: 'Hồ Hoàn Kiếm', rating_average: 4.5, latitude: 21.0285, longitude: 105.8542 },
+    { id: 2, name: 'Văn Miếu - Quốc Tử Giám', rating_average: 4.7, latitude: 21.0267, longitude: 105.8355 },
+    { id: 3, name: 'Lăng Chủ Tịch Hồ Chí Minh', rating_average: 4.8, latitude: 21.0369, longitude: 105.8344 },
+    { id: 4, name: 'Chùa Một Cột', rating_average: 4.3, latitude: 21.0359, longitude: 105.8334 },
+    { id: 5, name: 'Hồ Tây', rating_average: 4.2, latitude: 21.0538, longitude: 105.8194 },
 ];
 
 function AdminLocationsPage() {
+    const navigate = useNavigate();
+    const [locations, setLocations] = useState<PlaceDetail[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [locations, setLocations] = useState(mockLocations);
+    const [isLoading, setIsLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<number | null>(null);
+
     const itemsPerPage = 10;
+
+    // Fetch locations from API
+    useEffect(() => {
+        const fetchLocations = async () => {
+            setIsLoading(true);
+            try {
+                const response = await adminService.getPlaces();
+                if (response.success && response.data && response.data.length > 0) {
+                    setLocations(response.data);
+                } else {
+                    console.log('No places from API, using mock data');
+                    setLocations(mockLocations as any);
+                }
+            } catch (error) {
+                console.error('Error fetching places:', error);
+                setLocations(mockLocations as any);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLocations();
+    }, []);
 
     // Filter locations based on search
     const filteredLocations = locations.filter(location =>
@@ -37,22 +62,27 @@ function AdminLocationsPage() {
     // Handle edit
     const handleEdit = (locationId: number) => {
         console.log('Edit location:', locationId);
-        // TODO: Navigate to edit page or open modal
-    };
-
-    // Handle hide/show toggle
-    const handleHideToggle = (locationId: number) => {
-        setLocations(prevLocations =>
-            prevLocations.map(loc =>
-                loc.id === locationId ? { ...loc, isHidden: !loc.isHidden } : loc
-            )
-        );
+        alert('Chức năng chỉnh sửa đang được phát triển');
     };
 
     // Handle delete
-    const handleDelete = (locationId: number) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa địa điểm này?')) {
-            setLocations(prevLocations => prevLocations.filter(loc => loc.id !== locationId));
+    const handleDelete = async (locationId: number) => {
+        if (!window.confirm('Bạn có chắc chắn muốn xóa địa điểm này?')) return;
+
+        setActionLoading(locationId);
+        try {
+            const response = await adminService.deletePlace(locationId);
+            if (response.success) {
+                setLocations(prev => prev.filter(loc => loc.id !== locationId));
+                alert('Đã xóa địa điểm thành công!');
+            } else {
+                alert('Không thể xóa địa điểm');
+            }
+        } catch (error) {
+            console.error('Error deleting place:', error);
+            alert('Có lỗi xảy ra khi xóa địa điểm');
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -92,8 +122,18 @@ function AdminLocationsPage() {
                     <Icons.Search className="admin-locations-search__icon" />
                 </div>
 
-                {/* Results Count */}
-                <p className="admin-locations-count">Có {filteredLocations.length} kết quả</p>
+                {/* Results Count and Add Button */}
+                <div className="admin-locations-toolbar">
+                    <p className="admin-locations-count">
+                        {isLoading ? 'Đang tải...' : `Có ${filteredLocations.length} kết quả`}
+                    </p>
+                    <button
+                        className="admin-locations-add-btn"
+                        onClick={() => navigate('/admin/locations/add')}
+                    >
+                        Thêm địa điểm
+                    </button>
+                </div>
 
                 {/* Locations Table */}
                 <div className="admin-locations-table-container">
@@ -104,91 +144,83 @@ function AdminLocationsPage() {
                                 <th>place_name</th>
                                 <th>rating</th>
                                 <th>long/lat</th>
-                                <th colSpan={3}>Chức năng</th>
+                                <th colSpan={2}>Chức năng</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedLocations.map((location) => (
-                                <tr key={location.id}>
-                                    <td>{location.id}</td>
-                                    <td>{location.name}</td>
-                                    <td>{location.rating}</td>
-                                    <td>{location.lng.toFixed(4)}/{location.lat.toFixed(4)}</td>
-                                    <td>
-                                        <button
-                                            className="admin-locations-action-btn"
-                                            onClick={() => handleEdit(location.id)}
-                                        >
-                                            <Icons.Edit className="admin-locations-action-icon" />
-                                            Chỉnh sửa
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="admin-locations-action-btn"
-                                            onClick={() => handleHideToggle(location.id)}
-                                        >
-                                            <Icons.Hide className="admin-locations-action-icon" />
-                                            {location.isHidden ? 'Show' : 'Hide'}
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="admin-locations-action-btn admin-locations-action-btn--delete"
-                                            onClick={() => handleDelete(location.id)}
-                                        >
-                                            <Icons.Ban className="admin-locations-action-icon" />
-                                            Delete
-                                        </button>
-                                    </td>
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="admin-locations-loading">Đang tải...</td>
                                 </tr>
-                            ))}
-                            {/* Empty rows to fill table */}
-                            {Array.from({ length: Math.max(0, itemsPerPage - paginatedLocations.length) }).map((_, index) => (
-                                <tr key={`empty-${index}`} className="admin-locations-table__empty-row">
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
+                            ) : paginatedLocations.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="admin-locations-empty">Không có địa điểm nào</td>
                                 </tr>
-                            ))}
+                            ) : (
+                                paginatedLocations.map((location) => (
+                                    <tr key={location.id}>
+                                        <td>{location.id}</td>
+                                        <td>{location.name}</td>
+                                        <td>{location.rating_average?.toFixed(1) || 'N/A'}</td>
+                                        <td>{location.longitude?.toFixed(4)}/{location.latitude?.toFixed(4)}</td>
+                                        <td>
+                                            <button
+                                                className="admin-locations-action-btn"
+                                                onClick={() => handleEdit(location.id)}
+                                            >
+                                                <Icons.Edit className="admin-locations-action-icon" />
+                                                Chỉnh sửa
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="admin-locations-action-btn admin-locations-action-btn--delete"
+                                                onClick={() => handleDelete(location.id)}
+                                                disabled={actionLoading === location.id}
+                                            >
+                                                <Icons.Trash className="admin-locations-action-icon" />
+                                                {actionLoading === location.id ? 'Đang xóa...' : 'Xóa'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Pagination */}
-                <div className="admin-locations-pagination">
-                    <button
-                        className="admin-locations-pagination__nav"
-                        onClick={() => setCurrentPage(1)}
-                        disabled={currentPage === 1}
-                    >
-                        «
-                    </button>
-
-                    {getPageNumbers().map((page, index) => (
+                {totalPages > 1 && (
+                    <div className="admin-locations-pagination">
                         <button
-                            key={index}
-                            className={`admin-locations-pagination__page ${page === currentPage ? 'active' : ''
-                                } ${page === '...' ? 'ellipsis' : ''}`}
-                            onClick={() => typeof page === 'number' && setCurrentPage(page)}
-                            disabled={page === '...'}
+                            className="admin-locations-pagination__nav"
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
                         >
-                            {page}
+                            «
                         </button>
-                    ))}
 
-                    <button
-                        className="admin-locations-pagination__nav"
-                        onClick={() => setCurrentPage(totalPages)}
-                        disabled={currentPage === totalPages}
-                    >
-                        »
-                    </button>
-                </div>
+                        {getPageNumbers().map((page, index) => (
+                            <button
+                                key={index}
+                                className={`admin-locations-pagination__page ${page === currentPage ? 'active' : ''
+                                    } ${page === '...' ? 'ellipsis' : ''}`}
+                                onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                                disabled={page === '...'}
+                            >
+                                {page}
+                            </button>
+                        ))}
+
+                        <button
+                            className="admin-locations-pagination__nav"
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={currentPage === totalPages}
+                        >
+                            »
+                        </button>
+                    </div>
+                )}
             </main>
 
             <Footer />

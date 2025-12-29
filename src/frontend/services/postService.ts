@@ -51,8 +51,16 @@ export const postService = {
         const queryString = queryParams.toString();
         const url = queryString ? `/posts?${queryString}` : '/posts';
 
-        const response = await axiosClient.get<never, ListResponse<PostDetail>>(url);
-        return response;
+        // Backend returns nested structure: { success, data: { posts, pagination } }
+        const response = await axiosClient.get<never, { success: boolean; data: { posts: PostDetail[]; pagination: any }; message?: string }>(url);
+
+        // Transform to flat structure expected by frontend
+        return {
+            success: response.success,
+            data: response.data?.posts || [],
+            pagination: response.data?.pagination,
+            message: response.message
+        };
     },
 
     /**
@@ -152,6 +160,26 @@ export const postService = {
             `/comments/${commentId}/report`,
             { reason, description }
         );
+        return response;
+    },
+
+    /**
+     * Delete own post
+     * DELETE /posts/{id}
+     * Backend verifies ownership - returns 403 if not author
+     */
+    deleteOwnPost: async (postId: string): Promise<BaseResponse> => {
+        const response = await axiosClient.delete<never, BaseResponse>(`/posts/${postId}`);
+        return response;
+    },
+
+    /**
+     * Delete own comment
+     * DELETE /comments/{id}
+     * Backend verifies ownership - returns 403 if not author
+     */
+    deleteOwnComment: async (commentId: string): Promise<BaseResponse> => {
+        const response = await axiosClient.delete<never, BaseResponse>(`/comments/${commentId}`);
         return response;
     },
 };

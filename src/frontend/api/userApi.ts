@@ -13,8 +13,8 @@ import type {
 } from '../types';
 
 const USER_ENDPOINTS = {
-  PROFILE: '/users/profile',
-  UPDATE_PROFILE: '/users/profile',
+  PROFILE: '/users/me',
+  UPDATE_PROFILE: '/users/me',
   AVATAR: '/upload',
   PREFERENCES: '/users/preferences',
 };

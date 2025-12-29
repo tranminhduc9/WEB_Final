@@ -116,9 +116,8 @@ export const authApi = {
    * Xác thực email
    */
   verifyEmail: async (token: string): Promise<ApiResponse<{ message: string }>> => {
-    const response = await axiosClient.post<any, ApiResponse<{ message: string }>>(
-      AUTH_ENDPOINTS.VERIFY_EMAIL,
-      { token }
+    const response = await axiosClient.get<any, ApiResponse<{ message: string }>>(
+      `${AUTH_ENDPOINTS.VERIFY_EMAIL}?token=${encodeURIComponent(token)}`
     );
     return response;
   },
