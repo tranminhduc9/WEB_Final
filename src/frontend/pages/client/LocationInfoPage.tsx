@@ -235,11 +235,34 @@ const LocationInfoPage: React.FC = () => {
     };
 
     // ============================
+    // CHECK FAVORITE STATUS
+    // ============================
+    const checkFavoriteStatus = useCallback(async () => {
+        if (!id || !isAuthenticated) return;
+
+        try {
+            // Fetch user's favorite places and check if this place is in the list
+            const response = await placeService.getFavoritePlaces();
+            if (response.success && response.data) {
+                const favoriteIds = response.data.map((p: PlaceCompact) => p.id);
+                setIsFavorite(favoriteIds.includes(Number(id)));
+            }
+        } catch (err) {
+            console.error('Error checking favorite status:', err);
+        }
+    }, [id, isAuthenticated]);
+
+    // ============================
     // EFFECTS
     // ============================
     useEffect(() => {
         fetchPlaceDetails();
     }, [fetchPlaceDetails]);
+
+    // Check favorite status when user is authenticated
+    useEffect(() => {
+        checkFavoriteStatus();
+    }, [checkFavoriteStatus]);
 
     // Fetch suggestions after place is loaded (to use its coordinates)
     useEffect(() => {
@@ -403,10 +426,6 @@ const LocationInfoPage: React.FC = () => {
                                 src={location.images?.[1] || location.images?.[0] || location.main_image_url}
                                 alt={location.name}
                             />
-                            <button className="location-gallery__add-btn">
-                                <Icons.ImageFileAdd />
-                                <span>Thêm ảnh</span>
-                            </button>
                         </div>
                     </div>
                 </section>

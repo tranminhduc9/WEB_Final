@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Global styles - No Tailwind */
 
 * {
   margin: 0;
@@ -8,7 +6,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -18,4 +17,68 @@ html, body {
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Loading Spinner (for route guards) */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 2px solid transparent;
+  border-top-color: #F88622;
+  border-bottom-color: #F88622;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* App Layout */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+}
+
+/* Hero Section - ảnh nền */
+.hero-section {
+  position: relative;
+  width: 100%;
+  max-width: 1440px;
+  height: 670px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Removed dark overlay to keep image bright */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

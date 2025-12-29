@@ -164,17 +164,17 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="app-container">
       <Header />
-      <main className="flex-1">
+      <main className="app-main">
         {/* Hero Section với hình ảnh */}
-        <section className="relative h-96 bg-gray-100 w-screen -mx-4">
+        <section className="hero-section">
           <img
             src={homePhoto}
             alt="Du lịch Hà Nội"
-            className="w-full h-full object-cover"
+            className="hero-image"
           />
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+          <div className="hero-overlay">
           </div>
         </section>
 
