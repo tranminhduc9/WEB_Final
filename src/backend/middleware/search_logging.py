@@ -102,11 +102,48 @@ class SearchLogger:
         Args:
             log_data: Dữ liệu log cần lưu
         """
-        # TODO: Implement database saving
-        # Ví dụ:
-        # from database.models import VisitLog
-        # await VisitLog.create(**log_data)
-        pass
+        try:
+            from config.database import SessionLocal, VisitLog
+            import re
+            
+            db = SessionLocal()
+            try:
+                # Extract place_id from URL if visiting a place detail page
+                place_id = None
+                page_url = log_data.get("page_url", "")
+                place_match = re.search(r'/api/v1/places/(\d+)', page_url)
+                if place_match:
+                    place_id = int(place_match.group(1))
+                
+                # Extract post_id from URL if visiting a post detail page
+                post_id = None
+                post_match = re.search(r'/api/v1/posts/([a-f0-9]+)', page_url)
+                if post_match:
+                    post_id = post_match.group(1)
+                
+                # Tạo VisitLog record
+                visit_log = VisitLog(
+                    user_id=log_data.get("user_id"),
+                    place_id=place_id,
+                    post_id=post_id,
+                    page_url=page_url,
+                    ip_address=log_data.get("ip_address"),
+                    user_agent=log_data.get("user_agent"),
+                    visited_at=log_data.get("visited_at")
+                )
+                
+                db.add(visit_log)
+                db.commit()
+                logger.debug(f"Visit log saved to database: {page_url}")
+                
+            except Exception as e:
+                db.rollback()
+                logger.error(f"Failed to save visit log to database: {e}")
+            finally:
+                db.close()
+                
+        except ImportError as e:
+            logger.warning(f"Database not available for visit logging: {e}")
 
     def get_trending_keywords(self, limit: int = 10) -> list:
         """

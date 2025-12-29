@@ -26,6 +26,7 @@ from config.database import (
     Restaurant, Hotel, TouristAttraction, VisitLog
 )
 from app.utils.image_helpers import get_main_image_url
+from app.utils.place_helpers import get_user_compact
 from middleware.auth import get_current_user, get_optional_user
 from middleware.response import (
     success_response,
@@ -646,6 +647,93 @@ async def get_place_detail(
         elif row.close_hour:
             opening_hours = f"Đóng cửa lúc {str(row.close_hour)[:5]}"
         
+        # Fetch related posts from MongoDB
+        from middleware.mongodb_client import mongo_client, get_mongodb
+        
+        related_posts = []
+        try:
+            await get_mongodb()
+            
+            # Query posts with $or to match both int and string related_place_id
+            logger.info(f"[PLACES] Fetching related posts for place_id={place_id}")
+            posts = await mongo_client.find_many(
+                "posts",
+                {
+                    "$or": [
+                        {"related_place_id": place_id},
+                        {"related_place_id": str(place_id)}
+                    ],
+                    "status": "approved"
+                },
+                sort=[("likes_count", -1), ("comments_count", -1)],
+                limit=10
+            )
+            logger.info(f"[PLACES] Found {len(posts) if posts else 0} posts with related_place_id={place_id}")
+            
+            # Fallback 1: if no posts for this place, get general approved posts
+            if not posts or len(posts) == 0:
+                logger.info("[PLACES] No related posts found, trying general approved posts...")
+                posts = await mongo_client.find_many(
+                    "posts",
+                    {"status": "approved"},
+                    sort=[("likes_count", -1), ("comments_count", -1)],
+                    limit=5
+                )
+                logger.info(f"[PLACES] Found {len(posts) if posts else 0} approved posts")
+            
+            # Fallback 2: if still no approved posts, get any posts (for development/testing)
+            if not posts or len(posts) == 0:
+                logger.info("[PLACES] No approved posts found, trying any posts...")
+                posts = await mongo_client.find_many(
+                    "posts",
+                    {},  # Get all posts regardless of status
+                    sort=[("created_at", -1)],
+                    limit=5
+                )
+                logger.info(f"[PLACES] Found {len(posts) if posts else 0} total posts in MongoDB")
+            
+            # Format related posts with image normalization
+            backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
+            backend_port = os.getenv("BACKEND_PORT", "8080")
+            base_url = f"http://{backend_host}:{backend_port}"
+            
+            for post in posts:
+                author = get_user_compact(post.get("author_id"), db)
+                post_images = post.get("images", [])
+                if not post_images:
+                    post_images = images  # Fallback to place images
+                
+                # Normalize image URLs
+                normalized_images = []
+                for img in post_images:
+                    if img:
+                        if img.startswith('http'):
+                            normalized_images.append(img)
+                        elif img.startswith('/'):
+                            normalized_images.append(f"{base_url}{img}")
+                        else:
+                            normalized_images.append(f"{base_url}/{img}")
+                
+                related_posts.append({
+                    "_id": str(post.get("_id")),
+                    "author": author,
+                    "title": post.get("title"),
+                    "content": post.get("content"),
+                    "rating": post.get("rating"),
+                    "images": normalized_images,
+                    "tags": post.get("tags", []),
+                    "likes_count": post.get("likes_count", 0),
+                    "comments_count": post.get("comments_count", 0),
+                    "is_liked": False,
+                    "status": post.get("status"),
+                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                })
+        except Exception as e:
+            import traceback
+            logger.error(f"Error fetching related posts: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            related_posts = []
+        
         # Response theo Swagger PlaceDetailResponse schema
         # PlaceDetail extends PlaceCompact nên cần đầy đủ các trường
         data = {
@@ -675,7 +763,7 @@ async def get_place_detail(
             "details": details,
             "images": images,
             "nearby": nearby_places,
-            "related_posts": []
+            "related_posts": related_posts
         }
 
         # Log visit
