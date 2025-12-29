@@ -26,6 +26,20 @@ from middleware.response import (
     not_found_response,
     server_error_response
 )
+# Secure cookies for enhanced security
+from middleware.secure_cookies import (
+    set_auth_cookies,
+    clear_auth_cookies,
+    CookieConfig
+)
+# Request throttling for brute force protection
+from middleware.throttle import (
+    apply_throttle,
+    record_failed_attempt,
+    record_successful_attempt,
+    get_throttle_status
+)
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -335,6 +349,9 @@ async def login(
     - 500: Internal server error
     """
     try:
+        # Áp dụng throttle - delay nếu có nhiều lần thất bại
+        await apply_throttle(request, identifier=login_data.email)
+        
         # Lấy auth service
         auth_service = get_auth_service(db)
 
@@ -347,7 +364,25 @@ async def login(
         # Xử lý kết quả - Return trực tiếp response từ service (đã đúng format)
         if success:
             # Service đã return format frontend cần: {success, message, access_token, refresh_token, user}
-            return response
+            # Tạo JSONResponse để có thể set cookies
+            json_response = JSONResponse(content=response)
+            
+            # Set secure cookies cho authentication
+            access_token = response.get("access_token")
+            refresh_token = response.get("refresh_token")
+            
+            if access_token:
+                set_auth_cookies(
+                    response=json_response,
+                    access_token=access_token,
+                    refresh_token=refresh_token
+                )
+                logger.info(f"Secure auth cookies set for user: {login_data.email}")
+            
+            # Reset throttle sau khi login thành công
+            record_successful_attempt(request, identifier=login_data.email)
+            
+            return json_response
         else:
             # Error case
             error_code = response.get("error", {}).get("code", "UNKNOWN_ERROR")
@@ -361,6 +396,20 @@ async def login(
             }
 
             http_status = status_code_mapping.get(error_code, 400)
+
+            # Ghi nhận thất bại nếu là lỗi xác thực
+            if error_code == "INVALID_CREDENTIALS":
+                record_failed_attempt(request, identifier=login_data.email)
+                
+                # Thêm thông tin về throttle status vào response
+                throttle_info = get_throttle_status(request, identifier=login_data.email)
+                remaining_attempts = throttle_info["max_attempts"] - throttle_info["attempts"]
+                
+                if remaining_attempts > 0:
+                    error_message += f" Còn {remaining_attempts} lần thử."
+                else:
+                    error_message = f"Tài khoản đã bị khóa. Vui lòng thử lại sau {throttle_info['remaining_lockout'] // 60} phút."
+                    http_status = 429
 
             return error_response(
                 message=error_message,
@@ -486,7 +535,17 @@ async def logout(
                 db.commit()
                 logger.info(f"Token revoked for user_id: {token_record.user_id}")
 
-        return success_response(message="Đăng xuất thành công")
+        # Tạo response và xóa authentication cookies
+        json_response = JSONResponse(content={
+            "success": True,
+            "message": "Đăng xuất thành công"
+        })
+        
+        # Clear all auth cookies (Secure, HttpOnly)
+        clear_auth_cookies(json_response)
+        logger.info("Auth cookies cleared on logout")
+        
+        return json_response
 
     except Exception as e:
         logger.error(f"Unexpected error in logout endpoint: {str(e)}")
