@@ -129,7 +129,24 @@
 }
 
 .profile-section__header {
-  margin-bottom: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.profile-section__view-all {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #F88622;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.profile-section__view-all:hover {
+  color: #e07520;
+  text-decoration: underline;
 }
 
 /* Tiêu đề section - từ Figma: font-size 40px, font-weight 700, line-height 48px */
@@ -604,6 +621,206 @@
 .profile-edit-actions button:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+/* ==================== */
+/* Enhanced Edit Modal with Tabs */
+/* ==================== */
+.profile-edit-modal--enhanced {
+  width: 90%;
+  max-width: 720px;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-edit-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.profile-edit-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.profile-edit-layout {
+  display: flex;
+  min-height: 400px;
+}
+
+.profile-edit-tabs {
+  width: 200px;
+  padding: 48px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #FAFAFA;
+}
+
+.profile-edit-tab {
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.profile-edit-tab:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.profile-edit-tab--active {
+  background: #FFF;
+  color: #000;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.profile-edit-divider {
+  width: 1px;
+  background: #e0e0e0;
+}
+
+.profile-edit-content {
+  flex: 1;
+  padding: 48px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-edit-content .profile-edit-field label {
+  font-size: 20px;
+  font-weight: 500;
+  color: #000;
+  margin-bottom: 12px;
+}
+
+.profile-edit-content .profile-edit-field input {
+  padding: 16px 20px;
+  font-size: 16px;
+  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid #e0e0e0;
+}
+
+.profile-edit-content .profile-edit-field input:focus {
+  border-color: #F88622;
+  box-shadow: 0 0 0 3px rgba(248, 134, 34, 0.15);
+}
+
+.profile-edit-content .profile-edit-actions {
+  margin-top: auto;
+  justify-content: flex-end;
+}
+
+.profile-edit-submit {
+  min-width: 140px;
+  padding: 14px 32px;
+  background: #F88622 !important;
+  color: white !important;
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-edit-submit:hover:not(:disabled) {
+  background: #e07520 !important;
+}
+
+.profile-edit-submit:disabled {
+  background: #ccc !important;
+  cursor: not-allowed;
+}
+
+/* Error and Success Messages */
+.profile-edit-error {
+  padding: 12px 16px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.profile-edit-success {
+  padding: 12px 16px;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  color: #16a34a;
+  font-size: 14px;
+}
+
+/* Responsive for Enhanced Modal */
+@media (max-width: 700px) {
+  .profile-edit-modal--enhanced {
+    max-width: 100%;
+    margin: 16px;
+    border-radius: 12px;
+  }
+
+  .profile-edit-layout {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .profile-edit-tabs {
+    width: 100%;
+    flex-direction: row;
+    padding: 16px;
+    gap: 8px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .profile-edit-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .profile-edit-divider {
+    display: none;
+  }
+
+  .profile-edit-content {
+    padding: 24px 16px;
+  }
+
+  .profile-edit-content .profile-edit-field label {
+    font-size: 16px;
+  }
+
+  .profile-edit-close {
+    top: 8px;
+    right: 8px;
+  }
 }
 
 /* ==================== */

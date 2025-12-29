@@ -190,7 +190,7 @@ const SearchResultsPage: React.FC = () => {
           priceMin={place.price_min}
           priceMax={place.price_max}
           rating={place.rating_average || 0}
-          reviewCount="0"
+          reviewCount={place.rating_count || 0}
         />
       ))}
     </div>

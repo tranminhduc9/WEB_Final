@@ -337,3 +337,142 @@
 .blog-card__username--clickable:hover {
   color: #F88622;
 }
+
+/* ==================== */
+/* Header Actions (Delete/Report buttons) */
+/* ==================== */
+.blog-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.blog-card__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f5f5f5;
+}
+
+.blog-card__action-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.blog-card__action-btn--delete {
+  color: #dc3545;
+}
+
+.blog-card__action-btn--delete:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.blog-card__action-btn--delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.blog-card__action-btn--report {
+  color: #6c757d;
+}
+
+.blog-card__action-btn--report:hover {
+  background: #ffc107;
+  color: #212529;
+}
+
+/* ==================== */
+/* Report Modal */
+/* ==================== */
+.blog-card__modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.blog-card__modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.blog-card__modal h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.blog-card__modal textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.blog-card__modal textarea:focus {
+  outline: none;
+  border-color: #F88622;
+}
+
+.blog-card__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.blog-card__modal-actions button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.blog-card__modal-actions button:first-child {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.blog-card__modal-actions button:first-child:hover {
+  background: #e5e5e5;
+}
+
+.blog-card__modal-actions button:last-child {
+  background: #F88622;
+  border: none;
+  color: white;
+}
+
+.blog-card__modal-actions button:last-child:hover {
+  background: #e67d1f;
+}
+
+.blog-card__modal-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -250,7 +250,8 @@
 }
 
 .blog-detail__comment-reply,
-.blog-detail__comment-report {
+.blog-detail__comment-report,
+.blog-detail__comment-delete {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -258,6 +259,19 @@
   border: none;
   cursor: pointer;
   padding: 0;
+}
+
+.blog-detail__comment-delete {
+  color: #dc3545;
+}
+
+.blog-detail__comment-delete:hover {
+  color: #a71d2a;
+}
+
+.blog-detail__comment-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .blog-detail__comment-reply span,

@@ -13,9 +13,9 @@ import type {
 } from '../types';
 
 const USER_ENDPOINTS = {
-  PROFILE: '/users/profile',
-  UPDATE_PROFILE: '/users/profile',
-  AVATAR: '/users/avatar',
+  PROFILE: '/users/me',
+  UPDATE_PROFILE: '/users/me',
+  AVATAR: '/upload',
   PREFERENCES: '/users/preferences',
 };
 
@@ -49,12 +49,14 @@ export const userApi = {
 
   /**
    * Upload avatar
+   * POST /upload - multipart/form-data with 'files' field
+   * Response: { success: boolean, urls: string[] }
    */
   uploadAvatar: async (file: File): Promise<ApiResponse<AvatarUploadResponse>> => {
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append('files', file);
 
-    const response = await axiosClient.post<any, ApiResponse<AvatarUploadResponse>>(
+    const response = await axiosClient.post<any, ApiResponse<{ urls: string[] }>>(
       USER_ENDPOINTS.AVATAR,
       formData,
       {
@@ -63,7 +65,18 @@ export const userApi = {
         },
       }
     );
-    return response;
+
+    // Transform response to match AvatarUploadResponse
+    const urls = response.data?.urls;
+    if (response.success && urls && urls.length > 0) {
+      return {
+        success: true,
+        data: { url: urls[0], message: 'Avatar uploaded successfully' },
+        message: 'Avatar uploaded successfully'
+      };
+    }
+
+    return response as unknown as ApiResponse<AvatarUploadResponse>;
   },
 
   /**

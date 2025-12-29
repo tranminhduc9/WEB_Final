@@ -5,7 +5,7 @@ import Footer from '../../components/client/Footer';
 import LocationCard from '../../components/common/LocationCard';
 import PostCard from '../../components/client/PostCard';
 import { useAuthContext } from '../../contexts';
-import { userService } from '../../services';
+import { userService, authService } from '../../services';
 import type { UserDetailResponse, PostDetail, PlaceCompact } from '../../types/models';
 import '../../assets/styles/pages/UserProfilePage.css';
 
@@ -85,6 +85,14 @@ const UserProfilePage: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editBio, setEditBio] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Enhanced modal states - tabs and password
+  const [activeTab, setActiveTab] = useState<'info' | 'password'>('info');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   // Mock profile for fallback
   const mockProfile: UserDetailResponse = {
@@ -242,6 +250,62 @@ const UserProfilePage: React.FC = () => {
     return `Điểm danh tiếng: (${totalLikes} + ${totalComments}) / ${postCount} bài viết`;
   };
 
+  // Reset modal state on close
+  const resetEditModal = () => {
+    setShowEditModal(false);
+    setActiveTab('info');
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError(null);
+    setPasswordSuccess(false);
+  };
+
+  // Handle change password
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    // Validation
+    if (!oldPassword.trim()) {
+      setPasswordError('Vui lòng nhập mật khẩu cũ');
+      return;
+    }
+    if (!newPassword.trim()) {
+      setPasswordError('Vui lòng nhập mật khẩu mới');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('Mật khẩu mới phải có ít nhất 6 ký tự');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Xác nhận mật khẩu không khớp');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await authService.changePassword({
+        current_password: oldPassword,
+        new_password: newPassword
+      });
+      setPasswordSuccess(true);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      // Show success then close after delay
+      setTimeout(() => {
+        resetEditModal();
+      }, 1500);
+    } catch (err) {
+      console.error('Change password failed:', err);
+      setPasswordError('Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu cũ.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -334,9 +398,16 @@ const UserProfilePage: React.FC = () => {
 
         {/* Địa điểm yêu thích */}
         <section className="profile-section">
-          <h2 className="profile-section__title">
-            Địa điểm yêu thích <span className="profile-icon">📍</span>
-          </h2>
+          <div className="profile-section__header">
+            <h2 className="profile-section__title">
+              Địa điểm yêu thích <span className="profile-icon">📍</span>
+            </h2>
+            {favoritePlaces.length > 0 && (
+              <Link to="/places/favourite" className="profile-section__view-all">
+                Xem tất cả →
+              </Link>
+            )}
+          </div>
           {favoritePlaces.length > 0 ? (
             <div className="profile-locations-scroll">
               {favoritePlaces.map((place) => (
@@ -360,9 +431,16 @@ const UserProfilePage: React.FC = () => {
 
         {/* Bài viết nổi bật */}
         <section className="profile-section">
-          <h2 className="profile-section__title">
-            Bài viết nổi bật <span className="profile-icon">💬</span>
-          </h2>
+          <div className="profile-section__header">
+            <h2 className="profile-section__title">
+              Bài viết nổi bật <span className="profile-icon">💬</span>
+            </h2>
+            {userPosts.length > 0 && (
+              <Link to="/posts/user" className="profile-section__view-all">
+                Xem tất cả →
+              </Link>
+            )}
+          </div>
           {userPosts.length > 0 ? (
             <div className="profile-posts-grid">
               {userPosts.map((post) => (
@@ -384,53 +462,132 @@ const UserProfilePage: React.FC = () => {
         </section>
       </div>
 
-      {/* Edit Profile Modal */}
+      {/* Edit Profile Modal - Enhanced with tabs */}
       {showEditModal && (
         <div
           className="profile-edit-modal-overlay"
-          onClick={() => setShowEditModal(false)}
+          onClick={resetEditModal}
         >
           <div
-            className="profile-edit-modal"
+            className="profile-edit-modal profile-edit-modal--enhanced"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>Chỉnh sửa thông tin cá nhân</h3>
+            {/* Close Button */}
+            <button className="profile-edit-close" onClick={resetEditModal}>
+              ×
+            </button>
 
-            <div className="profile-edit-field">
-              <label>Họ tên</label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Nhập họ tên..."
-                disabled={isUpdating}
-              />
-            </div>
+            {/* Modal Content with Tabs */}
+            <div className="profile-edit-layout">
+              {/* Tab Navigation - Left Side */}
+              <div className="profile-edit-tabs">
+                <button
+                  className={`profile-edit-tab ${activeTab === 'info' ? 'profile-edit-tab--active' : ''}`}
+                  onClick={() => setActiveTab('info')}
+                >
+                  Thông tin cá nhân
+                </button>
+                <button
+                  className={`profile-edit-tab ${activeTab === 'password' ? 'profile-edit-tab--active' : ''}`}
+                  onClick={() => setActiveTab('password')}
+                >
+                  Mật khẩu
+                </button>
+              </div>
 
-            <div className="profile-edit-field">
-              <label>Giới thiệu</label>
-              <textarea
-                value={editBio}
-                onChange={(e) => setEditBio(e.target.value)}
-                placeholder="Giới thiệu về bản thân..."
-                disabled={isUpdating}
-                rows={3}
-              />
-            </div>
+              {/* Vertical Divider */}
+              <div className="profile-edit-divider"></div>
 
-            <div className="profile-edit-actions">
-              <button
-                onClick={() => setShowEditModal(false)}
-                disabled={isUpdating}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleUpdateProfile}
-                disabled={isUpdating || !editName.trim()}
-              >
-                {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
-              </button>
+              {/* Tab Content - Right Side */}
+              <div className="profile-edit-content">
+                {activeTab === 'info' ? (
+                  <>
+                    <div className="profile-edit-field">
+                      <label>Tên người dùng</label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Nhập tên người dùng..."
+                        disabled={isUpdating}
+                      />
+                    </div>
+
+                    <div className="profile-edit-field">
+                      <label>Sửa giới thiệu</label>
+                      <input
+                        type="text"
+                        value={editBio}
+                        onChange={(e) => setEditBio(e.target.value)}
+                        placeholder="Giới thiệu về bản thân..."
+                        disabled={isUpdating}
+                      />
+                    </div>
+
+                    <div className="profile-edit-actions">
+                      <button
+                        className="profile-edit-submit"
+                        onClick={handleUpdateProfile}
+                        disabled={isUpdating || !editName.trim()}
+                      >
+                        {isUpdating ? 'Đang lưu...' : 'Xác nhận'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {passwordError && (
+                      <div className="profile-edit-error">{passwordError}</div>
+                    )}
+                    {passwordSuccess && (
+                      <div className="profile-edit-success">Đổi mật khẩu thành công!</div>
+                    )}
+
+                    <div className="profile-edit-field">
+                      <label>Mật khẩu cũ</label>
+                      <input
+                        type="password"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        placeholder="Nhập mật khẩu cũ..."
+                        disabled={isUpdating}
+                      />
+                    </div>
+
+                    <div className="profile-edit-field">
+                      <label>Mật khẩu mới</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Nhập mật khẩu mới..."
+                        disabled={isUpdating}
+                      />
+                    </div>
+
+                    <div className="profile-edit-field">
+                      <label>Xác nhận mật khẩu</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Xác nhận mật khẩu mới..."
+                        disabled={isUpdating}
+                      />
+                    </div>
+
+                    <div className="profile-edit-actions">
+                      <button
+                        className="profile-edit-submit"
+                        onClick={handleChangePassword}
+                        disabled={isUpdating || !oldPassword || !newPassword || !confirmPassword}
+                      >
+                        {isUpdating ? 'Đang xử lý...' : 'Xác nhận'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

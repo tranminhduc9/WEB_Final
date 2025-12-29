@@ -30,7 +30,7 @@ const formatTimeAgo = (dateStr?: string): string => {
 
 const BlogDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
 
   // Post states
   const [post, setPost] = useState<PostDetail | null>(null);
@@ -47,6 +47,7 @@ const BlogDetailPage: React.FC = () => {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   // Report modal states
   const [showReportModal, setShowReportModal] = useState(false);
@@ -243,78 +244,123 @@ const BlogDetailPage: React.FC = () => {
     }
   };
 
-  // Render comment item
-  const renderComment = (comment: PostCommentInDetail, isReply = false) => (
-    <div key={comment._id} className={isReply ? 'blog-detail__reply' : 'blog-detail__comment'}>
-      <Link to={`/user/${comment.user?.id}`}>
-        <img
-          src={comment.user?.avatar_url || defaultAvatar}
-          alt={comment.user?.full_name || 'User'}
-          className="blog-detail__comment-avatar blog-detail__comment-avatar--clickable"
-        />
-      </Link>
-      <div className="blog-detail__comment-content">
-        <div className="blog-detail__comment-header">
-          <Link to={`/user/${comment.user?.id}`} className="blog-detail__comment-username-link">
-            <span className="blog-detail__comment-username">
-              {comment.user?.full_name || 'Người dùng'}
-            </span>
-          </Link>
-          <p className="blog-detail__comment-text">{comment.content}</p>
-        </div>
-        <div className="blog-detail__comment-footer">
-          <span className="blog-detail__comment-time">
-            {formatTimeAgo(comment.created_at)}
-          </span>
-          {!isReply && (
-            <button
-              className="blog-detail__comment-reply"
-              onClick={() => setReplyingTo(comment._id)}
-            >
-              <Icons.Comment className="blog-detail__comment-icon" />
-              <span>Trả lời</span>
-            </button>
-          )}
-          <button
-            className="blog-detail__comment-report"
-            onClick={() => openReportModal('comment', comment._id)}
-          >
-            <Icons.Flag className="blog-detail__comment-icon" />
-            <span>Báo cáo</span>
-          </button>
-        </div>
+  // Handle Delete Comment
+  const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bình luận này?')) {
+      return;
+    }
 
-        {/* Reply Input */}
-        {replyingTo === comment._id && (
-          <div className="blog-detail__reply-input">
-            <textarea
-              placeholder="Viết trả lời..."
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              disabled={isSubmitting}
-            />
-            <div className="blog-detail__reply-actions">
-              <button
-                onClick={() => {
-                  setReplyingTo(null);
-                  setReplyContent('');
-                }}
-                disabled={isSubmitting}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={() => handleReply(comment._id)}
-                disabled={isSubmitting || !replyContent.trim()}
-              >
-                {isSubmitting ? 'Đang gửi...' : 'Gửi'}
-              </button>
-            </div>
+    setDeletingCommentId(commentId);
+    try {
+      const response = await postService.deleteOwnComment(commentId);
+      if (response.success) {
+        alert('Đã xóa bình luận thành công!');
+        // Refresh post to update comments list
+        await fetchPost();
+      } else {
+        alert('Không thể xóa bình luận: ' + (response.message || 'Lỗi không xác định'));
+      }
+    } catch (error: any) {
+      console.error('Delete comment error:', error);
+      if (error.response?.status === 403) {
+        alert('Bạn không có quyền xóa bình luận này');
+      } else {
+        alert('Có lỗi xảy ra khi xóa bình luận');
+      }
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
+  // Render comment item
+  const renderComment = (comment: PostCommentInDetail, isReply = false) => {
+    const isCommentOwner = isAuthenticated && user && comment.user?.id === user.id;
+    const isDeleting = deletingCommentId === comment._id;
+
+    return (
+      <div key={comment._id} className={isReply ? 'blog-detail__reply' : 'blog-detail__comment'}>
+        <Link to={`/user/${comment.user?.id}`}>
+          <img
+            src={comment.user?.avatar_url || defaultAvatar}
+            alt={comment.user?.full_name || 'User'}
+            className="blog-detail__comment-avatar blog-detail__comment-avatar--clickable"
+          />
+        </Link>
+        <div className="blog-detail__comment-content">
+          <div className="blog-detail__comment-header">
+            <Link to={`/user/${comment.user?.id}`} className="blog-detail__comment-username-link">
+              <span className="blog-detail__comment-username">
+                {comment.user?.full_name || 'Người dùng'}
+              </span>
+            </Link>
+            <p className="blog-detail__comment-text">{comment.content}</p>
           </div>
-        )}
+          <div className="blog-detail__comment-footer">
+            <span className="blog-detail__comment-time">
+              {formatTimeAgo(comment.created_at)}
+            </span>
+            {!isReply && (
+              <button
+                className="blog-detail__comment-reply"
+                onClick={() => setReplyingTo(comment._id)}
+              >
+                <Icons.Comment className="blog-detail__comment-icon" />
+                <span>Trả lời</span>
+              </button>
+            )}
+            {/* Delete button for owner, Report button for others */}
+            {isCommentOwner ? (
+              <button
+                className="blog-detail__comment-delete"
+                onClick={() => handleDeleteComment(comment._id)}
+                disabled={isDeleting}
+              >
+                <Icons.Trash className="blog-detail__comment-icon" />
+                <span>{isDeleting ? 'Đang xóa...' : 'Xóa'}</span>
+              </button>
+            ) : isAuthenticated ? (
+              <button
+                className="blog-detail__comment-report"
+                onClick={() => openReportModal('comment', comment._id)}
+              >
+                <Icons.Flag className="blog-detail__comment-icon" />
+                <span>Báo cáo</span>
+              </button>
+            ) : null}
+          </div>
+
+          {/* Reply Input */}
+          {replyingTo === comment._id && (
+            <div className="blog-detail__reply-input">
+              <textarea
+                placeholder="Viết trả lời..."
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                disabled={isSubmitting}
+              />
+              <div className="blog-detail__reply-actions">
+                <button
+                  onClick={() => {
+                    setReplyingTo(null);
+                    setReplyContent('');
+                  }}
+                  disabled={isSubmitting}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => handleReply(comment._id)}
+                  disabled={isSubmitting || !replyContent.trim()}
+                >
+                  {isSubmitting ? 'Đang gửi...' : 'Gửi'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Loading state
   if (isLoading) {

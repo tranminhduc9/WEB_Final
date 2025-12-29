@@ -266,6 +266,7 @@ export interface NearbyQueryParams {
     lat: number;
     long: number;
     radius?: number;
+    limit?: number;
 }
 
 // ============================
