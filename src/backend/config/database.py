@@ -5,39 +5,181 @@ Module này xử lý kết nối và quản lý database PostgreSQL,
 cung cấp session và engine cho SQLAlchemy ORM.
 
 Database Schema v3.1 Compatible - UNIFIED DATABASE (Port 5433)
+
+Security Features:
+- SSL/TLS support for encrypted connections
+- Secure connection arguments
+- Connection pooling with security best practices
 """
 
 from sqlalchemy import (
     create_engine, Column, Integer, String, Boolean, DateTime,
-    Text, Float, Numeric, Time, ForeignKey, UniqueConstraint, Index
+    Text, Float, Numeric, Time, ForeignKey, UniqueConstraint, Index, event
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from datetime import datetime
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import logging
 import os
+import ssl
 
 logger = logging.getLogger(__name__)
 
-# Database URL từ environment variables - Sử dụng DATABASE_URL duy nhất
-DATABASE_URL = os.getenv(
+# ==============================================
+# DATABASE SECURITY CONFIGURATION
+# ==============================================
+
+# Environment detection
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+IS_PRODUCTION = ENVIRONMENT == "production"
+IS_STAGING = ENVIRONMENT == "staging"
+
+# SSL Mode configuration
+# Options: disable, allow, prefer, require, verify-ca, verify-full
+# - disable: No SSL (development only)
+# - prefer: Try SSL, fallback to non-SSL (development)
+# - require: SSL required, no certificate verification (staging)
+# - verify-ca: SSL required, verify CA certificate (production)
+# - verify-full: SSL required, verify CA and hostname (production - most secure)
+DB_SSL_MODE = os.getenv("DB_SSL_MODE", "prefer" if not IS_PRODUCTION else "require")
+
+# SSL Certificate paths (for verify-ca and verify-full modes)
+DB_SSL_CERT = os.getenv("DB_SSL_CERT", "")  # Client certificate
+DB_SSL_KEY = os.getenv("DB_SSL_KEY", "")   # Client private key
+DB_SSL_ROOT_CERT = os.getenv("DB_SSL_ROOT_CERT", "")  # CA certificate
+
+
+def build_secure_database_url(base_url: str) -> str:
+    """
+    Build secure database URL with SSL parameters
+    
+    Args:
+        base_url: Base PostgreSQL connection URL
+        
+    Returns:
+        str: URL with SSL parameters appended
+    """
+    # Parse the URL
+    parsed = urlparse(base_url)
+    
+    # Get existing query params
+    existing_params = parse_qs(parsed.query)
+    
+    # Add SSL mode if not already specified in URL
+    if 'sslmode' not in existing_params:
+        existing_params['sslmode'] = [DB_SSL_MODE]
+    
+    # Add SSL certificate paths for production if available
+    if IS_PRODUCTION or IS_STAGING:
+        if DB_SSL_ROOT_CERT and 'sslrootcert' not in existing_params:
+            existing_params['sslrootcert'] = [DB_SSL_ROOT_CERT]
+        if DB_SSL_CERT and 'sslcert' not in existing_params:
+            existing_params['sslcert'] = [DB_SSL_CERT]
+        if DB_SSL_KEY and 'sslkey' not in existing_params:
+            existing_params['sslkey'] = [DB_SSL_KEY]
+    
+    # Rebuild query string
+    new_query = urlencode({k: v[0] for k, v in existing_params.items()})
+    
+    # Rebuild URL
+    new_parsed = parsed._replace(query=new_query)
+    return urlunparse(new_parsed)
+
+
+def get_connect_args() -> dict:
+    """
+    Get secure connection arguments for SQLAlchemy engine
+    
+    Returns:
+        dict: Connection arguments with security settings
+    """
+    connect_args = {
+        # Application name for connection identification
+        "application_name": f"hanoi_travel_{ENVIRONMENT}",
+        
+        # Connection timeout (seconds)
+        "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "10")),
+        
+        # Statement timeout to prevent long-running queries (milliseconds)
+        # 30 seconds for production, 60 seconds for development
+        "options": f"-c statement_timeout={30000 if IS_PRODUCTION else 60000}",
+    }
+    
+    # Add SSL context for production if using psycopg2
+    if IS_PRODUCTION and DB_SSL_MODE in ("verify-ca", "verify-full"):
+        try:
+            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            if DB_SSL_ROOT_CERT:
+                ssl_context.load_verify_locations(DB_SSL_ROOT_CERT)
+            if DB_SSL_CERT and DB_SSL_KEY:
+                ssl_context.load_cert_chain(DB_SSL_CERT, DB_SSL_KEY)
+            connect_args["ssl_context"] = ssl_context
+        except Exception as e:
+            logger.warning(f"Could not create SSL context: {e}")
+    
+    return connect_args
+
+
+# Database URL từ environment variables
+_BASE_DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://admin:123456@localhost:5433/travel_db"
 )
 
-# Tạo SQLAlchemy engine
+# Build secure URL with SSL parameters
+DATABASE_URL = build_secure_database_url(_BASE_DATABASE_URL)
+
+# Log connection security info (không log credentials)
+parsed_url = urlparse(DATABASE_URL)
+logger.info(f"Database Configuration:")
+logger.info(f"  - Environment: {ENVIRONMENT}")
+logger.info(f"  - Host: {parsed_url.hostname}")
+logger.info(f"  - Port: {parsed_url.port}")
+logger.info(f"  - Database: {parsed_url.path.lstrip('/')}")
+logger.info(f"  - SSL Mode: {DB_SSL_MODE}")
+if IS_PRODUCTION:
+    logger.info(f"  - SSL Verify: {'Full' if DB_SSL_MODE == 'verify-full' else 'CA' if DB_SSL_MODE == 'verify-ca' else 'Connection Only'}")
+
+# Tạo SQLAlchemy engine với cấu hình bảo mật
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,
+    pool_pre_ping=True,  # Kiểm tra connection trước khi sử dụng
     pool_size=int(os.getenv("DB_POOL_SIZE", "10")),
     max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "20")),
     pool_timeout=int(os.getenv("DB_POOL_TIMEOUT", "30")),
-    pool_recycle=int(os.getenv("DB_POOL_RECYCLE", "3600")),
-    echo=False  # Set to True only for debugging
+    pool_recycle=int(os.getenv("DB_POOL_RECYCLE", "3600")),  # Recycle connections sau 1 giờ
+    echo=False,  # Set to True only for debugging
+    connect_args=get_connect_args(),
+    # Isolation level for transaction security
+    isolation_level="READ COMMITTED",
+    # Execution options
+    execution_options={
+        "compiled_cache": None if IS_PRODUCTION else {},  # Disable cache in production for security
+    }
 )
 
-# Tạo SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Event listener để log connection events (chỉ trong development)
+if not IS_PRODUCTION:
+    @event.listens_for(engine, "connect")
+    def receive_connect(dbapi_connection, connection_record):
+        """Log when a new connection is established"""
+        logger.debug("New database connection established")
+    
+    @event.listens_for(engine, "checkout")
+    def receive_checkout(dbapi_connection, connection_record, connection_proxy):
+        """Log when a connection is checked out from pool"""
+        logger.debug("Database connection checked out from pool")
+
+
+# Tạo SessionLocal class với cấu hình an toàn
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    expire_on_commit=True  # Expire objects after commit for data consistency
+)
 
 # Base class cho models
 Base = declarative_base()

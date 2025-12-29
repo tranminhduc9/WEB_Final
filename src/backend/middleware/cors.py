@@ -390,32 +390,114 @@ def is_cors_enabled_for_origin(origin: str) -> bool:
 def add_security_headers(app: FastAPI) -> None:
     """
     Add security headers cho production
+    
+    Headers được thêm:
+    - X-Content-Type-Options: Ngăn MIME-sniffing
+    - X-Frame-Options: Ngăn clickjacking
+    - X-XSS-Protection: Bật XSS filter của browser
+    - Referrer-Policy: Kiểm soát thông tin referrer
+    - Strict-Transport-Security (HSTS): Bắt buộc HTTPS
+    - Content-Security-Policy: Kiểm soát nguồn tài nguyên
+    - Permissions-Policy: Kiểm soát quyền truy cập API
 
     Args:
         app: FastAPI application
     """
+    # Get environment settings
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    is_production = environment == "production"
+    is_staging = environment == "staging"
+    
+    # HSTS configuration
+    hsts_max_age = int(os.getenv("HSTS_MAX_AGE", "31536000"))  # 1 year default
+    hsts_include_subdomains = os.getenv("HSTS_INCLUDE_SUBDOMAINS", "true").lower() == "true"
+    hsts_preload = os.getenv("HSTS_PRELOAD", "true").lower() == "true"
+    
     @app.middleware("http")
     async def add_security_headers_middleware(request: Request, call_next):
         response = await call_next(request)
 
-        # Security headers
+        # ==============================================
+        # BASIC SECURITY HEADERS (ALL ENVIRONMENTS)
+        # ==============================================
+        
+        # Ngăn MIME type sniffing
         response.headers["X-Content-Type-Options"] = "nosniff"
+        
+        # Ngăn clickjacking bằng cách không cho nhúng trong iframe
         response.headers["X-Frame-Options"] = "DENY"
+        
+        # Bật XSS filter của browser (deprecated but still useful for older browsers)
         response.headers["X-XSS-Protection"] = "1; mode=block"
+        
+        # Kiểm soát thông tin referrer được gửi
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # Ngăn cache thông tin nhạy cảm
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+            response.headers["Pragma"] = "no-cache"
 
-        # Content Security Policy (CSP) cho production
-        if os.getenv("ENVIRONMENT", "development").lower() == "production":
+        # ==============================================
+        # HTTPS/SSL SECURITY HEADERS (PRODUCTION/STAGING)
+        # ==============================================
+        
+        if is_production or is_staging:
+            # HTTP Strict Transport Security (HSTS)
+            # Bắt buộc trình duyệt sử dụng HTTPS
+            hsts_value = f"max-age={hsts_max_age}"
+            if hsts_include_subdomains:
+                hsts_value += "; includeSubDomains"
+            if hsts_preload and is_production:
+                hsts_value += "; preload"
+            response.headers["Strict-Transport-Security"] = hsts_value
+            
+            # Ngăn certificate transparency bypass
+            response.headers["Expect-CT"] = f"max-age={hsts_max_age}, enforce"
+        
+        # ==============================================
+        # PERMISSIONS POLICY (ALL ENVIRONMENTS)
+        # ==============================================
+        
+        # Kiểm soát quyền truy cập các API của browser
+        permissions_policy = (
+            "accelerometer=(), "
+            "camera=(), "
+            "geolocation=(self), "  # Cho phép geolocation cho bản thân site
+            "gyroscope=(), "
+            "magnetometer=(), "
+            "microphone=(), "
+            "payment=(), "
+            "usb=()"
+        )
+        response.headers["Permissions-Policy"] = permissions_policy
+
+        # ==============================================
+        # CONTENT SECURITY POLICY (PRODUCTION ONLY)
+        # ==============================================
+        
+        if is_production:
+            # CSP để kiểm soát nguồn tài nguyên được phép
             csp = (
                 "default-src 'self'; "
                 "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com; "
                 "img-src 'self' data: https:; "
-                "connect-src 'self' https://api.hanoi-travel.com"
+                "connect-src 'self' https://api.hanoi-travel.com; "
+                "frame-ancestors 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'"
             )
             response.headers["Content-Security-Policy"] = csp
+            
+            # Report-only CSP cho testing (uncomment khi cần test)
+            # response.headers["Content-Security-Policy-Report-Only"] = csp
 
         return response
 
-    logger.info("Security headers middleware added")
+    logger.info(f"Security headers middleware added (Environment: {environment})")
+    if is_production or is_staging:
+        logger.info(f"  - HSTS enabled: max-age={hsts_max_age}, includeSubDomains={hsts_include_subdomains}, preload={hsts_preload}")
+    logger.info("  - Permissions-Policy: enabled")
+    logger.info(f"  - CSP: {'enabled' if is_production else 'disabled (development)'}")
