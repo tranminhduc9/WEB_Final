@@ -178,11 +178,12 @@ class AuditLogger:
         Khởi tạo audit logger
 
         Args:
-            log_file: Path đến file log (optional)
+            log_file: Path đến file log (optional, mặc định None = không ghi file)
         """
         self.config = AuditConfig()
-        # Set default log file if not provided
-        self.log_file = log_file or os.getenv("AUDIT_LOG_FILE", "logs/audit.log")
+        # Disabled file logging - chỉ ghi vào console và database
+        # Set log_file = None để tắt ghi file (console đã hiển thị logs)
+        self.log_file = None  # Trước: log_file or os.getenv("AUDIT_LOG_FILE", "logs/audit.log")
         self.buffer = []
         self.setup_file_logger()
 
