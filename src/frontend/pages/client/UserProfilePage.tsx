@@ -404,7 +404,10 @@ const UserProfilePage: React.FC = () => {
               Địa điểm yêu thích <Icons.Location className="profile-icon" />
             </h2>
             {favoritePlaces.length > 0 && (
-              <Link to="/places/favourite" className="profile-section__view-all">
+              <Link
+                to={isOwnProfile ? "/places/favourite" : `/places/favourite/${id}`}
+                className="profile-section__view-all"
+              >
                 Xem tất cả →
               </Link>
             )}
@@ -437,7 +440,10 @@ const UserProfilePage: React.FC = () => {
               Bài viết nổi bật <Icons.Comment className="profile-icon" />
             </h2>
             {userPosts.length > 0 && (
-              <Link to="/posts/user" className="profile-section__view-all">
+              <Link
+                to={isOwnProfile ? "/posts/user" : `/posts/user/${id}`}
+                className="profile-section__view-all"
+              >
                 Xem tất cả →
               </Link>
             )}

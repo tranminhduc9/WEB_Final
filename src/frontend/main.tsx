@@ -105,6 +105,9 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     )
   },
+  // View other user's favorites/posts (public routes)
+  { path: '/places/favourite/:userId', element: <FavoritePlacesPage /> },
+  { path: '/posts/user/:userId', element: <UserPostsPage /> },
 
   // Public user profile route (view other users)
   { path: '/user/:id', element: <UserProfilePage /> },

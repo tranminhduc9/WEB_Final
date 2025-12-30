@@ -5,6 +5,7 @@ import Footer from '../../components/client/Footer';
 import { Icons } from '../../config/constants';
 import { postService } from '../../services';
 import { useAuthContext } from '../../contexts';
+import { useScrollToTop } from '../../hooks';
 import type { PostDetail, PostCommentInDetail } from '../../types/models';
 import '../../assets/styles/pages/BlogDetailPage.css';
 
@@ -31,6 +32,9 @@ const formatTimeAgo = (dateStr?: string): string => {
 const BlogDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated, user } = useAuthContext();
+
+  // Scroll to top on navigation
+  useScrollToTop();
 
   // Post states
   const [post, setPost] = useState<PostDetail | null>(null);

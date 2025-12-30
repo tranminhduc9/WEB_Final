@@ -1,10 +1,10 @@
 /**
  * User Posts Page - Trang bài viết của người dùng
- * Route: /posts/user
+ * Route: /posts/user (own) or /posts/user/:userId (other user)
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
 import { useAuthContext } from '../../contexts';
@@ -32,29 +32,46 @@ const formatTimeAgo = (dateStr?: string): string => {
 
 const UserPostsPage: React.FC = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, isLoading: authLoading, user } = useAuthContext();
+    const { userId } = useParams<{ userId: string }>();
+    const { isAuthenticated, isLoading: authLoading, user: currentUser } = useAuthContext();
+
+    // Determine if viewing own posts
+    const isOwnProfile = !userId || (currentUser && String(currentUser.id) === userId);
 
     const [posts, setPosts] = useState<PostDetail[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [userName, setUserName] = useState<string>('');
 
-    // Redirect to login if not authenticated
+    // Redirect to login if viewing own posts and not authenticated
     useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
+        if (!authLoading && !isAuthenticated && isOwnProfile) {
             navigate('/login', { state: { from: '/posts/user' } });
         }
-    }, [authLoading, isAuthenticated, navigate]);
+    }, [authLoading, isAuthenticated, isOwnProfile, navigate]);
 
-    // Fetch posts from profile API
+    // Fetch posts
     useEffect(() => {
         const fetchPosts = async () => {
-            if (!isAuthenticated) return;
+            // If viewing own and not authenticated, skip
+            if (isOwnProfile && !isAuthenticated) return;
 
             setIsLoading(true);
             try {
-                const profile = await userService.getProfile();
-                if (profile.recent_posts && profile.recent_posts.length > 0) {
-                    setPosts(profile.recent_posts);
+                if (isOwnProfile) {
+                    // Fetch own posts
+                    const profile = await userService.getProfile();
+                    if (profile.recent_posts && profile.recent_posts.length > 0) {
+                        setPosts(profile.recent_posts);
+                    }
+                    setUserName(currentUser?.name || currentUser?.full_name || 'bạn');
+                } else {
+                    // Fetch other user's posts
+                    const profile = await userService.getUserProfile(userId!);
+                    if (profile.recent_posts && profile.recent_posts.length > 0) {
+                        setPosts(profile.recent_posts);
+                    }
+                    setUserName(profile.full_name || 'người dùng');
                 }
             } catch (error) {
                 console.error('Error fetching posts:', error);
@@ -64,7 +81,7 @@ const UserPostsPage: React.FC = () => {
         };
 
         fetchPosts();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, isOwnProfile, userId, currentUser]);
 
     // Pagination logic
     const totalPages = Math.ceil(posts.length / ITEMS_PER_PAGE);
@@ -111,7 +128,7 @@ const UserPostsPage: React.FC = () => {
         );
     }
 
-    const userName = user?.name || user?.full_name || 'người dùng';
+    // Title uses userName from state (set during fetch)
 
     return (
         <>

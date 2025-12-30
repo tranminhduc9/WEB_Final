@@ -7,6 +7,7 @@ import BlogCard from '../../components/client/BlogCard';
 import { Icons } from '../../config/constants';
 import { placeService } from '../../services';
 import { useAuthContext } from '../../contexts';
+import { useScrollToTop } from '../../hooks';
 import type { PlaceDetail, PlaceCompact, PostDetail } from '../../types/models';
 import '../../assets/styles/pages/LocationInfoPage.css';
 
@@ -100,6 +101,9 @@ const formatReviewCount = (count?: number): string => {
 const LocationInfoPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { isAuthenticated } = useAuthContext();
+
+    // Scroll to top on navigation
+    useScrollToTop();
 
     // Main place data
     const [place, setPlace] = useState<PlaceDetail | null>(null);
@@ -329,7 +333,7 @@ const LocationInfoPage: React.FC = () => {
                         id={String(loc.id)}
                         imageSrc={loc.main_image_url || 'https://via.placeholder.com/300'}
                         title={loc.name}
-                        description=""
+                        description={loc.address || loc.district_name || 'Hà Nội'}
                         rating={loc.rating_average}
                         likeCount={String(loc.favorites_count || 0)}
                         distance={loc.distance || '~'}
