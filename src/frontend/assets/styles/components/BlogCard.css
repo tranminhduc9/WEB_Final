@@ -100,28 +100,28 @@
 }
 
 /* ==================== */
-/* Images - 2 ảnh cạnh nhau */
+/* Images - 2 ảnh cạnh nhau, chia đôi */
 /* ==================== */
 .blog-card__images {
   display: flex;
   gap: 10px;
-  /* 12 * 0.85 */
   margin-bottom: 14px;
-  /* 16 * 0.85 */
   overflow: hidden;
   border-radius: 7px;
+  width: 100%;
 }
 
 .blog-card__image {
-  flex: 1;
-  min-width: 0;
-  /* Cho phép co lại */
-  max-width: 50%;
-  /* Không vượt quá 50% */
+  width: calc(50% - 5px);
+  /* Chính xác 50% trừ nửa gap */
   height: 353px;
-  /* 415 * 0.85 */
   object-fit: cover;
+  /* Crop ảnh nếu quá lớn */
+  object-position: center;
+  /* Crop từ giữa */
   border-radius: 7px;
+  flex-shrink: 0;
+  /* Không co lại */
 }
 
 /* ==================== */

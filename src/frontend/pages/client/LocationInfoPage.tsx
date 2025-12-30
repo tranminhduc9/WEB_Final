@@ -113,6 +113,7 @@ const LocationInfoPage: React.FC = () => {
     // Favorite state
     const [isFavorite, setIsFavorite] = useState(false);
     const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+    const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
     // Nearby & suggestions
     const [nearbyPlaces, setNearbyPlaces] = useState<PlaceCompact[]>([]);
@@ -122,6 +123,9 @@ const LocationInfoPage: React.FC = () => {
 
     // UI state
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+    // Carousel state
+    const [currentSlide, setCurrentSlide] = useState(0);
 
     // ============================
     // FETCH PLACE DETAILS
@@ -245,11 +249,13 @@ const LocationInfoPage: React.FC = () => {
         if (!id || !isAuthenticated) return;
 
         try {
-            // Fetch user's favorite places and check if this place is in the list
-            const response = await placeService.getFavoritePlaces();
-            if (response.success && response.data) {
-                const favoriteIds = response.data.map((p: PlaceCompact) => p.id);
-                setIsFavorite(favoriteIds.includes(Number(id)));
+            // Use profile API which includes recent_favorites
+            const { userService } = await import('../../services');
+            const profile = await userService.getProfile();
+            if (profile.recent_favorites && profile.recent_favorites.length > 0) {
+                const ids = profile.recent_favorites.map((p: PlaceCompact) => p.id);
+                setFavoriteIds(ids);
+                setIsFavorite(ids.includes(Number(id)));
             }
         } catch (err) {
             console.error('Error checking favorite status:', err);
@@ -337,6 +343,7 @@ const LocationInfoPage: React.FC = () => {
                         rating={loc.rating_average}
                         likeCount={String(loc.favorites_count || 0)}
                         distance={loc.distance || '~'}
+                        isFavorite={favoriteIds.includes(loc.id)}
                     />
                 ))}
             </div>
@@ -416,21 +423,64 @@ const LocationInfoPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Image Gallery */}
+                {/* Image Carousel */}
                 <section className="location-gallery">
-                    <div className="location-gallery__container">
-                        <div className="location-gallery__main">
-                            <img
-                                src={location.images?.[0] || location.main_image_url}
-                                alt={location.name}
-                            />
+                    <div className="location-carousel">
+                        {/* Main image viewport */}
+                        <div className="location-carousel__viewport">
+                            {(() => {
+                                const images = location.images && location.images.length > 0
+                                    ? location.images
+                                    : [location.main_image_url];
+                                return (
+                                    <img
+                                        src={images[currentSlide] || location.main_image_url}
+                                        alt={`${location.name} - Ảnh ${currentSlide + 1}`}
+                                        className="location-carousel__image"
+                                    />
+                                );
+                            })()}
                         </div>
-                        <div className="location-gallery__side">
-                            <img
-                                src={location.images?.[1] || location.images?.[0] || location.main_image_url}
-                                alt={location.name}
-                            />
-                        </div>
+
+                        {/* Navigation arrows */}
+                        {location.images && location.images.length > 1 && (
+                            <>
+                                <button
+                                    className="location-carousel__arrow location-carousel__arrow--prev"
+                                    onClick={() => {
+                                        const images = location.images || [];
+                                        setCurrentSlide(prev => prev === 0 ? images.length - 1 : prev - 1);
+                                    }}
+                                    aria-label="Previous image"
+                                >
+                                    ‹
+                                </button>
+                                <button
+                                    className="location-carousel__arrow location-carousel__arrow--next"
+                                    onClick={() => {
+                                        const images = location.images || [];
+                                        setCurrentSlide(prev => prev === images.length - 1 ? 0 : prev + 1);
+                                    }}
+                                    aria-label="Next image"
+                                >
+                                    ›
+                                </button>
+                            </>
+                        )}
+
+                        {/* Dots indicator */}
+                        {location.images && location.images.length > 1 && (
+                            <div className="location-carousel__dots">
+                                {location.images.map((_, index) => (
+                                    <button
+                                        key={index}
+                                        className={`location-carousel__dot ${currentSlide === index ? 'active' : ''}`}
+                                        onClick={() => setCurrentSlide(index)}
+                                        aria-label={`Go to image ${index + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </section>
 
