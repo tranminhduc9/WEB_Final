@@ -242,8 +242,8 @@ async def get_post_detail(
         current_user_id = current_user.get("user_id") if current_user else None
         formatted_post = await format_post_response(post, db, current_user_id)
         
-        # Get comments (root level)
-        comments = await mongo_client.get_root_comments(post_id, limit=20)
+        # Get ALL comments (root + replies) for this post
+        comments = await mongo_client.get_comments(post_id, limit=50)
         formatted_comments = []
         for comment in comments:
             user = get_user_compact(comment.get("user_id"), db)
@@ -285,15 +285,39 @@ async def toggle_like(
     try:
         await get_mongodb()
         
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
         user_id = current_user.get("user_id")
         
+        # Find post - handle both ObjectId and string _id
+        post = None
+        post_query = None
+        try:
+            post_query = {"_id": ObjectId(post_id)}
+            post = await mongo_client.find_one("posts", post_query)
+        except InvalidId:
+            pass
+        
+        if not post:
+            post_query = {"_id": post_id}
+            post = await mongo_client.find_one("posts", post_query)
+        
+        if not post:
+            return error_response(
+                message="Bài viết không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
+        
+        # Toggle like
         result = await mongo_client.toggle_like(post_id, user_id)
         
-        # Update likes_count in post
-        from bson import ObjectId
-        await mongo_client.update_one("posts", {"_id": ObjectId(post_id)}, {
-            "likes_count": result["total_likes"]
-        })
+        # Update likes_count in post using the same query that found the post
+        if post_query:
+            await mongo_client.update_one("posts", post_query, {
+                "likes_count": result["total_likes"]
+            })
         
         return {
             "success": True,
@@ -325,7 +349,30 @@ async def add_comment(
     try:
         await get_mongodb()
         
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
         user_id = current_user.get("user_id")
+        
+        # Find post - handle both ObjectId and string _id
+        post = None
+        post_query = None
+        try:
+            post_query = {"_id": ObjectId(post_id)}
+            post = await mongo_client.find_one("posts", post_query)
+        except InvalidId:
+            pass
+        
+        if not post:
+            post_query = {"_id": post_id}
+            post = await mongo_client.find_one("posts", post_query)
+        
+        if not post:
+            return error_response(
+                message="Bài viết không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
         
         comment_doc = {
             "post_id": post_id,
@@ -337,11 +384,9 @@ async def add_comment(
         
         comment_id = await mongo_client.create_comment(comment_doc)
         
-        # Update comments_count
-        from bson import ObjectId
-        post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
-        if post:
-            await mongo_client.update_one("posts", {"_id": ObjectId(post_id)}, {
+        # Update comments_count using the same query
+        if post_query:
+            await mongo_client.update_one("posts", post_query, {
                 "comments_count": post.get("comments_count", 0) + 1
             })
         
@@ -376,11 +421,21 @@ async def reply_to_comment(
     try:
         await get_mongodb()
         
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
         user_id = current_user.get("user_id")
         
-        # Verify parent comment exists
-        from bson import ObjectId
-        parent = await mongo_client.find_one("post_comments", {"_id": ObjectId(comment_id)})
+        # Verify parent comment exists - handle both ObjectId and string _id
+        parent = None
+        try:
+            parent = await mongo_client.find_one("post_comments", {"_id": ObjectId(comment_id)})
+        except InvalidId:
+            pass
+        
+        if not parent:
+            parent = await mongo_client.find_one("post_comments", {"_id": comment_id})
+        
         if not parent:
             return error_response(
                 message="Comment gốc không tồn tại",
@@ -394,11 +449,22 @@ async def reply_to_comment(
             content=reply_data.content
         )
         
-        # Update comments_count of post
+        # Update comments_count of post - handle both ObjectId and string _id
         post_id = parent.get("post_id")
-        post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
-        if post:
-            await mongo_client.update_one("posts", {"_id": ObjectId(post_id)}, {
+        post = None
+        post_query = None
+        try:
+            post_query = {"_id": ObjectId(post_id)}
+            post = await mongo_client.find_one("posts", post_query)
+        except InvalidId:
+            pass
+        
+        if not post:
+            post_query = {"_id": post_id}
+            post = await mongo_client.find_one("posts", post_query)
+        
+        if post and post_query:
+            await mongo_client.update_one("posts", post_query, {
                 "comments_count": post.get("comments_count", 0) + 1
             })
         

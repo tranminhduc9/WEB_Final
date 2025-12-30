@@ -343,7 +343,21 @@ class MongoDBClient:
         Returns:
             Dict: Post data
         """
-        return await self.find_one("posts", {"_id": post_id})
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        # Try ObjectId first
+        post = None
+        try:
+            post = await self.find_one("posts", {"_id": ObjectId(post_id)})
+        except InvalidId:
+            pass
+        
+        # Fall back to string _id
+        if not post:
+            post = await self.find_one("posts", {"_id": post_id})
+        
+        return post
 
     async def get_posts(
         self,
@@ -453,8 +467,19 @@ class MongoDBClient:
         Returns:
             str: Reply comment ID
         """
-        # Get parent comment to extract post_id
-        parent = await self.find_one("post_comments", {"_id": parent_id})
+        # Get parent comment to extract post_id - handle both ObjectId and string _id
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        parent = None
+        try:
+            parent = await self.find_one("post_comments", {"_id": ObjectId(parent_id)})
+        except InvalidId:
+            pass
+        
+        if not parent:
+            parent = await self.find_one("post_comments", {"_id": parent_id})
+        
         if not parent:
             raise Exception("Parent comment not found")
 
