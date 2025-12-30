@@ -245,10 +245,12 @@ const UserProfilePage: React.FC = () => {
     if (profile?.reputation_score) {
       return `Điểm danh tiếng: ${profile.reputation_score}`;
     }
+    // Calculate from posts: (totalLikes + totalComments) / postCount
     const totalLikes = userPosts.reduce((sum, p) => sum + (p.likes_count || 0), 0);
     const totalComments = userPosts.reduce((sum, p) => sum + (p.comments_count || 0), 0);
     const postCount = userPosts.length || 1;
-    return `Điểm danh tiếng: (${totalLikes} + ${totalComments}) / ${postCount} bài viết`;
+    const calculatedScore = Math.round((totalLikes + totalComments) / postCount);
+    return `Điểm danh tiếng: ${calculatedScore}`;
   };
 
   // Reset modal state on close

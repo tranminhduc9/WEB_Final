@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
+import HeroCarousel from '../../components/client/HeroCarousel';
 import LocationCard from '../../components/common/LocationCard';
 import { placeService } from '../../services';
 import type { PlaceCompact } from '../../types/models';
@@ -143,23 +144,12 @@ const TrendPlacesPage: React.FC = () => {
     <>
       <Header />
       <div className="trend-places-page">
-        {/* Hero Section với 2 ảnh */}
-        <section className="trend-hero">
-          <div className="trend-hero__container">
-            <div className="trend-hero__image trend-hero__image--left">
-              <img
-                src="https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg"
-                alt="Hồ Hoàn Kiếm"
-              />
-            </div>
-            <div className="trend-hero__image trend-hero__image--right">
-              <img
-                src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800"
-                alt="Phố cổ Hà Nội"
-              />
-            </div>
-          </div>
-        </section>
+        {/* Hero Carousel */}
+        <HeroCarousel
+          title="Bắt trọn từng khoảnh khắc"
+          subtitle="Lên đồ và khám phá top những tọa độ check-in 'chất' nhất, từ nội đô sầm uất đến những chốn đi trốn bình yên."
+          showSearchBar={false}
+        />
 
         {/* Section 1: Địa điểm trending */}
         <section className="trend-section location-section">

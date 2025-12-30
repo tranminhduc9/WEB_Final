@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
+import HeroCarousel from '../../components/client/HeroCarousel';
 import LocationCard from '../../components/common/LocationCard';
 import { placeService } from '../../services';
 import type { PlaceCompact, District, PlaceType } from '../../types/models';
@@ -180,23 +181,12 @@ const PlacesPage: React.FC = () => {
         <>
             <Header />
             <main className="places-page">
-                {/* Hero Section */}
-                <section className="places-hero">
-                    <div className="places-hero__container">
-                        <div className="places-hero__image places-hero__image--left">
-                            <img
-                                src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600"
-                                alt="Phố cổ Hà Nội"
-                            />
-                        </div>
-                        <div className="places-hero__image places-hero__image--right">
-                            <img
-                                src="https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg"
-                                alt="Hồ Hoàn Kiếm"
-                            />
-                        </div>
-                    </div>
-                </section>
+                {/* Hero Carousel */}
+                <HeroCarousel
+                    title="Mỗi địa danh, một câu chuyện"
+                    subtitle="Hãy để những di tích cổ kính và thắng cảnh nên thơ kể cho bạn nghe về một Hà Nội ngàn năm văn hiến"
+                    showSearchBar={false}
+                />
 
                 {/* Header Section */}
                 <section className="places-header">

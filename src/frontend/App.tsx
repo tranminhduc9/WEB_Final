@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from './components/client/Header';
-import homePhoto from './assets/images/home_photo_1.png';
+import HeroCarousel from './components/client/HeroCarousel';
 import LocationCard from './components/common/LocationCard';
 import Footer from './components/client/Footer'
 import PostCard from './components/client/PostCard'
@@ -167,16 +167,8 @@ export default function App() {
     <div className="app-container">
       <Header />
       <main className="app-main">
-        {/* Hero Section với hình ảnh */}
-        <section className="hero-section">
-          <img
-            src={homePhoto}
-            alt="Du lịch Hà Nội"
-            className="hero-image"
-          />
-          <div className="hero-overlay">
-          </div>
-        </section>
+        {/* Hero Carousel với hình ảnh slideshow */}
+        <HeroCarousel />
 
         {/* Các địa điểm nổi bật */}
         <section className="featured-places-section">
