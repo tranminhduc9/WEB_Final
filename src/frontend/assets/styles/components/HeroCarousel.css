@@ -1,0 +1,321 @@
+/* HeroCarousel Component Styles */
+
+.hero-carousel {
+    position: relative;
+    width: 100%;
+    height: 550px;
+    overflow: hidden;
+    background: #1a1a2e;
+}
+
+/* Slides Container */
+.hero-carousel__slides {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.hero-carousel__slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.hero-carousel__slide.active {
+    opacity: 1;
+}
+
+/* Decorative Shapes - Hidden */
+.hero-carousel__decoration,
+.hero-carousel__shape-orange {
+    display: none;
+}
+
+/* Content Overlay */
+.hero-carousel__content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    text-align: center;
+    width: 90%;
+    max-width: 800px;
+    padding: 20px;
+}
+
+/* Title */
+.hero-carousel__title {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    font-style: normal;
+    color: #ffffff;
+    margin-bottom: 16px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px;
+    line-height: 1.3;
+}
+
+/* Subtitle */
+.hero-carousel__subtitle {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 32px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1.6;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Search Bar */
+.hero-carousel__search {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.hero-carousel__search-container {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 50px;
+    padding: 6px 6px 6px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    gap: 12px;
+}
+
+.hero-carousel__search-icon {
+    color: #999;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.hero-carousel__search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    color: #333;
+    background: transparent;
+    padding: 12px 0;
+}
+
+.hero-carousel__search-input::placeholder {
+    color: #999;
+}
+
+.hero-carousel__search-btn {
+    background: linear-gradient(135deg, #F88622 0%, #FF6B35 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.hero-carousel__search-btn:hover {
+    background: linear-gradient(135deg, #FF6B35 0%, #F88622 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(248, 134, 34, 0.4);
+}
+
+/* Navigation Arrows */
+.hero-carousel__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 15;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #ffffff;
+}
+
+.hero-carousel__nav:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.hero-carousel__nav--prev {
+    left: 20px;
+}
+
+.hero-carousel__nav--next {
+    right: 20px;
+}
+
+/* Dots Indicator */
+.hero-carousel__dots {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    gap: 10px;
+}
+
+.hero-carousel__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.hero-carousel__dot.active {
+    background: #F88622;
+    border-color: #F88622;
+    transform: scale(1.2);
+}
+
+.hero-carousel__dot:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .hero-carousel {
+        height: 480px;
+    }
+
+    .hero-carousel__title {
+        font-size: 2.4rem;
+    }
+
+    .hero-carousel__subtitle {
+        font-size: 1rem;
+    }
+
+    .hero-carousel__shape-orange {
+        width: 160px;
+    }
+
+    .hero-carousel__decoration--top-left {
+        width: 80px;
+        height: 80px;
+    }
+
+    .hero-carousel__decoration--top-right {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-carousel {
+        height: 420px;
+    }
+
+    .hero-carousel__title {
+        font-size: 1.8rem;
+    }
+
+    .hero-carousel__subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 24px;
+    }
+
+    .hero-carousel__search-container {
+        flex-direction: column;
+        border-radius: 16px;
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .hero-carousel__search-input {
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .hero-carousel__search-icon {
+        display: none;
+    }
+
+    .hero-carousel__search-btn {
+        width: 100%;
+        padding: 12px 24px;
+    }
+
+    .hero-carousel__shape-orange {
+        width: 100px;
+    }
+
+    .hero-carousel__nav {
+        width: 40px;
+        height: 40px;
+    }
+
+    .hero-carousel__nav--prev {
+        left: 10px;
+    }
+
+    .hero-carousel__nav--next {
+        right: 10px;
+    }
+
+    .hero-carousel__decoration--top-left,
+    .hero-carousel__decoration--top-right,
+    .hero-carousel__decoration--bottom-left,
+    .hero-carousel__decoration--bottom-right {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-carousel {
+        height: 380px;
+    }
+
+    .hero-carousel__title {
+        font-size: 1.5rem;
+    }
+
+    .hero-carousel__subtitle {
+        font-size: 0.9rem;
+    }
+
+    .hero-carousel__shape-orange {
+        width: 60px;
+    }
+
+    .hero-carousel__dots {
+        bottom: 20px;
+    }
+
+    .hero-carousel__dot {
+        width: 10px;
+        height: 10px;
+    }
+}

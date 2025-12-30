@@ -8,6 +8,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
 import LocationCard from '../../components/common/LocationCard';
+import { Icons } from '../../config/constants';
 import { useAuthContext } from '../../contexts';
 import { userService } from '../../services';
 import type { PlaceCompact } from '../../types/models';
@@ -123,7 +124,7 @@ const FavoritePlacesPage: React.FC = () => {
                     <h1 className="favorites-title">
                         <span className="favorites-title__bar"></span>
                         Địa điểm yêu thích
-                        <span className="favorites-title__icon">📍</span>
+                        <Icons.Location className="favorites-title__icon" />
                     </h1>
                 </section>
 

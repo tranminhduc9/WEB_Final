@@ -19,6 +19,24 @@ export const userService = {
       throw new Error(response.message || 'Không thể tải profile');
     }
 
+    // Backend returns: { user: {...}, stats, recent_favorites, recent_posts }
+    const data = response.data as {
+      user?: UserDetailResponse;
+      stats?: { posts_count?: number; favorites_count?: number };
+      recent_favorites?: unknown[];
+      recent_posts?: unknown[];
+    };
+
+    // If response has nested user object, spread it with other fields
+    if (data.user) {
+      return {
+        ...data.user,
+        recent_favorites: data.recent_favorites,
+        recent_posts: data.recent_posts,
+      } as UserDetailResponse;
+    }
+
+    // Fallback: response.data is already flat UserDetailResponse
     return response.data as UserDetailResponse;
   },
 
