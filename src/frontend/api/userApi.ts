@@ -13,7 +13,7 @@ import type {
 } from '../types';
 
 const USER_ENDPOINTS = {
-  PROFILE: '/users/me',
+  PROFILE: '/users/profile',  // Use /profile for full data including rating_count
   UPDATE_PROFILE: '/users/me',
   AVATAR: '/upload',
   PREFERENCES: '/users/preferences',

@@ -11,6 +11,7 @@ interface LocationCardHorizontalProps {
     rating: number;
     likeCount: string;
     distance: string;
+    isFavorite?: boolean;
 }
 
 const LocationCardHorizontal: React.FC<LocationCardHorizontalProps> = ({
@@ -21,6 +22,7 @@ const LocationCardHorizontal: React.FC<LocationCardHorizontalProps> = ({
     rating,
     likeCount,
     distance,
+    isFavorite = false,
 }) => {
     return (
         <Link to={`/location/${id}`} className="location-card-h">
@@ -36,8 +38,8 @@ const LocationCardHorizontal: React.FC<LocationCardHorizontalProps> = ({
                 </div>
                 <p className="location-card-h__description">{description}</p>
                 <div className="location-card-h__footer">
-                    <div className="location-card-h__stat">
-                        <Icons.Heart className="location-card-h__icon" />
+                    <div className={`location-card-h__stat ${isFavorite ? 'location-card-h__stat--favorited' : ''}`}>
+                        <Icons.Heart className={`location-card-h__icon ${isFavorite ? 'location-card-h__icon--red' : ''}`} />
                         <span>{likeCount}</span>
                     </div>
                     <div className="location-card-h__stat">

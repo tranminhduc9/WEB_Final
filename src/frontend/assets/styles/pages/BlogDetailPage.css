@@ -954,3 +954,118 @@ a.blog-detail__user-info:hover .blog-detail__username {
 .blog-detail__comment-username-link:hover .blog-detail__comment-username {
   color: #F88622;
 }
+
+/* ==================== */
+/* Image Carousel */
+/* ==================== */
+.blog-detail__carousel {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  background: #FFFFFF;
+}
+
+.blog-detail__carousel-viewport {
+  width: 100%;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blog-detail__carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #FFFFFF;
+  transition: opacity 0.3s ease;
+}
+
+/* Navigation Arrows */
+.blog-detail__carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(248, 134, 34, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 300;
+  color: #FFFFFF;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.blog-detail__carousel-arrow:hover {
+  background: rgba(248, 134, 34, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.blog-detail__carousel-arrow--prev {
+  left: 16px;
+}
+
+.blog-detail__carousel-arrow--next {
+  right: 16px;
+}
+
+/* Dots Indicator */
+.blog-detail__carousel-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.blog-detail__carousel-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.blog-detail__carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.blog-detail__carousel-dot.active {
+  background: #F88622;
+  width: 24px;
+  border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .blog-detail__carousel-viewport {
+    height: 300px;
+  }
+
+  .blog-detail__carousel-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+
+  .blog-detail__carousel-arrow--prev {
+    left: 10px;
+  }
+
+  .blog-detail__carousel-arrow--next {
+    right: 10px;
+  }
+}

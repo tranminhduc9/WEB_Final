@@ -59,6 +59,9 @@ const BlogDetailPage: React.FC = () => {
   const [reportReason, setReportReason] = useState('');
   const [isReporting, setIsReporting] = useState(false);
 
+  // Carousel state
+  const [currentImageSlide, setCurrentImageSlide] = useState(0);
+
   // Mock data for testing
   const mockPost: PostDetail = {
     _id: id || 'mock-123',
@@ -445,17 +448,51 @@ const BlogDetailPage: React.FC = () => {
             </Link>
           )}
 
-          {/* Images */}
+          {/* Image Carousel */}
           {post.images && post.images.length > 0 && (
-            <div className="blog-detail__images">
-              {post.images.slice(0, 2).map((img, idx) => (
+            <div className="blog-detail__carousel">
+              {/* Main image */}
+              <div className="blog-detail__carousel-viewport">
                 <img
-                  key={idx}
-                  src={img || placeholderImage}
-                  alt={`Post ${idx + 1}`}
-                  className="blog-detail__image"
+                  src={post.images[currentImageSlide] || placeholderImage}
+                  alt={`Post image ${currentImageSlide + 1}`}
+                  className="blog-detail__carousel-image"
                 />
-              ))}
+              </div>
+
+              {/* Navigation arrows */}
+              {post.images.length > 1 && (
+                <>
+                  <button
+                    className="blog-detail__carousel-arrow blog-detail__carousel-arrow--prev"
+                    onClick={() => setCurrentImageSlide(prev => prev === 0 ? post.images!.length - 1 : prev - 1)}
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="blog-detail__carousel-arrow blog-detail__carousel-arrow--next"
+                    onClick={() => setCurrentImageSlide(prev => prev === post.images!.length - 1 ? 0 : prev + 1)}
+                    aria-label="Next image"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              {/* Dots indicator */}
+              {post.images.length > 1 && (
+                <div className="blog-detail__carousel-dots">
+                  {post.images.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`blog-detail__carousel-dot ${currentImageSlide === index ? 'active' : ''}`}
+                      onClick={() => setCurrentImageSlide(index)}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

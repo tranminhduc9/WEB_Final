@@ -139,3 +139,14 @@
         font-size: 13px;
     }
 }
+
+/* Favorited Heart - Red */
+.location-card-h__icon--red {
+    color: #e74c3c !important;
+    fill: #e74c3c !important;
+}
+
+.location-card-h__stat--favorited .location-card-h__icon {
+    color: #e74c3c;
+    fill: #e74c3c;
+}
