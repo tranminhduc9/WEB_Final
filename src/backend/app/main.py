@@ -95,7 +95,9 @@ async def lifespan(app: FastAPI):
     1. Kết nối database
     2. Tạo tables (nếu chưa tồn tại)
     3. Test kết nối
-    4. Log thông tin cấu hình
+    4. Kết nối MongoDB
+    5. Sync rating từ MongoDB posts sang PostgreSQL places
+    6. Log thông tin cấu hình
 
     Tắt:
     1. Đóng các kết nối database
@@ -113,6 +115,33 @@ async def lifespan(app: FastAPI):
             # Khởi tạo database tables
             init_db()
             logger.info("[OK] Da khoi tao database")
+            
+            # Sync rating từ MongoDB posts
+            try:
+                from middleware.mongodb_client import mongo_client, get_mongodb
+                from app.services.rating_sync import sync_all_place_ratings
+                from config.database import SessionLocal
+                
+                # Kết nối MongoDB
+                await get_mongodb()
+                logger.info("[OK] Da ket noi MongoDB")
+                
+                # Sync rating từ posts
+                db = SessionLocal()
+                try:
+                    logger.info("[...] Dang dong bo rating tu MongoDB posts...")
+                    result = await sync_all_place_ratings(db, mongo_client)
+                    
+                    if "error" not in result:
+                        logger.info(f"[OK] Da dong bo rating: {result.get('updated_count', 0)} places cap nhat")
+                    else:
+                        logger.warning(f"[WARN] Loi dong bo rating: {result.get('error')}")
+                finally:
+                    db.close()
+                    
+            except Exception as mongo_err:
+                logger.warning(f"[WARN] Khong the dong bo rating tu MongoDB: {str(mongo_err)}")
+                logger.warning("Rating se duoc dong bo khi co post moi duoc approve")
         else:
             logger.warning("[FAIL] Kiem tra ket noi database: THAT BAI")
             logger.warning("Máy chủ sẽ khởi động nhưng tính năng database có thể không hoạt động")

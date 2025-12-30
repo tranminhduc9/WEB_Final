@@ -30,6 +30,12 @@ from middleware.auth import get_current_user, auth_middleware
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
 from app.utils.image_helpers import get_avatar_url
+from app.services.rating_sync import (
+    on_post_approved, 
+    on_post_rejected_or_deleted,
+    sync_all_place_ratings,
+    update_place_rating
+)
 
 logger = logging.getLogger(__name__)
 
@@ -160,8 +166,10 @@ async def admin_login(
             "user": {
                 "id": user.id,
                 "full_name": user.full_name,
+                "email": user.email,  # Required for frontend User type
                 "avatar_url": get_avatar_url(user.avatar_url),
-                "role_id": user.role_id
+                "role_id": user.role_id,
+                "role": user.role_name  # Frontend checks this field first
             }
         }
         
@@ -487,7 +495,7 @@ async def create_admin_post(
     current_user: Dict[str, Any] = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Tạo post (auto-approved)"""
+    """Tạo post (auto-approved) - Tự động cập nhật rating của place liên quan"""
     try:
         await get_mongodb()
         
@@ -507,8 +515,17 @@ async def create_admin_post(
         
         post_id = await mongo_client.create_post(post_doc)
         
+        # Sync rating nếu post có related_place_id và rating
+        rating_synced = False
+        if post_data.related_place_id and post_data.rating and post_data.rating > 0:
+            rating_synced = await on_post_approved(post_doc, db, mongo_client)
+        
+        message = "Tạo bài viết thành công"
+        if rating_synced:
+            message += " và đã cập nhật rating của địa điểm"
+        
         return success_response(
-            message="Tạo bài viết thành công",
+            message=message,
             data={"post_id": post_id}
         )
         
@@ -572,21 +589,39 @@ async def delete_post(
     current_user: Dict[str, Any] = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Xóa post"""
+    """Xóa post - Tự động cập nhật lại rating của place liên quan"""
     try:
         await get_mongodb()
         from bson import ObjectId
         
-        success = await mongo_client.delete_one("posts", {"_id": ObjectId(post_id)})
-        
-        if not success:
+        # Lấy post trước khi xóa để có thông tin related_place_id và rating
+        post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
+        if not post:
             return error_response(
                 message="Post không tồn tại",
                 error_code="NOT_FOUND",
                 status_code=404
             )
         
-        return success_response(message="Đã xóa post")
+        success = await mongo_client.delete_one("posts", {"_id": ObjectId(post_id)})
+        
+        if not success:
+            return error_response(
+                message="Lỗi xóa post",
+                error_code="DELETE_FAILED",
+                status_code=500
+            )
+        
+        # Recalculate rating nếu post có related_place_id và rating
+        rating_synced = False
+        if post.get("related_place_id") and post.get("rating") and post.get("status") == "approved":
+            rating_synced = await on_post_rejected_or_deleted(post, db, mongo_client)
+        
+        message = "Đã xóa post"
+        if rating_synced:
+            message += " và đã cập nhật lại rating của địa điểm"
+        
+        return success_response(message=message)
         
     except Exception as e:
         logger.error(f"Delete post error: {str(e)}")
@@ -605,12 +640,24 @@ async def update_post_status(
     current_user: Dict[str, Any] = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Approve hoặc reject post"""
+    """Approve hoặc reject post - Tự động cập nhật rating của place liên quan"""
     try:
         await get_mongodb()
         from bson import ObjectId
         
-        update_data = {"status": status_data.status}
+        # Lấy post trước khi update để có thông tin related_place_id
+        post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
+        if not post:
+            return error_response(
+                message="Post không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
+        
+        # Map status: published -> approved để thống nhất
+        new_status = "approved" if status_data.status == "published" else status_data.status
+        
+        update_data = {"status": new_status}
         if status_data.reason:
             update_data["reject_reason"] = status_data.reason
         
@@ -620,12 +667,26 @@ async def update_post_status(
         
         if not success:
             return error_response(
-                message="Post không tồn tại",
-                error_code="NOT_FOUND",
-                status_code=404
+                message="Lỗi cập nhật post",
+                error_code="UPDATE_FAILED",
+                status_code=500
             )
         
-        return success_response(message=f"Đã cập nhật status thành {status_data.status}")
+        # Sync rating nếu post có related_place_id và rating
+        rating_synced = False
+        if post.get("related_place_id") and post.get("rating"):
+            if new_status == "approved":
+                # Post được approve -> cập nhật rating
+                rating_synced = await on_post_approved(post, db, mongo_client)
+            elif new_status == "rejected":
+                # Post bị reject -> recalculate rating (loại bỏ rating của post này)
+                rating_synced = await on_post_rejected_or_deleted(post, db, mongo_client)
+        
+        message = f"Đã cập nhật status thành {new_status}"
+        if rating_synced:
+            message += " và đã cập nhật rating của địa điểm"
+        
+        return success_response(message=message)
         
     except Exception as e:
         logger.error(f"Update post status error: {str(e)}")
@@ -799,6 +860,8 @@ async def get_admin_places(
 ):
     """Lấy danh sách places cho admin"""
     try:
+        from app.utils.image_helpers import get_main_image_url
+        
         query = db.query(Place).filter(Place.deleted_at == None)
         
         total = query.count()
@@ -817,14 +880,29 @@ async def get_admin_places(
             if price_min > price_max:
                 price_min, price_max = price_max, price_min
             
+            # Get district name
+            district = db.query(District).filter(District.id == place.district_id).first()
+            district_name = district.name if district else f"Quận {place.district_id}"
+            
+            # Get main image
+            main_image_url = get_main_image_url(place.id, db)
+            
+            # Build address
+            address = place.address_detail or f"Quận {district_name}, Hà Nội"
+            
             place_list.append({
                 "id": place.id,
                 "name": place.name,
                 "district_id": place.district_id,
+                "district_name": district_name,
+                "address": address,
+                "description": place.description or "",
                 "place_type_id": place.place_type_id,
                 "rating_average": float(place.rating_average) if place.rating_average else 0,
+                "rating_count": place.rating_count or 0,
                 "price_min": price_min,
                 "price_max": price_max,
+                "main_image_url": main_image_url,
                 "latitude": float(place.latitude) if place.latitude else None,
                 "longitude": float(place.longitude) if place.longitude else None,
                 "created_at": place.created_at.isoformat() if place.created_at else None
@@ -1014,6 +1092,99 @@ async def delete_place(
         logger.error(f"Delete place error: {str(e)}")
         return error_response(
             message="Lỗi xóa địa điểm",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+# ==================== RATING SYNC ====================
+
+@router.post("/sync-ratings", summary="Sync All Place Ratings")
+async def sync_ratings(
+    request: Request,
+    current_user: Dict[str, Any] = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Đồng bộ rating của TẤT CẢ places từ MongoDB posts.
+    Chạy batch job để tính toán lại rating_average và rating_count.
+    Chỉ admin mới có thể chạy.
+    """
+    try:
+        await get_mongodb()
+        
+        logger.info(f"[ADMIN] Starting rating sync by user {current_user.get('user_id')}")
+        
+        result = await sync_all_place_ratings(db, mongo_client)
+        
+        if "error" in result:
+            return error_response(
+                message=f"Lỗi đồng bộ rating: {result['error']}",
+                error_code="SYNC_FAILED",
+                status_code=500
+            )
+        
+        return success_response(
+            message="Đồng bộ rating thành công",
+            data=result
+        )
+        
+    except Exception as e:
+        logger.error(f"Sync ratings error: {str(e)}")
+        return error_response(
+            message="Lỗi đồng bộ rating",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.post("/places/{place_id}/sync-rating", summary="Sync Single Place Rating")
+async def sync_single_place_rating(
+    request: Request,
+    place_id: int = Path(...),
+    current_user: Dict[str, Any] = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Đồng bộ rating cho một place cụ thể từ MongoDB posts.
+    """
+    try:
+        await get_mongodb()
+        
+        # Check place exists
+        place = db.query(Place).filter(Place.id == place_id).first()
+        if not place:
+            return error_response(
+                message="Địa điểm không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
+        
+        success = await update_place_rating(place_id, db, mongo_client)
+        
+        if not success:
+            return error_response(
+                message="Lỗi cập nhật rating",
+                error_code="UPDATE_FAILED",
+                status_code=500
+            )
+        
+        # Lấy rating mới sau khi cập nhật
+        db.refresh(place)
+        
+        return success_response(
+            message="Đã cập nhật rating cho địa điểm",
+            data={
+                "place_id": place_id,
+                "rating_average": float(place.rating_average) if place.rating_average else 0,
+                "rating_count": place.rating_count or 0
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Sync place rating error: {str(e)}")
+        return error_response(
+            message="Lỗi cập nhật rating",
             error_code="INTERNAL_ERROR",
             status_code=500
         )

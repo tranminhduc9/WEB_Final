@@ -151,7 +151,9 @@ async def get_user_profile(
                     "email": user.email,
                     "avatar_url": get_avatar_url(user.avatar_url),  # Normalized to full URL
                     "bio": user.bio,
-                    "reputation_score": user.reputation_score
+                    "reputation_score": user.reputation_score,
+                    "role_id": user.role_id,  # Required for admin check
+                    "role": user.role_name  # Frontend checks this field first
                 },
                 "stats": stats,
                 "recent_favorites": recent_favorites,
@@ -214,7 +216,9 @@ async def update_user_profile(
                     "email": user.email,
                     "avatar_url": get_avatar_url(user.avatar_url),
                     "bio": user.bio,
-                    "reputation_score": user.reputation_score
+                    "reputation_score": user.reputation_score,
+                    "role_id": user.role_id,  # Required for admin check
+                    "role": user.role_name  # Frontend checks this field first
                 }
             }
         )
@@ -416,6 +420,7 @@ async def get_profile_alias(
                 "avatar_url": get_avatar_url(user.avatar_url),
                 "bio": user.bio,
                 "role_id": user.role_id,
+                "role": user.role_name,  # Frontend checks this field first
                 "reputation_score": user.reputation_score,
                 "is_active": user.is_active,
                 "recent_favorites": recent_favorites,
@@ -472,7 +477,9 @@ async def update_profile_alias(
                     "email": user.email,
                     "avatar_url": get_avatar_url(user.avatar_url),
                     "bio": user.bio,
-                    "reputation_score": user.reputation_score
+                    "reputation_score": user.reputation_score,
+                    "role_id": user.role_id,  # Required for admin check
+                    "role": user.role_name  # Frontend checks this field first
                 }
             }
         )

@@ -363,6 +363,10 @@ async def login(
 
         # Xử lý kết quả - Return trực tiếp response từ service (đã đúng format)
         if success:
+            # Log for debugging
+            user_info = response.get("user", {})
+            logger.info(f"Login successful - User ID: {user_info.get('id')}, role_id: {user_info.get('role_id')}, role: {user_info.get('role')}, email: {user_info.get('email')}")
+            
             # Service đã return format frontend cần: {success, message, access_token, refresh_token, user}
             # Tạo JSONResponse để có thể set cookies
             json_response = JSONResponse(content=response)
@@ -552,8 +556,57 @@ async def logout(
         return server_error_response()
 
 
-# NOTE: /auth/me endpoint removed to match Swagger spec
-# Users should use /users/me instead (defined in users.py)
+
+@router.get(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "User info"},
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    },
+    summary="Get Current User",
+    description="Lấy thông tin user hiện tại"
+)
+async def get_current_user_info(
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy thông tin user hiện tại
+    
+    Returns:
+        - user: Thông tin user bao gồm role_id để kiểm tra quyền
+    """
+    try:
+        from config.database import User
+        from app.utils.image_helpers import get_avatar_url
+        
+        user_id = current_user.get("user_id")
+        
+        # Lấy user từ database
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return not_found_response("User không tồn tại")
+        
+        return {
+            "success": True,
+            "user": {
+                "id": user.id,
+                "full_name": user.full_name,
+                "email": user.email,
+                "avatar_url": get_avatar_url(user.avatar_url),
+                "bio": user.bio,
+                "role_id": user.role_id,  # Required for admin check
+                "role": user.role_name,  # Frontend checks this field first
+                "reputation_score": user.reputation_score
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting current user: {str(e)}")
+        return server_error_response()
 
 
 @router.post(
