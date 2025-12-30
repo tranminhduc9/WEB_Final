@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
-import BlogCard from '../../components/client/BlogCard';
+import BlogCard from '../../components/common/BlogCard';
 import CreatePostModal from '../../components/client/CreatePostModal';
 import { postService } from '../../services';
 import type { PostDetail, Pagination } from '../../types/models';
