@@ -4,6 +4,7 @@ import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
 import LocationCard from '../../components/common/LocationCard';
 import PostCard from '../../components/client/PostCard';
+import { Icons } from '../../config/constants';
 import { useAuthContext } from '../../contexts';
 import { userService, authService } from '../../services';
 import type { UserDetailResponse, PostDetail, PlaceCompact } from '../../types/models';
@@ -390,7 +391,7 @@ const UserProfilePage: React.FC = () => {
               className="profile-edit-btn"
               onClick={() => setShowEditModal(true)}
             >
-              <span className="profile-edit-icon">⚙️</span>
+              <Icons.Settings className="profile-edit-icon" />
               Chỉnh sửa thông tin cá nhân
             </button>
           )}
@@ -400,10 +401,13 @@ const UserProfilePage: React.FC = () => {
         <section className="profile-section">
           <div className="profile-section__header">
             <h2 className="profile-section__title">
-              Địa điểm yêu thích <span className="profile-icon">📍</span>
+              Địa điểm yêu thích <Icons.Location className="profile-icon" />
             </h2>
             {favoritePlaces.length > 0 && (
-              <Link to="/places/favourite" className="profile-section__view-all">
+              <Link
+                to={isOwnProfile ? "/places/favourite" : `/places/favourite/${id}`}
+                className="profile-section__view-all"
+              >
                 Xem tất cả →
               </Link>
             )}
@@ -433,10 +437,13 @@ const UserProfilePage: React.FC = () => {
         <section className="profile-section">
           <div className="profile-section__header">
             <h2 className="profile-section__title">
-              Bài viết nổi bật <span className="profile-icon">💬</span>
+              Bài viết nổi bật <Icons.Comment className="profile-icon" />
             </h2>
             {userPosts.length > 0 && (
-              <Link to="/posts/user" className="profile-section__view-all">
+              <Link
+                to={isOwnProfile ? "/posts/user" : `/posts/user/${id}`}
+                className="profile-section__view-all"
+              >
                 Xem tất cả →
               </Link>
             )}

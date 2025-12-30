@@ -7,6 +7,7 @@ import BlogCard from '../../components/client/BlogCard';
 import { Icons } from '../../config/constants';
 import { placeService } from '../../services';
 import { useAuthContext } from '../../contexts';
+import { useScrollToTop } from '../../hooks';
 import type { PlaceDetail, PlaceCompact, PostDetail } from '../../types/models';
 import '../../assets/styles/pages/LocationInfoPage.css';
 
@@ -100,6 +101,9 @@ const formatReviewCount = (count?: number): string => {
 const LocationInfoPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { isAuthenticated } = useAuthContext();
+
+    // Scroll to top on navigation
+    useScrollToTop();
 
     // Main place data
     const [place, setPlace] = useState<PlaceDetail | null>(null);
@@ -235,11 +239,34 @@ const LocationInfoPage: React.FC = () => {
     };
 
     // ============================
+    // CHECK FAVORITE STATUS
+    // ============================
+    const checkFavoriteStatus = useCallback(async () => {
+        if (!id || !isAuthenticated) return;
+
+        try {
+            // Fetch user's favorite places and check if this place is in the list
+            const response = await placeService.getFavoritePlaces();
+            if (response.success && response.data) {
+                const favoriteIds = response.data.map((p: PlaceCompact) => p.id);
+                setIsFavorite(favoriteIds.includes(Number(id)));
+            }
+        } catch (err) {
+            console.error('Error checking favorite status:', err);
+        }
+    }, [id, isAuthenticated]);
+
+    // ============================
     // EFFECTS
     // ============================
     useEffect(() => {
         fetchPlaceDetails();
     }, [fetchPlaceDetails]);
+
+    // Check favorite status when user is authenticated
+    useEffect(() => {
+        checkFavoriteStatus();
+    }, [checkFavoriteStatus]);
 
     // Fetch suggestions after place is loaded (to use its coordinates)
     useEffect(() => {
@@ -306,7 +333,7 @@ const LocationInfoPage: React.FC = () => {
                         id={String(loc.id)}
                         imageSrc={loc.main_image_url || 'https://via.placeholder.com/300'}
                         title={loc.name}
-                        description=""
+                        description={loc.address || loc.district_name || 'Hà Nội'}
                         rating={loc.rating_average}
                         likeCount={String(loc.favorites_count || 0)}
                         distance={loc.distance || '~'}
@@ -403,10 +430,6 @@ const LocationInfoPage: React.FC = () => {
                                 src={location.images?.[1] || location.images?.[0] || location.main_image_url}
                                 alt={location.name}
                             />
-                            <button className="location-gallery__add-btn">
-                                <Icons.ImageFileAdd />
-                                <span>Thêm ảnh</span>
-                            </button>
                         </div>
                     </div>
                 </section>

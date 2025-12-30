@@ -16,9 +16,9 @@ interface PublicRouteProps {
  * Route component cho các trang public (login, register)
  * Nếu user đã đăng nhập, redirect về trang chủ hoặc trang trước đó
  */
-export const PublicRoute: React.FC<PublicRouteProps> = ({ 
-  children, 
-  redirectTo = '/' 
+export const PublicRoute: React.FC<PublicRouteProps> = ({
+  children,
+  redirectTo = '/'
 }) => {
   const { isAuthenticated, isLoading } = useAuthContext();
   const location = useLocation();
@@ -26,8 +26,8 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({
   // Đang loading
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
       </div>
     );
   }

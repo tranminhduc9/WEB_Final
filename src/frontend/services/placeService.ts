@@ -156,6 +156,18 @@ export const placeService = {
         );
         return response;
     },
+
+    /**
+     * Lấy danh sách địa điểm yêu thích của user
+     * GET /users/me/favorites/places
+     * Requires authentication
+     */
+    getFavoritePlaces: async (): Promise<ListResponse<PlaceCompact>> => {
+        const response = await axiosClient.get<never, ListResponse<PlaceCompact>>(
+            '/users/me/favorites/places'
+        );
+        return response;
+    },
 };
 
 export default placeService;

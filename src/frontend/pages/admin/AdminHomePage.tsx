@@ -129,7 +129,7 @@ function AdminHomePage() {
             id: String(place.id),
             imageSrc: place.main_image_url || 'https://via.placeholder.com/400x300',
             title: place.name,
-            address: '',
+            address: place.address || place.district_name || 'Hà Nội',
             priceMin: place.price_min || 0,
             priceMax: place.price_max || 0,
             rating: place.rating_average || 0,

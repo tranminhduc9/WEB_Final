@@ -1,10 +1,10 @@
 /**
  * Favorite Places Page - Trang địa điểm yêu thích
- * Route: /places/favourite
+ * Route: /places/favourite (own) or /places/favourite/:userId (other user)
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
 import LocationCard from '../../components/common/LocationCard';
@@ -18,29 +18,46 @@ const ITEMS_PER_PAGE = 9;
 
 const FavoritePlacesPage: React.FC = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+    const { userId } = useParams<{ userId: string }>();
+    const { isAuthenticated, isLoading: authLoading, user: currentUser } = useAuthContext();
+
+    // Determine if viewing own favorites
+    const isOwnProfile = !userId || (currentUser && String(currentUser.id) === userId);
 
     const [favorites, setFavorites] = useState<PlaceCompact[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [userName, setUserName] = useState<string>('');
 
-    // Redirect to login if not authenticated
+    // Redirect to login if viewing own favorites and not authenticated
     useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
+        if (!authLoading && !isAuthenticated && isOwnProfile) {
             navigate('/login', { state: { from: '/places/favourite' } });
         }
-    }, [authLoading, isAuthenticated, navigate]);
+    }, [authLoading, isAuthenticated, isOwnProfile, navigate]);
 
-    // Fetch favorites from profile API
+    // Fetch favorites
     useEffect(() => {
         const fetchFavorites = async () => {
-            if (!isAuthenticated) return;
+            // If viewing own and not authenticated, skip
+            if (isOwnProfile && !isAuthenticated) return;
 
             setIsLoading(true);
             try {
-                const profile = await userService.getProfile();
-                if (profile.recent_favorites && profile.recent_favorites.length > 0) {
-                    setFavorites(profile.recent_favorites);
+                if (isOwnProfile) {
+                    // Fetch own favorites
+                    const profile = await userService.getProfile();
+                    if (profile.recent_favorites && profile.recent_favorites.length > 0) {
+                        setFavorites(profile.recent_favorites);
+                    }
+                    setUserName(profile.full_name || 'Bạn');
+                } else {
+                    // Fetch other user's favorites
+                    const profile = await userService.getUserProfile(userId!);
+                    if (profile.recent_favorites && profile.recent_favorites.length > 0) {
+                        setFavorites(profile.recent_favorites);
+                    }
+                    setUserName(profile.full_name || 'Người dùng');
                 }
             } catch (error) {
                 console.error('Error fetching favorites:', error);
@@ -50,7 +67,7 @@ const FavoritePlacesPage: React.FC = () => {
         };
 
         fetchFavorites();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, isOwnProfile, userId]);
 
     // Pagination logic
     const totalPages = Math.ceil(favorites.length / ITEMS_PER_PAGE);

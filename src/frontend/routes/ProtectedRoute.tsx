@@ -15,9 +15,9 @@ interface ProtectedRouteProps {
  * Route component yêu cầu user phải đăng nhập
  * Nếu chưa đăng nhập, redirect về login page
  */
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  redirectTo = '/login' 
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  redirectTo = '/login'
 }) => {
   const { isAuthenticated, isLoading } = useAuthContext();
   const location = useLocation();
@@ -25,8 +25,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Đang loading, hiển thị loading indicator
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
       </div>
     );
   }

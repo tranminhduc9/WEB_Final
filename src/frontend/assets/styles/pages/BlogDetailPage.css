@@ -110,10 +110,13 @@
   display: flex;
   gap: 16px;
   margin-bottom: 24px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .blog-detail__image {
   flex: 1;
+  max-width: 50%;
   height: 415px;
   object-fit: cover;
   border-radius: 8px;
