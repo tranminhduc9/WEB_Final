@@ -91,11 +91,11 @@ function Header() {
             >
               <div className="user-avatar-wrapper">
                 <div className="user-avatar">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} />
+                  {(user.avatar || user.avatar_url) ? (
+                    <img src={user.avatar || user.avatar_url || ''} alt={user.name || user.full_name} />
                   ) : (
                     <div className="avatar-placeholder">
-                      {user.name?.[0]?.toUpperCase() || 'U'}
+                      {(user.name || user.full_name)?.[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>

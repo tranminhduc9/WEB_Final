@@ -99,6 +99,9 @@ export interface PlaceCreateRequest {
   images?: string[];
 }
 
+// PlaceUpdateRequest is same as PlaceCreateRequest
+export type PlaceUpdateRequest = PlaceCreateRequest;
+
 // ============================
 // POST MANAGEMENT
 // ============================

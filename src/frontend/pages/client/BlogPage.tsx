@@ -104,17 +104,32 @@ const BlogPage: React.FC = () => {
     images: File[]
   }) => {
     try {
-      // TODO: Upload images first if needed, for now just use content
+      let imageUrls: string[] = [];
+
+      // Upload images first if any
+      if (data.images && data.images.length > 0) {
+        try {
+          const uploadResponse = await postService.uploadPostImages(data.images);
+          if (uploadResponse.success && uploadResponse.urls) {
+            imageUrls = uploadResponse.urls;
+          }
+        } catch (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          // Continue with post creation even if image upload fails
+        }
+      }
+
+      // Create post with uploaded image URLs
       await postService.createPost({
         title: data.content.slice(0, 50) || 'Bài viết mới',
         content: data.content,
         rating: data.rating || undefined,
         related_place_id: data.related_place_id,
-        // TODO: Implement image upload and pass URLs
-        images: []
+        images: imageUrls  // Sử dụng URLs đã upload
       });
+
       setIsModalOpen(false);
-      // Refresh posts
+      alert('Đăng bài thành công! Bài viết đang chờ duyệt.');
       fetchPosts();
     } catch (err) {
       console.error('Error creating post:', err);

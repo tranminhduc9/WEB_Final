@@ -302,7 +302,7 @@ const LocationInfoPage: React.FC = () => {
                 {posts.map((post) => (
                     <div key={post._id} className="location-blog-card">
                         <BlogCard
-                            id={Number(post._id) || 0}
+                            id={post._id}
                             avatarSrc={post.author?.avatar_url || 'https://i.pravatar.cc/150'}
                             username={post.author?.full_name || 'Ẩn danh'}
                             timeAgo={formatTimeAgo(post.created_at)}

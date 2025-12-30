@@ -61,8 +61,7 @@ function AdminLocationsPage() {
 
     // Handle edit
     const handleEdit = (locationId: number) => {
-        console.log('Edit location:', locationId);
-        alert('Chức năng chỉnh sửa đang được phát triển');
+        navigate(`/admin/locations/edit/${locationId}`);
     };
 
     // Handle delete

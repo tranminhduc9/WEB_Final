@@ -16,7 +16,14 @@ const defaultAvatar = '/duckk.jpg';
 // Format time ago helper
 const formatTimeAgo = (dateStr?: string): string => {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+
+  // Backend returns UTC time without 'Z' suffix, add it if missing
+  let normalizedDateStr = dateStr;
+  if (!dateStr.endsWith('Z') && !dateStr.includes('+') && !dateStr.includes('-', 10)) {
+    normalizedDateStr = dateStr + 'Z';
+  }
+
+  const date = new Date(normalizedDateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);

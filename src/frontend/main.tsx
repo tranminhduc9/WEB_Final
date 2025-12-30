@@ -26,6 +26,7 @@ import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminLocationsPage from './pages/admin/AdminLocationsPage'
 import AdminAddPlacePage from './pages/admin/AdminAddPlacePage'
+import AdminEditPlacePage from './pages/admin/AdminEditPlacePage'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
 import AdminSQLPage from './pages/admin/AdminSQLPage'
 
@@ -150,6 +151,14 @@ const router = createBrowserRouter([
     element: (
       <AdminRoute>
         <AdminAddPlacePage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/locations/edit/:id',
+    element: (
+      <AdminRoute>
+        <AdminEditPlacePage />
       </AdminRoute>
     )
   },

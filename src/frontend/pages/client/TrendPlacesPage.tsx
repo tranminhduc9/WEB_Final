@@ -18,7 +18,7 @@ const mockTrendingLocations = [
     priceMin: 0,
     priceMax: 0,
     rating: 4.5,
-    reviewCount: '3.6K+'
+    reviewCount: 3600
   },
   {
     id: '2',
@@ -28,7 +28,7 @@ const mockTrendingLocations = [
     priceMin: 30000,
     priceMax: 50000,
     rating: 4.7,
-    reviewCount: '2.8K+'
+    reviewCount: 2800
   },
   {
     id: '3',
@@ -38,7 +38,7 @@ const mockTrendingLocations = [
     priceMin: 0,
     priceMax: 0,
     rating: 4.9,
-    reviewCount: '5.2K+'
+    reviewCount: 5200
   }
 ];
 
@@ -51,7 +51,7 @@ const mockMustVisitLocations = [
     priceMin: 0,
     priceMax: 0,
     rating: 4.6,
-    reviewCount: '4.1K+'
+    reviewCount: 4100
   },
   {
     id: '5',
@@ -61,7 +61,7 @@ const mockMustVisitLocations = [
     priceMin: 0,
     priceMax: 0,
     rating: 4.5,
-    reviewCount: '2.3K+'
+    reviewCount: 2300
   }
 ];
 
@@ -129,7 +129,7 @@ const TrendPlacesPage: React.FC = () => {
     priceMin: place.price_min || 0,
     priceMax: place.price_max || 0,
     rating: place.rating_average || 0,
-    reviewCount: place.rating_count ? `${place.rating_count}` : '0'
+    reviewCount: place.rating_count || 0
   });
 
   // Render loading spinner
@@ -170,7 +170,7 @@ const TrendPlacesPage: React.FC = () => {
                   priceMin={location.priceMin}
                   priceMax={location.priceMax}
                   rating={location.rating}
-                  reviewCount={String(location.reviewCount)}
+                  reviewCount={location.reviewCount}
                 />
               ))}
             </div>
@@ -196,7 +196,7 @@ const TrendPlacesPage: React.FC = () => {
                   priceMin={location.priceMin}
                   priceMax={location.priceMax}
                   rating={location.rating}
-                  reviewCount={String(location.reviewCount)}
+                  reviewCount={location.reviewCount}
                 />
               ))}
             </div>
