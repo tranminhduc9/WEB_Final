@@ -24,7 +24,7 @@ import logging
 import os
 
 from config.database import get_db, User, UserPostFavorite, Place
-from app.utils.image_helpers import get_main_image_url
+from app.utils.image_helpers import get_main_image_url, get_post_images
 from app.utils.place_helpers import get_place_compact, get_user_compact
 from middleware.auth import get_current_user, get_optional_user
 from middleware.response import success_response, error_response
@@ -83,24 +83,8 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
         })
         is_liked = like is not None
     
-    # Get post images and normalize URLs
-    post_images = post.get("images", [])
-    
-    # Normalize image URLs - convert relative paths to full URLs
-    backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
-    backend_port = os.getenv("BACKEND_PORT", "8080")
-    base_url = f"http://{backend_host}:{backend_port}"
-    
-    normalized_images = []
-    for img in post_images:
-        if img:
-            if img.startswith('http://') or img.startswith('https://'):
-                normalized_images.append(img)
-            elif img.startswith('/'):
-                normalized_images.append(f"{base_url}{img}")
-            else:
-                normalized_images.append(f"{base_url}/{img}")
-    post_images = normalized_images
+    # Get post images - chỉ cần gọi helper function
+    post_images = get_post_images(post)
     
     return {
         "_id": str(post.get("_id")),

@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place, PlaceImage, District
-from app.utils.image_helpers import get_main_image_url
+from app.utils.image_helpers import get_main_image_url, normalize_image_list, get_avatar_url
 from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
@@ -90,12 +90,20 @@ async def get_user_profile(
                 if price_min > price_max:
                     price_min, price_max = price_max, price_min
                 
+                # Get district name
+                district = db.query(District).filter(District.id == place.district_id).first()
+                district_name = district.name if district else f"Quận {place.district_id}"
+                address = place.address_detail or f"Quận {district_name}, Hà Nội"
+                
                 recent_favorites.append({
                     "id": place.id,
                     "name": place.name,
                     "district_id": place.district_id,
+                    "district_name": district_name,
+                    "address": address,
                     "place_type_id": place.place_type_id,
                     "rating_average": float(place.rating_average) if place.rating_average else 0,
+                    "rating_count": place.rating_count or 0,
                     "price_min": price_min,
                     "price_max": price_max,
                     "main_image_url": get_main_image_url(place.id, db)
@@ -141,7 +149,7 @@ async def get_user_profile(
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "avatar_url": user.avatar_url,  # Added per Swagger spec
+                    "avatar_url": get_avatar_url(user.avatar_url),  # Normalized to full URL
                     "bio": user.bio,
                     "reputation_score": user.reputation_score
                 },
@@ -204,7 +212,7 @@ async def update_user_profile(
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "avatar_url": user.avatar_url,
+                    "avatar_url": get_avatar_url(user.avatar_url),
                     "bio": user.bio,
                     "reputation_score": user.reputation_score
                 }
@@ -385,7 +393,7 @@ async def get_profile_alias(
                     "author": {
                         "id": user.id,
                         "full_name": user.full_name,
-                        "avatar_url": user.avatar_url,
+                        "avatar_url": get_avatar_url(user.avatar_url),
                         "role_id": user.role_id
                     },
                     "title": post.get("title"),
@@ -405,7 +413,7 @@ async def get_profile_alias(
                 "id": user.id,
                 "full_name": user.full_name,
                 "email": user.email,
-                "avatar_url": user.avatar_url,
+                "avatar_url": get_avatar_url(user.avatar_url),
                 "bio": user.bio,
                 "role_id": user.role_id,
                 "reputation_score": user.reputation_score,
@@ -462,7 +470,7 @@ async def update_profile_alias(
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "avatar_url": user.avatar_url,
+                    "avatar_url": get_avatar_url(user.avatar_url),
                     "bio": user.bio,
                     "reputation_score": user.reputation_score
                 }
@@ -540,35 +548,18 @@ async def get_user_by_id(
                 limit=5
             )
             
-            import os
-            backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
-            backend_port = os.getenv("BACKEND_PORT", "8080")
-            base_url = f"http://{backend_host}:{backend_port}"
-            
             for post in user_posts:
-                # Normalize images
-                post_images = post.get("images", [])
-                normalized_images = []
-                for img in post_images:
-                    if img:
-                        if img.startswith('http'):
-                            normalized_images.append(img)
-                        elif img.startswith('/'):
-                            normalized_images.append(f"{base_url}{img}")
-                        else:
-                            normalized_images.append(f"{base_url}/{img}")
-                
                 recent_posts.append({
                     "_id": str(post.get("_id")),
                     "author": {
                         "id": user.id,
                         "full_name": user.full_name,
-                        "avatar_url": user.avatar_url,
+                        "avatar_url": get_avatar_url(user.avatar_url),
                         "role_id": user.role_id
                     },
                     "title": post.get("title"),
                     "content": post.get("content", ""),
-                    "images": normalized_images,
+                    "images": normalize_image_list(post.get("images", [])),
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
                     "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
@@ -581,7 +572,7 @@ async def get_user_by_id(
             data={
                 "id": user.id,
                 "full_name": user.full_name,
-                "avatar_url": user.avatar_url,
+                "avatar_url": get_avatar_url(user.avatar_url),
                 "bio": user.bio,
                 "role_id": user.role_id,
                 "reputation_score": user.reputation_score,
@@ -609,8 +600,7 @@ async def upload_avatar(
     Upload avatar mới cho user
     """
     from fastapi import File, UploadFile
-    import os
-    import uuid
+    from app.utils.image_helpers import save_avatar_image
     
     try:
         user_id = current_user.get("user_id")
@@ -643,43 +633,24 @@ async def upload_avatar(
                 status_code=400
             )
         
-        # Read file content
-        content = await avatar_file.read()
+        # Save using helper function
+        result = await save_avatar_image(avatar_file, user_id)
         
-        # Validate file size (5MB max)
-        if len(content) > 5 * 1024 * 1024:
-            return error_response(
-                message="File quá lớn. Tối đa 5MB",
-                error_code="FILE_TOO_LARGE",
-                status_code=400
-            )
+        # Log for debugging
+        logger.info(f"Avatar upload result for user {user_id}:")
+        logger.info(f"  - relative_path (stored in DB): {result['relative_path']}")
+        logger.info(f"  - url (returned to frontend): {result['url']}")
+        logger.info(f"  - filename: {result['filename']}")
         
-        # Generate filename
-        ext = content_type.split("/")[-1]
-        if ext == "jpeg":
-            ext = "jpg"
-        filename = f"avatar_{user_id}_{uuid.uuid4().hex[:8]}.{ext}"
-        
-        # Save file
-        upload_dir = os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads", "avatars")
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        filepath = os.path.join(upload_dir, filename)
-        with open(filepath, "wb") as f:
-            f.write(content)
-        
-        # Update user avatar_url
-        backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
-        backend_port = os.getenv("BACKEND_PORT", "8080")
-        avatar_url = f"http://{backend_host}:{backend_port}/uploads/avatars/{filename}"
-        
-        user.avatar_url = avatar_url
+        # Save relative path to database (e.g., "/static/uploads/avatars/avatar_1_abc123.jpg")
+        user.avatar_url = result["relative_path"]
         db.commit()
         
+        # Return full URL to frontend immediately
         return success_response(
             message="Upload avatar thành công",
             data={
-                "url": avatar_url
+                "url": result["url"]  # Full URL for immediate display
             }
         )
         
@@ -691,6 +662,7 @@ async def upload_avatar(
             error_code="INTERNAL_ERROR",
             status_code=500
         )
+
 
 
 @router.delete("/avatar", summary="Delete Avatar")

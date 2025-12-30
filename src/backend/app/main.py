@@ -219,17 +219,27 @@ app.include_router(upload_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 
 # ==================== STATIC FILES ====================
-# Mount uploads directory để serve ảnh địa điểm
-# Database lưu URLs: /static/uploads/places/place_1_0.jpg
-uploads_path = Path(__file__).parent.parent.parent / "uploads"
-if uploads_path.exists():
-    # Mount /static/uploads để khớp với URLs trong database
-    app.mount("/static/uploads", StaticFiles(directory=str(uploads_path)), name="static_uploads")
-    # Mount /uploads cho các uploads mới
-    app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
-    logger.info(f"[OK] Mounted static files from: {uploads_path}")
-else:
-    logger.warning(f"[WARN] Uploads directory not found: {uploads_path}")
+# Mount static/uploads directory để serve ảnh
+# Database lưu: /static/uploads/places/place_1_0.jpg
+# URL: http://127.0.0.1:8080/static/uploads/places/place_1_0.jpg
+
+# Use absolute path to ensure it works regardless of working directory
+uploads_path = Path(__file__).resolve().parent.parent.parent / "static" / "uploads"
+uploads_base_url = os.getenv("UPLOADS_BASE_URL", "http://127.0.0.1:8080/static/uploads")
+
+# ALWAYS create uploads folder and subfolders if not exist
+# This ensures static mount works on first run
+uploads_path.mkdir(parents=True, exist_ok=True)
+(uploads_path / "places").mkdir(exist_ok=True)
+(uploads_path / "avatars").mkdir(exist_ok=True)
+(uploads_path / "posts").mkdir(exist_ok=True)
+
+# Mount static uploads
+app.mount("/static/uploads", StaticFiles(directory=str(uploads_path)), name="static_uploads")
+logger.info(f"[Static Files] Mounted /static/uploads from: {uploads_path}")
+logger.info(f"[Static Files] Base URL: {uploads_base_url}")
+
+
 
 
 # ==================== ERROR HANDLERS ====================

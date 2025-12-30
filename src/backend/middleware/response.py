@@ -180,9 +180,13 @@ class APIResponse:
 
 
 # Utility functions for common responses
-def success_response(data: Any = None, message: str = "Thành công") -> JSONResponse:
+def success_response(
+    data: Any = None, 
+    message: str = "Thành công",
+    pagination: Optional[Dict[str, Any]] = None
+) -> JSONResponse:
     """Shortcut cho success response"""
-    return APIResponse.success(data=data, message=message)
+    return APIResponse.success(data=data, message=message, pagination=pagination)
 
 
 def error_response(message: str, error_code: str = None, status_code: int = 400) -> JSONResponse:

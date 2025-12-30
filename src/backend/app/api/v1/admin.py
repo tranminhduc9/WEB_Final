@@ -29,6 +29,7 @@ from config.database import (
 from middleware.auth import get_current_user, auth_middleware
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
+from app.utils.image_helpers import get_avatar_url
 
 logger = logging.getLogger(__name__)
 
@@ -143,8 +144,14 @@ async def admin_login(
                 status_code=403
             )
         
-        # Generate tokens
-        access_token = auth_middleware.create_access_token(user)
+        # Generate tokens - pass dictionary with correct role information
+        user_data = {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role_name,  # Use role_name property: "admin", "moderator", or "user"
+            "role_id": user.role_id
+        }
+        access_token = auth_middleware.create_access_token(user_data)
         
         return {
             "success": True,
@@ -153,7 +160,7 @@ async def admin_login(
             "user": {
                 "id": user.id,
                 "full_name": user.full_name,
-                "avatar_url": user.avatar_url,
+                "avatar_url": get_avatar_url(user.avatar_url),
                 "role_id": user.role_id
             }
         }
@@ -192,6 +199,10 @@ async def get_dashboard(
         total_users = db.query(User).count()
         active_users = db.query(User).filter(User.is_active == True).count()
         
+        # New users today
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        new_users_today = db.query(User).filter(User.created_at >= today_start).count()
+        
         # Place stats
         total_places = db.query(Place).filter(Place.deleted_at == None).count()
         
@@ -199,18 +210,32 @@ async def get_dashboard(
         try:
             total_posts = await mongo_client.count("posts", {})
             pending_posts = await mongo_client.count("posts", {"status": "pending"})
+            # New posts today
+            new_posts_today = await mongo_client.count("posts", {
+                "created_at": {"$gte": today_start}
+            })
         except:
             total_posts = 0
             pending_posts = 0
+            new_posts_today = 0
+        
+        # Report stats from MongoDB
+        try:
+            total_reports = await mongo_client.count("reports", {})
+        except:
+            total_reports = 0
         
         return success_response(
             message="Lấy thống kê thành công",
             data={
                 "total_users": total_users,
                 "active_users": active_users,
+                "new_users_today": new_users_today,
                 "total_posts": total_posts,
                 "pending_posts": pending_posts,
-                "total_places": total_places
+                "new_posts_today": new_posts_today,
+                "total_places": total_places,
+                "total_reports": total_reports
             }
         )
         
@@ -260,10 +285,11 @@ async def get_users(
                 "id": user.id,
                 "full_name": user.full_name,
                 "email": user.email,
-                "avatar_url": user.avatar_url,
+                "avatar_url": get_avatar_url(user.avatar_url),
                 "role_id": user.role_id,
                 "is_active": user.is_active,
                 "ban_reason": user.ban_reason,
+                "reputation_score": user.reputation_score or 0,
                 "created_at": user.created_at.isoformat() if user.created_at else None
             })
         
@@ -799,6 +825,8 @@ async def get_admin_places(
                 "rating_average": float(place.rating_average) if place.rating_average else 0,
                 "price_min": price_min,
                 "price_max": price_max,
+                "latitude": float(place.latitude) if place.latitude else None,
+                "longitude": float(place.longitude) if place.longitude else None,
                 "created_at": place.created_at.isoformat() if place.created_at else None
             })
         

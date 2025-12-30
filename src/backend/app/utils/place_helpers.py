@@ -66,13 +66,15 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
         Dict chứa UserCompact data hoặc None nếu không tìm thấy
     """
     from config.database import User
+    from app.utils.image_helpers import get_avatar_url
     
     user = db.query(User).filter(User.id == user_id).first()
     if user:
         return {
             "id": user.id,
             "full_name": user.full_name,
-            "avatar_url": user.avatar_url,
+            "avatar_url": get_avatar_url(user.avatar_url),  # Normalized to full URL
             "role_id": user.role_id
         }
     return None
+

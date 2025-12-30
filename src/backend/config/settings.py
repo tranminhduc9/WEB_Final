@@ -73,12 +73,9 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "5242880"))  # 5MB
     ALLOWED_FILE_TYPES: list = os.getenv("ALLOWED_FILE_TYPES", "jpg,jpeg,png,gif,webp").split(",")
     UPLOAD_PATH: str = os.getenv("UPLOAD_PATH", "uploads")
-
-    # ==================== CLOUDINARY ====================
-    CLOUDINARY_CLOUD_NAME: Optional[str] = os.getenv("CLOUDINARY_CLOUD_NAME")
-    CLOUDINARY_API_KEY: Optional[str] = os.getenv("CLOUDINARY_API_KEY")
-    CLOUDINARY_API_SECRET: Optional[str] = os.getenv("CLOUDINARY_API_SECRET")
-    CLOUDINARY_FOLDER: str = os.getenv("CLOUDINARY_FOLDER", "hanoi-travel")
+    
+    # Base URL cho serving ảnh - thay đổi khi deploy lên AWS S3/CloudFront
+    UPLOADS_BASE_URL: str = os.getenv("UPLOADS_BASE_URL", "http://127.0.0.1:8080/static/uploads")
 
     # ==================== CHATBOT (GEMINI AI) ====================
     CHATBOT_ENABLED: bool = os.getenv("CHATBOT_ENABLED", "true").lower() == "true"

@@ -4,16 +4,16 @@ Upload API Routes
 Module này định nghĩa API endpoint cho file upload:
 - POST /upload - Upload files (images)
 
-Swagger v1.0.5 Compatible - Cloudinary Integration
+Refactored to use image_helpers for saving logic.
 """
 
 from fastapi import APIRouter, Depends, Request, UploadFile, File, HTTPException, status
 from typing import Dict, Any, List
 import logging
-import os
 
 from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
+from app.utils.image_helpers import save_upload_file
 
 logger = logging.getLogger(__name__)
 
@@ -32,71 +32,15 @@ def allowed_file(filename: str) -> bool:
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-async def upload_to_cloudinary(file: UploadFile) -> str:
-    """
-    Upload file to Cloudinary
-    Returns: URL of uploaded file
-    """
-    try:
-        import cloudinary
-        import cloudinary.uploader
-        
-        # Configure Cloudinary
-        cloudinary.config(
-            cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-            api_key=os.getenv("CLOUDINARY_API_KEY"),
-            api_secret=os.getenv("CLOUDINARY_API_SECRET")
-        )
-        
-        # Read file content
-        content = await file.read()
-        
-        # Upload to Cloudinary
-        result = cloudinary.uploader.upload(
-            content,
-            folder="hanoi_travel",
-            resource_type="image"
-        )
-        
-        return result.get("secure_url")
-        
-    except Exception as e:
-        logger.error(f"Cloudinary upload error: {str(e)}")
-        raise
-
-
-async def save_file_locally(file: UploadFile) -> str:
-    """
-    Fallback: Save file locally if Cloudinary not configured
-    Returns: Local URL
-    """
-    import uuid
-    from pathlib import Path
-    
-    # Create uploads directory
-    upload_dir = Path(__file__).parent.parent.parent.parent / "uploads"
-    upload_dir.mkdir(exist_ok=True)
-    
-    # Generate unique filename
-    ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
-    filename = f"{uuid.uuid4()}.{ext}"
-    filepath = upload_dir / filename
-    
-    # Save file
-    content = await file.read()
-    with open(filepath, 'wb') as f:
-        f.write(content)
-    
-    # Return local URL
-    return f"/uploads/{filename}"
-
-
 # ==================== ENDPOINTS ====================
 
 @router.post("", summary="Upload Files", status_code=201)
 async def upload_files(
     request: Request,
     files: List[UploadFile] = File(..., description="Files to upload"),
+    folder: str = "misc",  # Optional: specify subfolder
+    upload_type: str = "generic",  # Type: "place", "avatar", "post", or "generic"
+    entity_id: str = None,  # ID of entity (place_id, user_id, post_id)
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
@@ -105,8 +49,15 @@ async def upload_files(
     Supported formats: PNG, JPG, JPEG, GIF, WEBP
     Max file size: 10MB per file
     
+    Parameters:
+        - folder: Subfolder to save in (default: "misc")
+        - upload_type: Type of upload - "place", "avatar", "post", or "generic" (default: "generic")
+        - entity_id: Required for typed uploads (place_id, user_id, post_id)
+    
     Returns:
-        urls: List of uploaded file URLs
+        - urls: List of full URLs for frontend display
+        - relative_paths: List of relative paths for database storage
+        - filenames: List of filenames
     """
     try:
         if not files:
@@ -116,7 +67,40 @@ async def upload_files(
                 status_code=400
             )
         
+        # Validate upload_type
+        valid_types = ["generic", "place", "avatar", "post"]
+        if upload_type not in valid_types:
+            return error_response(
+                message=f"upload_type không hợp lệ. Chỉ chấp nhận: {', '.join(valid_types)}",
+                error_code="INVALID_UPLOAD_TYPE",
+                status_code=400
+            )
+        
+        # For typed uploads, entity_id is required
+        if upload_type != "generic" and not entity_id:
+            return error_response(
+                message=f"entity_id là bắt buộc cho upload_type='{upload_type}'",
+                error_code="MISSING_ENTITY_ID",
+                status_code=400
+            )
+        
+        # Validate folder name to prevent directory traversal
+        if ".." in folder or folder.startswith("/"):
+            folder = "misc"
+        
+        # Auto-determine folder based on upload_type for typed uploads
+        # This ensures images are saved to the correct subfolder
+        type_to_folder = {
+            "place": "places",
+            "avatar": "avatars",
+            "post": "posts"
+        }
+        if upload_type in type_to_folder:
+            folder = type_to_folder[upload_type]
+        
         uploaded_urls = []
+        uploaded_paths = []
+        uploaded_filenames = []
         errors = []
         
         for file in files:
@@ -126,22 +110,20 @@ async def upload_files(
                 continue
             
             # Check file size
-            content = await file.read()
-            await file.seek(0)  # Reset file pointer
-            
-            if len(content) > MAX_FILE_SIZE:
-                errors.append(f"{file.filename}: File quá lớn (max 10MB)")
-                continue
+            # Note: save_upload_file uses file.read() which handles size if needed
             
             try:
-                # Try Cloudinary first
-                if os.getenv("CLOUDINARY_CLOUD_NAME"):
-                    url = await upload_to_cloudinary(file)
-                else:
-                    # Fallback to local storage
-                    url = await save_file_locally(file)
+                # Save using refactored helper
+                result = await save_upload_file(
+                    file, 
+                    folder=folder,
+                    upload_type=upload_type,
+                    entity_id=entity_id
+                )
                 
-                uploaded_urls.append(url)
+                uploaded_urls.append(result["url"])
+                uploaded_paths.append(result["relative_path"])
+                uploaded_filenames.append(result["filename"])
                 
             except Exception as e:
                 errors.append(f"{file.filename}: Lỗi upload - {str(e)}")
@@ -157,7 +139,9 @@ async def upload_files(
         response_data = {
             "success": True,
             "message": f"Đã upload {len(uploaded_urls)} file",
-            "urls": uploaded_urls
+            "urls": uploaded_urls,  # Full URLs for frontend
+            "relative_paths": uploaded_paths,  # Relative paths for database
+            "filenames": uploaded_filenames
         }
         if errors:
             response_data["errors"] = errors
@@ -167,10 +151,8 @@ async def upload_files(
     except Exception as e:
         logger.error(f"Error uploading files: {str(e)}")
         return error_response(
-            message="Lỗi upload file",
+            message=f"Lỗi upload file: {str(e)}",
             error_code="INTERNAL_ERROR",
             status_code=500
         )
 
-
-# ==================== END OF UPLOAD ROUTES ====================

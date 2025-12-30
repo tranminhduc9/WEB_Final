@@ -25,7 +25,7 @@ from config.database import (
     get_db, Place, PlaceImage, PlaceType, District, UserPlaceFavorite,
     Restaurant, Hotel, TouristAttraction, VisitLog
 )
-from app.utils.image_helpers import get_main_image_url
+from app.utils.image_helpers import get_main_image_url, get_all_place_images, normalize_image_list
 from app.utils.place_helpers import get_user_compact
 from middleware.auth import get_current_user, get_optional_user
 from middleware.response import (
@@ -545,29 +545,8 @@ async def get_place_detail(
         rating = float(row.rating_average) if row.rating_average else 0.0
         rating_count = row.rating_count or 0
         
-        # Lấy images
-        images_query = text("""
-            SELECT image_url FROM place_images 
-            WHERE place_id = :place_id 
-            ORDER BY is_main DESC, id ASC
-        """)
-        images_result = db.execute(images_query, {"place_id": place_id}).fetchall()
-        
-        # Transform relative URLs to full URLs
-        import os
-        backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
-        backend_port = os.getenv("BACKEND_PORT", "8080")
-        base_url = f"http://{backend_host}:{backend_port}"
-        
-        if images_result:
-            images = []
-            for img in images_result:
-                url = img.image_url
-                if url and not url.startswith('http'):
-                    url = f"{base_url}{url}"
-                images.append(url)
-        else:
-            images = [get_main_image_url(place_id, db)]
+        # Lấy images - chỉ cần gọi helper function
+        images = get_all_place_images(place_id, db)
         
         # Lấy nearby places
         nearby_places = []
@@ -692,27 +671,12 @@ async def get_place_detail(
                 )
                 logger.info(f"[PLACES] Found {len(posts) if posts else 0} total posts in MongoDB")
             
-            # Format related posts with image normalization
-            backend_host = os.getenv("BACKEND_HOST", "127.0.0.1")
-            backend_port = os.getenv("BACKEND_PORT", "8080")
-            base_url = f"http://{backend_host}:{backend_port}"
-            
+            # Format related posts - chỉ cần gọi helper function
             for post in posts:
                 author = get_user_compact(post.get("author_id"), db)
                 post_images = post.get("images", [])
                 if not post_images:
                     post_images = images  # Fallback to place images
-                
-                # Normalize image URLs
-                normalized_images = []
-                for img in post_images:
-                    if img:
-                        if img.startswith('http'):
-                            normalized_images.append(img)
-                        elif img.startswith('/'):
-                            normalized_images.append(f"{base_url}{img}")
-                        else:
-                            normalized_images.append(f"{base_url}/{img}")
                 
                 related_posts.append({
                     "_id": str(post.get("_id")),
@@ -720,7 +684,7 @@ async def get_place_detail(
                     "title": post.get("title"),
                     "content": post.get("content"),
                     "rating": post.get("rating"),
-                    "images": normalized_images,
+                    "images": normalize_image_list(post_images),
                     "tags": post.get("tags", []),
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
