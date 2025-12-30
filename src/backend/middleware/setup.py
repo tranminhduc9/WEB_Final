@@ -182,7 +182,7 @@ def setup_app(app: FastAPI) -> FastAPI:
                 "rate_limiting": config.RATE_LIMIT_ENABLED,
                 "audit_logging": config.ENABLE_AUDIT_LOG,
                 "search_logging": config.ENABLE_SEARCH_LOGGING,
-                "file_upload": bool(config.CLOUDINARY_CLOUD_NAME),
+                "file_upload": bool(config.UPLOADS_BASE_URL),
                 "email": bool(config.SMTP_USERNAME),
                 "chatbot": config.CHATBOT_ENABLED
             }

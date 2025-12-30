@@ -1,502 +1,297 @@
 """
-File Upload Middleware
+File Upload Module - Local Storage Only
 
-Module này xử lý upload file lên cloud storage (Cloudinary)
-với validation và security checks.
+Module này xử lý upload file lên local storage (uploads folder).
+Sử dụng UPLOADS_BASE_URL từ .env để tạo URLs cho ảnh.
+
+Cấu trúc thư mục:
+- uploads/places/     - Ảnh địa điểm
+- uploads/avatars/    - Ảnh đại diện người dùng
+- uploads/posts/      - Ảnh bài viết
+
+Được sử dụng bởi: upload.py, users.py
 """
 
 import os
 import uuid
-from typing import List, Optional, Dict, Any
-from fastapi import UploadFile, HTTPException
+import shutil
+from pathlib import Path
+from typing import Optional, Dict, Any
 import logging
-import aiofiles
-import tempfile
+
+from config.image_config import get_image_url, ImageFolder
 
 logger = logging.getLogger(__name__)
 
 
-class FileUploadConfig:
-    """Cấu hình cho file upload"""
-
-    # File size limits (bytes)
-    MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
-    MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50MB
-
-    # Allowed file types
-    ALLOWED_IMAGE_TYPES = {
-        'image/jpeg': ['.jpg', '.jpeg'],
-        'image/png': ['.png'],
-        'image/gif': ['.gif'],
-        'image/webp': ['.webp']
-    }
-
-    ALLOWED_VIDEO_TYPES = {
-        'video/mp4': ['.mp4'],
-        'video/avi': ['.avi'],
-        'video/mov': ['.mov']
-    }
-
-    # Upload destinations
-    DEFAULT_FOLDER = "hanoi-travel"
-    AVATAR_FOLDER = "avatars"
-    POST_FOLDER = "posts"
-    PLACE_FOLDER = "places"
-
-
-class CloudinaryUploader:
+class LocalFileUploader:
     """
-    Cloudinary upload service
-
-    Cung cấp các phương thức upload file lên Cloudinary
-    với validation và transformation.
+    Local file upload service
+    
+    Upload và quản lý files trên local storage
     """
-
-    def __init__(self, cloud_name: str = None, api_key: str = None, api_secret: str = None):
+    
+    def __init__(self, upload_base_path: Optional[str] = None):
         """
-        Khởi tạo Cloudinary uploader
-
+        Khởi tạo Local file uploader
+        
         Args:
-            cloud_name: Cloudinary cloud name
-            api_key: Cloudinary API key
-            api_secret: Cloudinary API secret
+            upload_base_path: Base path cho uploads folder
         """
-        self.cloud_name = cloud_name or os.getenv("CLOUDINARY_CLOUD_NAME")
-        self.api_key = api_key or os.getenv("CLOUDINARY_API_KEY")
-        self.api_secret = api_secret or os.getenv("CLOUDINARY_API_SECRET")
-
-        # Initialize Cloudinary client if credentials available
-        if self.cloud_name and self.api_key and self.api_secret:
-            try:
-                import cloudinary
-                import cloudinary.uploader
-                import cloudinary.api
-
-                cloudinary.config(
-                    cloud_name=self.cloud_name,
-                    api_key=self.api_key,
-                    api_secret=self.api_secret
-                )
-
-                self.cloudinary = cloudinary
-                self.uploader = cloudinary.uploader
-                self.api = cloudinary.api
-                self.is_configured = True
-                logger.info("Cloudinary client initialized successfully")
-
-            except ImportError:
-                logger.warning("Cloudinary SDK not installed. Using fallback mode.")
-                self.is_configured = False
-            except Exception as e:
-                logger.error(f"Failed to initialize Cloudinary: {str(e)}")
-                self.is_configured = False
+        # Get upload base path (src/static/uploads) - use absolute path
+        if upload_base_path:
+            self.upload_base_path = Path(upload_base_path)
         else:
-            logger.warning("Cloudinary credentials not configured")
-            self.is_configured = False
+            # Default: src/static/uploads using absolute path
+            current_file = Path(__file__).resolve()
+            # src/backend/middleware/file_upload.py -> src/backend/middleware -> src/backend -> src
+            src_dir = current_file.parent.parent.parent
+            self.upload_base_path = src_dir / "static" / "uploads"
 
+        
+        # Create base upload directory if not exists
+        self.upload_base_path.mkdir(parents=True, exist_ok=True)
+        
+        # Create subfolders
+        self.folders = {
+            ImageFolder.PLACES: self.upload_base_path / "places",
+            ImageFolder.AVATARS: self.upload_base_path / "avatars",
+            ImageFolder.POSTS: self.upload_base_path / "posts"
+        }
+        
+        for folder_path in self.folders.values():
+            folder_path.mkdir(parents=True, exist_ok=True)
+        
+        logger.info(f"Local file uploader initialized at: {self.upload_base_path}")
+    
     async def upload_image(
         self,
-        file: UploadFile,
-        folder: str = None,
-        transformations: Dict[str, Any] = None
-    ) -> Dict[str, str]:
+        file_content: bytes,
+        filename: str,
+        folder: ImageFolder,
+        max_size: int = 5 * 1024 * 1024  # 5MB
+    ) -> Dict[str, Any]:
         """
-        Upload image lên Cloudinary
-
+        Upload image lên local storage
+        
         Args:
-            file: UploadFile object
-            folder: Thư mục đích
-            transformations: Cloudinary transformations
-
+            file_content: Nội dung file (bytes)
+            filename: Tên file gốc
+            folder: ImageFolder enum (PLACES, AVATARS, POSTS)
+            max_size: Kích thước tối đa (bytes)
+            
         Returns:
-            Dict: {url, public_id, secure_url}
-
+            Dict với url, path, filename
+            
         Raises:
-            HTTPException: Nếu upload thất bại
+            ValueError: Nếu file quá lớn hoặc không hợp lệ
         """
-        # Validate file
-        self._validate_image_file(file)
-
-        if self.is_configured:
-            return await self._upload_to_cloudinary(file, folder, transformations, "image")
-        else:
-            return await self._upload_locally(file, folder, "image")
-
-    async def upload_video(
+        # Validate file size
+        if len(file_content) > max_size:
+            raise ValueError(f"File size exceeds maximum of {max_size / 1024 / 1024}MB")
+        
+        # Validate file extension
+        ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+        allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+        if ext not in allowed_extensions:
+            raise ValueError(f"File type .{ext} not allowed. Allowed: {', '.join(allowed_extensions)}")
+        
+        # Generate unique filename
+        unique_filename = f"{uuid.uuid4().hex}.{ext}"
+        
+        # Get folder path
+        folder_path = self.folders[folder]
+        file_path = folder_path / unique_filename
+        
+        try:
+            # Write file
+            with open(file_path, 'wb') as f:
+                f.write(file_content)
+            
+            # Generate URL using centralized config
+            url = get_image_url(folder, unique_filename)
+            
+            logger.info(f"Uploaded file: {unique_filename} to {folder.value}/")
+            
+            return {
+                "success": True,
+                "url": url,
+                "filename": unique_filename,
+                "folder": folder.value,
+                "path": str(file_path),
+                "size": len(file_content)
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to upload file: {str(e)}")
+            # Clean up if file was partially written
+            if file_path.exists():
+                file_path.unlink()
+            raise
+    
+    async def upload_place_image(
         self,
-        file: UploadFile,
-        folder: str = None
-    ) -> Dict[str, str]:
+        file_content: bytes,
+        filename: str,
+        place_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
-        Upload video lên Cloudinary
-
+        Upload ảnh địa điểm
+        
         Args:
-            file: UploadFile object
-            folder: Thư mục đích
-
+            file_content: Nội dung file
+            filename: Tên file gốc
+            place_id: ID địa điểm (optional, để đặt tên file)
+            
         Returns:
-            Dict: {url, public_id, secure_url}
-
-        Raises:
-            HTTPException: Nếu upload thất bại
+            Upload result
         """
-        # Validate file
-        self._validate_video_file(file)
-
-        if self.is_configured:
-            return await self._upload_to_cloudinary(file, folder, None, "video")
+        # If place_id provided, use naming convention
+        if place_id:
+            ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+            # Count existing images for this place
+            existing = list(self.folders[ImageFolder.PLACES].glob(f"place_{place_id}_*.{ext}"))
+            index = len(existing)
+            custom_filename = f"place_{place_id}_{index}.{ext}"
+            
+            # Write with custom name
+            file_path = self.folders[ImageFolder.PLACES] / custom_filename
+            with open(file_path, 'wb') as f:
+                f.write(file_content)
+            
+            url = get_image_url(ImageFolder.PLACES, custom_filename)
+            
+            return {
+                "success": True,
+                "url": url,
+                "filename": custom_filename,
+                "folder": "places",
+                "path": str(file_path),
+                "size": len(file_content)
+            }
         else:
-            return await self._upload_locally(file, folder, "video")
-
-    def _validate_image_file(self, file: UploadFile):
-        """
-        Validate image file
-
-        Args:
-            file: UploadFile object
-
-        Raises:
-            HTTPException: Nếu file không hợp lệ
-        """
-        # Check file size
-        if hasattr(file, 'size') and file.size:
-            if file.size > FileUploadConfig.MAX_IMAGE_SIZE:
-                from .response import file_too_large_response
-                raise HTTPException(
-                    status_code=400,
-                    detail={
-                        "success": False,
-                        "message": f"File không được vượt quá {FileUploadConfig.MAX_IMAGE_SIZE // (1024*1024)}MB",
-                        "data": None,
-                        "error_code": "FILE_001"
-                    }
-                )
-
-        # Check file extension
-        if file.filename:
-            ext = os.path.splitext(file.filename)[1].lower()
-            allowed_extensions = []
-            for extensions in FileUploadConfig.ALLOWED_IMAGE_TYPES.values():
-                allowed_extensions.extend(extensions)
-
-            if ext not in allowed_extensions:
-                from .response import invalid_file_type_response
-                raise HTTPException(
-                    status_code=400,
-                    detail={
-                        "success": False,
-                        "message": f"Chỉ hỗ trợ các định dạng: {', '.join(allowed_extensions)}",
-                        "data": None,
-                        "error_code": "FILE_002"
-                    }
-                )
-
-        # Check MIME type
-        if file.content_type not in FileUploadConfig.ALLOWED_IMAGE_TYPES:
-            from .response import invalid_file_type_response
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "success": False,
-                    "message": f"Chỉ hỗ trợ các định dạng: {', '.join(['jpg', 'jpeg', 'png'])}",
-                    "data": None,
-                    "error_code": "FILE_002"
-                }
-            )
-
-    def _validate_video_file(self, file: UploadFile):
-        """
-        Validate video file
-
-        Args:
-            file: UploadFile object
-
-        Raises:
-            HTTPException: Nếu file không hợp lệ
-        """
-        # Check file size
-        if hasattr(file, 'size') and file.size:
-            if file.size > FileUploadConfig.MAX_VIDEO_SIZE:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Video size exceeds {FileUploadConfig.MAX_VIDEO_SIZE // (1024*1024)}MB limit"
-                )
-
-        # Check file extension
-        if file.filename:
-            ext = os.path.splitext(file.filename)[1].lower()
-            allowed_extensions = []
-            for extensions in FileUploadConfig.ALLOWED_VIDEO_TYPES.values():
-                allowed_extensions.extend(extensions)
-
-            if ext not in allowed_extensions:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Video type not allowed. Allowed: {', '.join(allowed_extensions)}"
-                )
-
-        # Check MIME type
-        if file.content_type not in FileUploadConfig.ALLOWED_VIDEO_TYPES:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Video type not supported. Allowed: {list(FileUploadConfig.ALLOWED_VIDEO_TYPES.keys())}"
-            )
-
-    async def _upload_to_cloudinary(
+            return await self.upload_image(file_content, filename, ImageFolder.PLACES)
+    
+    async def upload_avatar(
         self,
-        file: UploadFile,
-        folder: str,
-        transformations: Dict[str, Any],
-        resource_type: str
-    ) -> Dict[str, str]:
+        file_content: bytes,
+        filename: str,
+        user_id: int
+    ) -> Dict[str, Any]:
         """
-        Upload file lên Cloudinary
-
+        Upload ảnh avatar cho user
+        
         Args:
-            file: UploadFile object
-            folder: Thư mục đích
-            transformations: Cloudinary transformations
-            resource_type: Type of resource (image/video)
-
+            file_content: Nội dung file
+            filename: Tên file gốc
+            user_id: ID của user
+            
         Returns:
-            Dict: Upload result
-
-        Raises:
-            HTTPException: Nếu upload thất bại
+            Upload result
+        """
+        ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+        
+        # Delete old avatar if exists
+        old_avatars = list(self.folders[ImageFolder.AVATARS].glob(f"avatar_{user_id}*"))
+        for old_avatar in old_avatars:
+            old_avatar.unlink()
+        
+        # Custom filename with user_id
+        custom_filename = f"avatar_{user_id}_{uuid.uuid4().hex[:8]}.{ext}"
+        file_path = self.folders[ImageFolder.AVATARS] / custom_filename
+        
+        with open(file_path, 'wb') as f:
+            f.write(file_content)
+        
+        url = get_image_url(ImageFolder.AVATARS, custom_filename)
+        
+        return {
+            "success": True,
+            "url": url,
+            "filename": custom_filename,
+            "folder": "avatars",
+            "path": str(file_path),
+            "size": len(file_content)
+        }
+    
+    async def upload_post_image(
+        self,
+        file_content: bytes,
+        filename: str,
+        post_id: str
+    ) -> Dict[str, Any]:
+        """
+        Upload ảnh cho post
+        
+        Args:
+            file_content: Nội dung file
+            filename: Tên file gốc
+            post_id: MongoDB ObjectId của post
+            
+        Returns:
+            Upload result
+        """
+        ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
+        
+        # Count existing images for this post
+        existing = list(self.folders[ImageFolder.POSTS].glob(f"post_{post_id}_*.{ext}"))
+        index = len(existing)
+        
+        custom_filename = f"post_{post_id}_{index}.{ext}"
+        file_path = self.folders[ImageFolder.POSTS] / custom_filename
+        
+        with open(file_path, 'wb') as f:
+            f.write(file_content)
+        
+        url = get_image_url(ImageFolder.POSTS, custom_filename)
+        
+        return {
+            "success": True,
+            "url": url,
+            "filename": custom_filename,
+            "folder": "posts",
+            "path": str(file_path),
+            "size": len(file_content)
+        }
+    
+    async def delete_file(self, folder: ImageFolder, filename: str) -> bool:
+        """
+        Xóa file khỏi local storage
+        
+        Args:
+            folder: ImageFolder enum
+            filename: Tên file
+            
+        Returns:
+            True nếu xóa thành công
         """
         try:
-            # Generate unique public_id
-            public_id = f"{folder or FileUploadConfig.DEFAULT_FOLDER}/{uuid.uuid4()}"
-
-            # Prepare upload options
-            upload_options = {
-                "public_id": public_id,
-                "resource_type": resource_type,
-                "folder": folder or FileUploadConfig.DEFAULT_FOLDER
-            }
-
-            # Add transformations for images
-            if resource_type == "image" and transformations:
-                upload_options["transformation"] = transformations
-
-            # Read file content
-            content = await file.read()
-            await file.seek(0)  # Reset file pointer
-
-            # Upload to Cloudinary
-            result = self.uploader.upload(
-                content,
-                **upload_options
-            )
-
-            return {
-                "url": result.get("url"),
-                "secure_url": result.get("secure_url"),
-                "public_id": result.get("public_id"),
-                "resource_type": result.get("resource_type"),
-                "format": result.get("format"),
-                "size": result.get("bytes")
-            }
-
-        except Exception as e:
-            logger.error(f"Cloudinary upload failed: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Upload failed: {str(e)}"
-            )
-
-    async def _upload_locally(
-        self,
-        file: UploadFile,
-        folder: str,
-        resource_type: str
-    ) -> Dict[str, str]:
-        """
-        Upload file locally (fallback)
-
-        Args:
-            file: UploadFile object
-            folder: Thư mục đích
-            resource_type: Type of resource
-
-        Returns:
-            Dict: Local upload result
-        """
-        try:
-            # Create upload directory if not exists
-            upload_dir = os.path.join("uploads", folder or FileUploadConfig.DEFAULT_FOLDER)
-            os.makedirs(upload_dir, exist_ok=True)
-
-            # Generate unique filename
-            ext = os.path.splitext(file.filename or "")[1]
-            filename = f"{uuid.uuid4()}{ext}"
-            file_path = os.path.join(upload_dir, filename)
-
-            # Save file locally
-            async with aiofiles.open(file_path, 'wb') as f:
-                content = await file.read()
-                await f.write(content)
-
-            # Return local URL
-            local_url = f"/uploads/{folder or FileUploadConfig.DEFAULT_FOLDER}/{filename}"
-
-            return {
-                "url": local_url,
-                "secure_url": local_url,
-                "public_id": filename,
-                "resource_type": resource_type,
-                "format": ext[1:],  # Remove dot
-                "local_path": file_path
-            }
-
-        except Exception as e:
-            logger.error(f"Local upload failed: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Upload failed: {str(e)}"
-            )
-
-    async def delete_file(self, public_id: str, resource_type: str = "image") -> bool:
-        """
-        Xóa file khỏi Cloudinary
-
-        Args:
-            public_id: Public ID của file
-            resource_type: Loại resource
-
-        Returns:
-            bool: True nếu xóa thành công
-        """
-        if not self.is_configured:
-            # Fallback: delete local file
-            try:
-                file_path = os.path.join("uploads", public_id)
-                if os.path.exists(file_path):
-                    os.remove(file_path)
+            file_path = self.folders[folder] / filename
+            if file_path.exists():
+                file_path.unlink()
+                logger.info(f"Deleted file: {filename} from {folder.value}/")
                 return True
-            except Exception as e:
-                logger.error(f"Failed to delete local file: {str(e)}")
+            else:
+                logger.warning(f"File not found: {filename} in {folder.value}/")
                 return False
-
-        try:
-            result = self.uploader.destroy(public_id, resource_type=resource_type)
-            return result.get("result") == "ok"
         except Exception as e:
-            logger.error(f"Failed to delete file from Cloudinary: {str(e)}")
+            logger.error(f"Failed to delete file: {str(e)}")
             return False
+    
+    def get_file_path(self, folder: ImageFolder, filename: str) -> Optional[Path]:
+        """
+        Lấy path của file
+        
+        Args:
+            folder: ImageFolder enum
+            filename: Tên file
+            
+        Returns:
+            Path nếu file tồn tại, None nếu không
+        """
+        file_path = self.folders[folder] / filename
+        return file_path if file_path.exists() else None
 
 
 # Global uploader instance
-uploader = CloudinaryUploader()
-
-
-# Utility functions
-async def upload_avatar(file: UploadFile, user_id: int) -> Dict[str, str]:
-    """
-    Upload avatar cho user
-
-    Args:
-        file: UploadFile object
-        user_id: ID của user
-
-    Returns:
-        Dict: Upload result
-    """
-    folder = f"{FileUploadConfig.AVATAR_FOLDER}/{user_id}"
-
-    # Transformations cho avatar
-    transformations = {
-        "width": 300,
-        "height": 300,
-        "crop": "fill",
-        "gravity": "face",
-        "quality": "auto"
-    }
-
-    return await uploader.upload_image(file, folder, transformations)
-
-
-async def upload_post_image(file: UploadFile, post_id: int) -> Dict[str, str]:
-    """
-    Upload image cho bài viết
-
-    Args:
-        file: UploadFile object
-        post_id: ID của bài viết
-
-    Returns:
-        Dict: Upload result
-    """
-    folder = f"{FileUploadConfig.POST_FOLDER}/{post_id}"
-
-    # Transformations cho post image
-    transformations = {
-        "width": 1200,
-        "height": 630,
-        "crop": "fill",
-        "quality": "auto"
-    }
-
-    return await uploader.upload_image(file, folder, transformations)
-
-
-async def upload_place_image(file: UploadFile, place_id: int) -> Dict[str, str]:
-    """
-    Upload image cho địa điểm
-
-    Args:
-        file: UploadFile object
-        place_id: ID của địa điểm
-
-    Returns:
-        Dict: Upload result
-    """
-    folder = f"{FileUploadConfig.PLACE_FOLDER}/{place_id}"
-
-    # Transformations cho place image
-    transformations = {
-        "width": 800,
-        "height": 600,
-        "crop": "fill",
-        "quality": "auto"
-    }
-
-    return await uploader.upload_image(file, folder, transformations)
-
-
-def validate_multiple_files(
-    files: List[UploadFile],
-    max_files: int = 5,
-    max_total_size: int = 20 * 1024 * 1024  # 20MB
-):
-    """
-    Validate multiple files upload
-
-    Args:
-        files: Danh sách UploadFile objects
-        max_files: Số file tối đa
-        max_total_size: Tổng size tối đa
-
-    Raises:
-        HTTPException: Nếu validation failed
-    """
-    if len(files) > max_files:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Maximum {max_files} files allowed"
-        )
-
-    total_size = 0
-    for file in files:
-        if hasattr(file, 'size') and file.size:
-            total_size += file.size
-
-    if total_size > max_total_size:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Total file size exceeds {max_total_size // (1024*1024)}MB limit"
-        )
-
-    # Validate individual files
-    for file in files:
-        uploader._validate_image_file(file)
+uploader = LocalFileUploader()

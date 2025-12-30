@@ -45,11 +45,8 @@ class MiddlewareConfig:
     RATE_LIMIT_STORAGE = os.getenv("RATE_LIMIT_STORAGE", "redis")
     RATE_LIMIT_DEFAULT_WINDOW = int(os.getenv("RATE_LIMIT_DEFAULT_WINDOW", "60"))
 
-    # Cloudinary
-    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "")
-    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "")
-    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "")
-    CLOUDINARY_FOLDER = os.getenv("CLOUDINARY_FOLDER", "hanoi-travel")
+    # File Upload
+    UPLOADS_BASE_URL = os.getenv("UPLOADS_BASE_URL", "http://127.0.0.1:8080/static/uploads")
 
     # Email (SendGrid)
     SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
@@ -127,8 +124,8 @@ class MiddlewareConfig:
                 warnings.append("[WARN] Production: CORS_ORIGINS contains localhost")
 
         # Check optional but recommended configs
-        if not cls.CLOUDINARY_CLOUD_NAME:
-            warnings.append("[WARN] Cloudinary not configured - file upload will use local storage")
+        if not cls.UPLOADS_BASE_URL:
+            warnings.append("[WARN] UPLOADS_BASE_URL not configured - using default local URL")
 
         if not cls.SENDGRID_API_KEY:
             warnings.append("[WARN] SendGrid not configured - email features will be disabled")
@@ -252,18 +249,18 @@ class MiddlewareConfig:
         }
 
     @classmethod
-    def get_cloudinary_config(cls) -> Dict[str, str]:
+    def get_uploads_config(cls) -> Dict[str, str]:
         """
-        Get Cloudinary configuration
+        Get Uploads configuration
 
         Returns:
-            Dict: Cloudinary config
+            Dict: Uploads config
         """
         return {
-            "cloud_name": cls.CLOUDINARY_CLOUD_NAME,
-            "api_key": cls.CLOUDINARY_API_KEY,
-            "api_secret": cls.CLOUDINARY_API_SECRET,
-            "folder": cls.CLOUDINARY_FOLDER
+            "base_url": cls.UPLOADS_BASE_URL,
+            "max_file_size": cls.MAX_FILE_SIZE,
+            "allowed_types": cls.ALLOWED_FILE_TYPES,
+            "upload_path": cls.UPLOAD_PATH
         }
 
     @classmethod

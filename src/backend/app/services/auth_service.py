@@ -26,6 +26,7 @@ from middleware.response import (
     not_found_response
 )
 from app.utils.email_validator import validate_user_email
+from app.utils.image_helpers import get_avatar_url
 
 logger = logging.getLogger(__name__)
 
@@ -286,7 +287,7 @@ class AuthService:
                 "user": {
                     "id": user.id,  # Swagger spec: integer, không phải string
                     "full_name": user.full_name,
-                    "avatar_url": user.avatar_url,
+                    "avatar_url": get_avatar_url(user.avatar_url),
                     "role_id": user.role_id
                 }
             }, user.to_dict(include_sensitive=True)
@@ -407,7 +408,7 @@ class AuthService:
                 "user": {
                     "id": user.id,
                     "full_name": user.full_name,
-                    "avatar_url": user.avatar_url,
+                    "avatar_url": get_avatar_url(user.avatar_url),
                     "role_id": user.role_id
                 }
             }
@@ -497,7 +498,7 @@ class AuthService:
                 "user": {
                     "id": user.id,  # Swagger spec: integer
                     "full_name": user.full_name,
-                    "avatar_url": user.avatar_url,
+                    "avatar_url": get_avatar_url(user.avatar_url),
                     "role_id": user.role_id
                 }
             }, user.to_dict()
