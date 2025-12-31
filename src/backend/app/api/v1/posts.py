@@ -26,9 +26,15 @@ import os
 from config.database import get_db, User, UserPostFavorite, Place
 from app.utils.image_helpers import get_main_image_url, get_post_images
 from app.utils.place_helpers import get_place_compact, get_user_compact
+from app.utils.content_sanitizer import (
+    sanitize_post_title, sanitize_post_content, sanitize_comment,
+    sanitize_tags, sanitize_image_urls, sanitize_report_reason,
+    sanitize_report_description, detect_xss_attempt, log_security_event
+)
 from middleware.auth import get_current_user, get_optional_user
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
+from app.services.logging_service import log_activity, log_visit
 
 logger = logging.getLogger(__name__)
 
@@ -173,14 +179,25 @@ async def create_post(
         
         user_id = current_user.get("user_id")
         
-        # Prepare post document
+        # Sanitize user inputs
+        clean_title = sanitize_post_title(post_data.title)
+        clean_content = sanitize_post_content(post_data.content)
+        clean_tags = sanitize_tags(post_data.tags or [])
+        clean_images = sanitize_image_urls(post_data.images or [])
+        
+        # Log security event if XSS attempt detected
+        if detect_xss_attempt(post_data.content) or detect_xss_attempt(post_data.title):
+            client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+            log_security_event("xss_attempt", post_data.content, user_id, client_ip)
+        
+        # Prepare post document with sanitized data
         post_doc = {
             "type": "post",
             "author_id": user_id,
-            "title": post_data.title,
-            "content": post_data.content,
-            "images": post_data.images or [],
-            "tags": post_data.tags or [],
+            "title": clean_title,
+            "content": clean_content,
+            "images": clean_images,
+            "tags": clean_tags,
             "related_place_id": post_data.related_place_id,
             "rating": post_data.rating,
             "likes_count": 0,
@@ -190,6 +207,15 @@ async def create_post(
         
         # Insert to MongoDB
         post_id = await mongo_client.create_post(post_doc)
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="create_post",
+            details=f"Tạo bài viết mới: {post_data.title[:50]}...",
+            request=request
+        )
         
         return success_response(
             message="Tạo bài viết thành công, đang chờ duyệt",
@@ -258,6 +284,18 @@ async def get_post_detail(
         
         formatted_post["comments"] = formatted_comments
         
+        # Log visit
+        try:
+            user_id = current_user.get("user_id") if current_user else None
+            await log_visit(
+                db=db,
+                request=request,
+                user_id=user_id,
+                post_id=post_id
+            )
+        except Exception as e:
+            logger.error(f"Error logging visit: {e}")
+        
         return success_response(
             message="Lấy chi tiết bài viết thành công",
             data=formatted_post
@@ -319,6 +357,15 @@ async def toggle_like(
                 "likes_count": result["total_likes"]
             })
         
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="like_post" if result["liked"] else "unlike_post",
+            details=f"{'Like' if result['liked'] else 'Unlike'} bài viết ID: {post_id}",
+            request=request
+        )
+        
         return {
             "success": True,
             "message": "Đã cập nhật like",
@@ -374,11 +421,20 @@ async def add_comment(
                 status_code=404
             )
         
+        # Sanitize comment content
+        clean_content = sanitize_comment(comment_data.content)
+        clean_images = sanitize_image_urls(comment_data.images or [])
+        
+        # Log security event if XSS attempt detected
+        if detect_xss_attempt(comment_data.content):
+            client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+            log_security_event("xss_attempt_comment", comment_data.content, user_id, client_ip)
+        
         comment_doc = {
             "post_id": post_id,
             "user_id": user_id,
-            "content": comment_data.content,
-            "images": comment_data.images or [],
+            "content": clean_content,
+            "images": clean_images,
             "parent_id": None  # Root comment
         }
         
@@ -389,6 +445,15 @@ async def add_comment(
             await mongo_client.update_one("posts", post_query, {
                 "comments_count": post.get("comments_count", 0) + 1
             })
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="create_comment",
+            details=f"Comment bài viết ID: {post_id}",
+            request=request
+        )
         
         return success_response(
             message="Thêm comment thành công",
@@ -443,10 +508,18 @@ async def reply_to_comment(
                 status_code=404
             )
         
+        # Sanitize reply content
+        clean_content = sanitize_comment(reply_data.content)
+        
+        # Log security event if XSS attempt detected
+        if detect_xss_attempt(reply_data.content):
+            client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+            log_security_event("xss_attempt_reply", reply_data.content, user_id, client_ip)
+        
         reply_id = await mongo_client.create_reply(
             parent_id=comment_id,
             user_id=user_id,
-            content=reply_data.content
+            content=clean_content
         )
         
         # Update comments_count of post - handle both ObjectId and string _id
@@ -508,11 +581,29 @@ async def toggle_favorite_post(
             db.delete(existing)
             db.commit()
             is_favorited = False
+            
+            # Log activity
+            await log_activity(
+                db=db,
+                user_id=user_id,
+                action="unfavorite_post",
+                details=f"Bỏ lưu bài viết ID: {post_id}",
+                request=request
+            )
         else:
             favorite = UserPostFavorite(user_id=user_id, post_id=post_id)
             db.add(favorite)
             db.commit()
             is_favorited = True
+            
+            # Log activity
+            await log_activity(
+                db=db,
+                user_id=user_id,
+                action="favorite_post",
+                details=f"Lưu bài viết ID: {post_id}",
+                request=request
+            )
         
         return {
             "success": True,
@@ -546,15 +637,28 @@ async def report_post(
         
         user_id = current_user.get("user_id")
         
+        # Sanitize report data
+        clean_reason = sanitize_report_reason(report_data.reason)
+        clean_description = sanitize_report_description(report_data.description)
+        
         report_doc = {
             "target_type": "post",
             "target_id": post_id,
             "reporter_id": user_id,
-            "reason": report_data.reason,
-            "description": report_data.description
+            "reason": clean_reason,
+            "description": clean_description
         }
         
         await mongo_client.create_report(report_doc)
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="report_content",
+            details=f"Báo cáo bài viết ID: {post_id} - Lý do: {report_data.reason}",
+            request=request
+        )
         
         return success_response(message="Đã gửi báo cáo")
         
@@ -583,12 +687,16 @@ async def report_comment(
         
         user_id = current_user.get("user_id")
         
+        # Sanitize report data
+        clean_reason = sanitize_report_reason(report_data.reason)
+        clean_description = sanitize_report_description(report_data.description)
+        
         report_doc = {
             "target_type": "comment",
             "target_id": comment_id,
             "reporter_id": user_id,
-            "reason": report_data.reason,
-            "description": report_data.description
+            "reason": clean_reason,
+            "description": clean_description
         }
         
         await mongo_client.create_report(report_doc)
@@ -599,6 +707,101 @@ async def report_comment(
         logger.error(f"Error reporting comment: {str(e)}")
         return error_response(
             message="Lỗi gửi báo cáo",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.delete("/comments/{comment_id}", summary="Delete Comment")
+async def delete_comment(
+    request: Request,
+    comment_id: str = Path(..., description="Comment ID"),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Xóa comment (chỉ owner hoặc admin mới có quyền)
+    """
+    try:
+        await get_mongodb()
+        
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        user_id = current_user.get("user_id")
+        user_role = current_user.get("role", "user")
+        
+        # Find comment - handle both ObjectId and string _id
+        comment = None
+        comment_query = None
+        try:
+            comment_query = {"_id": ObjectId(comment_id)}
+            comment = await mongo_client.find_one("post_comments", comment_query)
+        except InvalidId:
+            pass
+        
+        if not comment:
+            comment_query = {"_id": comment_id}
+            comment = await mongo_client.find_one("post_comments", comment_query)
+        
+        if not comment:
+            return error_response(
+                message="Comment không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
+        
+        # Check permission: owner or admin
+        comment_owner_id = comment.get("user_id")
+        is_owner = (comment_owner_id == user_id)
+        is_admin = (user_role in ["admin", "moderator"])
+        
+        if not is_owner and not is_admin:
+            return error_response(
+                message="Bạn không có quyền xóa comment này",
+                error_code="FORBIDDEN",
+                status_code=403
+            )
+        
+        # Delete the comment
+        await mongo_client.delete_one("post_comments", comment_query)
+        
+        # Update post's comments_count
+        post_id = comment.get("post_id")
+        if post_id:
+            post = None
+            post_query = None
+            try:
+                post_query = {"_id": ObjectId(post_id)}
+                post = await mongo_client.find_one("posts", post_query)
+            except InvalidId:
+                pass
+            
+            if not post:
+                post_query = {"_id": post_id}
+                post = await mongo_client.find_one("posts", post_query)
+            
+            if post and post_query:
+                new_count = max(0, post.get("comments_count", 1) - 1)
+                await mongo_client.update_one("posts", post_query, {
+                    "comments_count": new_count
+                })
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="delete_comment",
+            details=f"Xóa comment ID: {comment_id}",
+            request=request
+        )
+        
+        return success_response(message="Đã xóa comment thành công")
+        
+    except Exception as e:
+        logger.error(f"Error deleting comment: {str(e)}")
+        return error_response(
+            message="Lỗi xóa comment",
             error_code="INTERNAL_ERROR",
             status_code=500
         )

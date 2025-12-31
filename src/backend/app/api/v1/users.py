@@ -18,9 +18,11 @@ import logging
 
 from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place, PlaceImage, District
 from app.utils.image_helpers import get_main_image_url, normalize_image_list, get_avatar_url
+from app.utils.content_sanitizer import sanitize_full_name, sanitize_bio, sanitize_url
 from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
+from app.services.logging_service import log_activity
 
 logger = logging.getLogger(__name__)
 
@@ -209,16 +211,25 @@ async def update_user_profile(
                 status_code=404
             )
         
-        # Update fields
+        # Update fields with sanitized data
         if update_data.full_name is not None:
-            user.full_name = update_data.full_name
+            user.full_name = sanitize_full_name(update_data.full_name)
         if update_data.bio is not None:
-            user.bio = update_data.bio
+            user.bio = sanitize_bio(update_data.bio)
         if update_data.avatar_url is not None:
-            user.avatar_url = update_data.avatar_url
+            user.avatar_url = sanitize_url(update_data.avatar_url, allow_relative=True)
         
         db.commit()
         db.refresh(user)
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="profile_update",
+            details="Cập nhật thông tin profile",
+            request=request
+        )
         
         return success_response(
             message="Cập nhật profile thành công",
@@ -285,6 +296,15 @@ async def change_password(
         user.password_hash = auth_middleware.hash_password(password_data.new_password)
         db.commit()
         
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="password_change",
+            details="Đổi mật khẩu thành công",
+            request=request
+        )
+        
         return success_response(message="Đổi mật khẩu thành công")
         
     except Exception as e:
@@ -325,6 +345,15 @@ async def remove_favorite_place(
         
         db.delete(favorite)
         db.commit()
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="unfavorite_place",
+            details=f"Xóa địa điểm ID {place_id} khỏi yêu thích",
+            request=request
+        )
         
         return success_response(message="Đã xóa khỏi danh sách yêu thích")
         
@@ -483,12 +512,13 @@ async def update_profile_alias(
                 status_code=404
             )
         
+        # Update fields with sanitized data
         if update_data.full_name is not None:
-            user.full_name = update_data.full_name
+            user.full_name = sanitize_full_name(update_data.full_name)
         if update_data.bio is not None:
-            user.bio = update_data.bio
+            user.bio = sanitize_bio(update_data.bio)
         if update_data.avatar_url is not None:
-            user.avatar_url = update_data.avatar_url
+            user.avatar_url = sanitize_url(update_data.avatar_url, allow_relative=True)
         
         db.commit()
         db.refresh(user)
@@ -690,6 +720,15 @@ async def upload_avatar(
         user.avatar_url = result["relative_path"]
         db.commit()
         
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="avatar_update",
+            details="Cập nhật avatar mới",
+            request=request
+        )
+        
         # Return full URL to frontend immediately
         return success_response(
             message="Upload avatar thành công",
@@ -732,6 +771,15 @@ async def delete_avatar(
         # Clear avatar_url
         user.avatar_url = None
         db.commit()
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="avatar_delete",
+            details="Xóa avatar",
+            request=request
+        )
         
         return success_response(message="Đã xóa avatar")
         

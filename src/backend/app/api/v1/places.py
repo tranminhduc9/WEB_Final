@@ -34,6 +34,7 @@ from middleware.response import (
     not_found_response,
     server_error_response
 )
+from app.services.logging_service import log_visit, log_activity
 
 logger = logging.getLogger(__name__)
 
@@ -813,18 +814,15 @@ async def get_place_detail(
             "related_posts": related_posts
         }
 
-        # Log visit
+        # Log visit using centralized service
         try:
             user_id = int(current_user.get("user_id")) if current_user else None
-            visit_log = VisitLog(
+            await log_visit(
+                db=db,
+                request=request,
                 user_id=user_id,
-                place_id=place_id,
-                page_url=str(request.url),
-                ip_address=request.client.host,
-                user_agent=request.headers.get("user-agent")
+                place_id=place_id
             )
-            db.add(visit_log)
-            db.commit()
         except Exception as e:
             logger.error(f"Error logging visit: {e}")
             # Don't fail the request if logging fails
@@ -872,6 +870,15 @@ async def toggle_favorite_place(
             db.commit()
             is_favorited = False
             message = "Đã bỏ yêu thích"
+            
+            # Log activity
+            await log_activity(
+                db=db,
+                user_id=user_id,
+                action="unfavorite_place",
+                details=f"Bỏ yêu thích địa điểm: {place.name} (ID: {place_id})",
+                request=request
+            )
         else:
             # Chưa yêu thích -> Thêm yêu thích
             new_fav = UserPlaceFavorite(user_id=user_id, place_id=place_id)
@@ -879,6 +886,15 @@ async def toggle_favorite_place(
             db.commit()
             is_favorited = True
             message = "Đã thêm vào yêu thích"
+            
+            # Log activity
+            await log_activity(
+                db=db,
+                user_id=user_id,
+                action="favorite_place",
+                details=f"Thêm yêu thích địa điểm: {place.name} (ID: {place_id})",
+                request=request
+            )
         
         logger.info(f"[PLACES] Toggle favorite - user_id={user_id}, place_id={place_id}, is_favorited={is_favorited}")
         

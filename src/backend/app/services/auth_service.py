@@ -135,9 +135,13 @@ class AuthService:
             # 3. Hash mật khẩu
             password_hash = auth_middleware.hash_password(password)
 
+            # 3.5. Sanitize user inputs
+            from app.utils.content_sanitizer import sanitize_full_name
+            clean_full_name = sanitize_full_name(full_name)
+
             # 4. Tạo user mới với role_id (Schema v3.1)
             new_user = User(
-                full_name=full_name,
+                full_name=clean_full_name,
                 email=email,
                 password_hash=password_hash,
                 role_id=3,  # 3 = user role

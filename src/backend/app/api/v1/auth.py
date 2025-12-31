@@ -19,6 +19,7 @@ from config.database import get_db
 from middleware.auth import get_current_user
 from middleware.rate_limit import apply_rate_limit
 from app.services.auth_service import get_auth_service
+from app.services.logging_service import log_activity, get_client_ip
 from middleware.response import (
     success_response,
     error_response,
@@ -182,6 +183,16 @@ async def register(
 
         # Xử lý kết quả
         if success:
+            # Log activity - đăng ký thành công
+            if user_data and user_data.get("id"):
+                await log_activity(
+                    db=db,
+                    user_id=user_data["id"],
+                    action="register",
+                    details=f"Đăng ký tài khoản mới với email: {register_data.email}",
+                    request=request
+                )
+            
             # Frontend chỉ cần success + message (BaseResponse)
             # KHÔNG cần user data vì không auto-login sau register
             return response
@@ -367,6 +378,16 @@ async def login(
             user_info = response.get("user", {})
             logger.info(f"Login successful - User ID: {user_info.get('id')}, role_id: {user_info.get('role_id')}, role: {user_info.get('role')}, email: {user_info.get('email')}")
             
+            # Log activity - đăng nhập thành công
+            if user_info.get("id"):
+                await log_activity(
+                    db=db,
+                    user_id=user_info["id"],
+                    action="login",
+                    details=f"Đăng nhập từ IP: {get_client_ip(request)}",
+                    request=request
+                )
+            
             # Service đã return format frontend cần: {success, message, access_token, refresh_token, user}
             # Tạo JSONResponse để có thể set cookies
             json_response = JSONResponse(content=response)
@@ -538,6 +559,15 @@ async def logout(
                 token_record.revoked = True
                 db.commit()
                 logger.info(f"Token revoked for user_id: {token_record.user_id}")
+                
+                # Log activity - đăng xuất
+                await log_activity(
+                    db=db,
+                    user_id=token_record.user_id,
+                    action="logout",
+                    details="Đăng xuất thành công",
+                    request=request
+                )
 
         # Tạo response và xóa authentication cookies
         json_response = JSONResponse(content={
