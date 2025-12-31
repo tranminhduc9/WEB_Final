@@ -1,0 +1,309 @@
+/* AdminPostsPage.css - Styles for Admin Post Approval Page */
+
+.admin-posts-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.admin-posts-main {
+    flex: 1;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 80px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Header */
+.admin-posts-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.admin-section__accent {
+    width: 8px;
+    height: 48px;
+    background: #F88622;
+    border-radius: 5px;
+}
+
+.admin-posts-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 48px;
+    color: #000;
+    margin: 0;
+}
+
+/* Loading & Empty States */
+.admin-posts__loading,
+.admin-posts__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    color: #666;
+}
+
+.admin-posts__loading .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #F88622;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Posts List */
+.admin-posts__list {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Post Card */
+.admin-post-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.admin-post-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.admin-post-card__author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-post-card__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.admin-post-card__username {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: #000;
+}
+
+.admin-post-card__rating {
+    background: #F88622;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    padding: 8px 16px;
+    border-radius: 20px 5px;
+    line-height: 1.2;
+}
+
+/* Location */
+.admin-post-card__location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: #000;
+}
+
+.admin-post-card__location svg {
+    color: #F88622;
+}
+
+.admin-post-card__location span {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+}
+
+/* Images */
+.admin-post-card__images {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.admin-post-card__image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Description */
+.admin-post-card__description {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1.5;
+    color: #000;
+    margin-bottom: 24px;
+}
+
+.admin-post-card__more {
+    color: #F88622;
+    cursor: pointer;
+}
+
+/* Actions */
+.admin-post-card__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+.admin-post-card__btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    padding: 12px 40px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-post-card__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.admin-post-card__btn--reject {
+    background: #D9D9D9;
+    color: #020202;
+}
+
+.admin-post-card__btn--reject:hover:not(:disabled) {
+    background: #c0c0c0;
+}
+
+.admin-post-card__btn--approve {
+    background: #F88622;
+    color: #fff;
+}
+
+.admin-post-card__btn--approve:hover:not(:disabled) {
+    background: #e07a1e;
+}
+
+/* Pagination */
+.admin-posts__pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 48px;
+    padding: 24px 0;
+}
+
+.admin-posts__pagination-nav,
+.admin-posts__pagination-btn {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-posts__pagination-nav {
+    background: transparent;
+    color: #666;
+}
+
+.admin-posts__pagination-nav:hover:not(:disabled) {
+    color: #F88622;
+}
+
+.admin-posts__pagination-nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.admin-posts__pagination-btn {
+    background: #D9D9D9;
+    color: #000;
+}
+
+.admin-posts__pagination-btn:hover:not(.active) {
+    background: #c0c0c0;
+}
+
+.admin-posts__pagination-btn.active {
+    background: #F88622;
+    color: #fff;
+}
+
+.admin-posts__pagination-ellipsis {
+    font-size: 24px;
+    color: #666;
+    padding: 0 8px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .admin-posts-main {
+        padding: 24px 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-posts-main {
+        padding: 20px;
+    }
+
+    .admin-posts-title {
+        font-size: 28px;
+    }
+
+    .admin-post-card__images {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-post-card__image {
+        height: 250px;
+    }
+
+    .admin-post-card__actions {
+        flex-direction: column;
+    }
+
+    .admin-post-card__btn {
+        width: 100%;
+        text-align: center;
+    }
+}

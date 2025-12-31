@@ -52,10 +52,10 @@ function AdminHeader() {
             {/* Navigation */}
             <nav className="admin-header__nav">
                 <Link
-                    to="/admin/sql"
-                    className={`admin-nav-link ${isActiveLink('/admin/sql') ? 'active' : ''}`}
+                    to="/admin/posts"
+                    className={`admin-nav-link ${isActiveLink('/admin/posts') ? 'active' : ''}`}
                 >
-                    Truy vấn SQL
+                    Duyệt bài
                 </Link>
                 <Link
                     to="/admin/statistics"
