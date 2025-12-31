@@ -180,8 +180,9 @@
 .blog-detail__action-icon svg {
   width: 30px;
   height: 30px;
-  fill: #000000;
+  fill: none;
   stroke: #000000;
+  transition: fill 0.2s ease, stroke 0.2s ease;
 }
 
 .blog-detail__action span {
@@ -641,8 +642,12 @@
 
 /* Liked state */
 .blog-detail__action--liked .blog-detail__action-icon svg {
-  fill: #e74c3c;
-  stroke: #e74c3c;
+  fill: #e74c3c !important;
+  stroke: #e74c3c !important;
+}
+
+.blog-detail__action--liked .blog-detail__action-icon {
+  color: #e74c3c;
 }
 
 /* ==================== */

@@ -123,8 +123,9 @@ export default function App() {
                   authorName={post.author?.full_name || 'Ẩn danh'}
                   timeAgo={post.created_at ? formatTimeAgo(post.created_at) : 'Vừa xong'}
                   content={post.content}
-                  likeCount={post.likes_count}
-                  commentCount={post.comments_count}
+                  likeCount={post.likes_count || 0}
+                  commentCount={post.comments_count || 0}
+                  isLiked={post.is_liked === true}
                 />
               ))}
             </div>
