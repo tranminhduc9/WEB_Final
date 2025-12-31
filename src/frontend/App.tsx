@@ -51,7 +51,7 @@ export default function App() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await postService.getPosts(1, 5);
+        const response = await postService.getPosts(1, 6);
         if (response.success && response.data) {
           setPosts(response.data);
         }

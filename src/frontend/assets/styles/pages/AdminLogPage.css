@@ -1,0 +1,247 @@
+/* Admin Log Page - Quản lý log hoạt động */
+
+.admin-log-page {
+    min-height: 100vh;
+    background: #FFFFFF;
+}
+
+.admin-log-main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 42px;
+}
+
+/* ==================== */
+/* Header Section */
+/* ==================== */
+.admin-log-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.admin-section__accent {
+    width: 8px;
+    height: 48px;
+    background: #F88622;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
+.admin-log-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 48px;
+    color: #000000;
+    margin: 0;
+}
+
+/* ==================== */
+/* Filters */
+/* ==================== */
+.admin-log-filters {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.admin-log-filter-select {
+    padding: 10px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    border: 1px solid #D9D9D9;
+    border-radius: 8px;
+    background: #FFFFFF;
+    cursor: pointer;
+    min-width: 160px;
+}
+
+.admin-log-filter-select:focus {
+    outline: none;
+    border-color: #F88622;
+}
+
+.admin-log-count {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #666;
+}
+
+/* ==================== */
+/* Table */
+/* ==================== */
+.admin-log-table-container {
+    background: #FFFFFF;
+    overflow-x: auto;
+    margin-bottom: 32px;
+}
+
+.admin-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.admin-log-table thead tr {
+    background: #D9D9D9;
+    border: 1px solid #000000;
+}
+
+.admin-log-table th {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    text-align: center;
+    color: #000000;
+    padding: 20px 16px;
+    border: 1px solid #000000;
+}
+
+.admin-log-table tbody tr {
+    background: #D9D9D9;
+    border: 1px solid #000000;
+    transition: background 0.2s ease;
+}
+
+.admin-log-table tbody tr:hover {
+    background: #EBEBEB;
+}
+
+.admin-log-table td {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #000000;
+    padding: 16px;
+    border: 1px solid #000000;
+    text-align: center;
+}
+
+.admin-log-table td:first-child {
+    width: 100px;
+}
+
+.admin-log-table td:nth-child(2) {
+    width: 150px;
+}
+
+.admin-log-table td:nth-child(3) {
+    width: 120px;
+}
+
+.admin-log-table td:nth-child(4) {
+    width: 160px;
+}
+
+.admin-log-details {
+    text-align: left !important;
+    max-width: 400px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-log-loading,
+.admin-log-empty {
+    text-align: center !important;
+    padding: 40px 16px !important;
+    color: #666;
+    font-style: italic;
+}
+
+/* ==================== */
+/* Pagination */
+/* ==================== */
+.admin-log-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 32px;
+}
+
+.admin-log-pagination__nav,
+.admin-log-pagination__page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+    background: #D9D9D9;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-log-pagination__nav:hover:not(:disabled),
+.admin-log-pagination__page:hover:not(:disabled) {
+    background: #c4c4c4;
+}
+
+.admin-log-pagination__page.active {
+    background: #F88622;
+    color: #FFFFFF;
+}
+
+.admin-log-pagination__page.ellipsis {
+    background: transparent;
+    cursor: default;
+}
+
+.admin-log-pagination__nav:disabled,
+.admin-log-pagination__page:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ==================== */
+/* Responsive */
+/* ==================== */
+@media (max-width: 1200px) {
+    .admin-log-main {
+        padding: 30px 24px;
+    }
+
+    .admin-log-title {
+        font-size: 32px;
+        line-height: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-log-main {
+        padding: 20px 16px;
+    }
+
+    .admin-log-title {
+        font-size: 28px;
+        line-height: 36px;
+    }
+
+    .admin-log-filters {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .admin-log-table th,
+    .admin-log-table td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+
+    .admin-log-pagination__nav,
+    .admin-log-pagination__page {
+        min-width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}

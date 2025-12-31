@@ -8,6 +8,10 @@
     justify-content: space-between;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     height: 70px;
+    /* Fixed header khi scroll */
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 /* Logo */

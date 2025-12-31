@@ -62,6 +62,12 @@ function AdminHeader() {
                     Duyệt bài
                 </Link>
                 <Link
+                    to="/admin/log"
+                    className={`admin-nav-link ${isActiveLink('/admin/log') ? 'active' : ''}`}
+                >
+                    Kiểm tra log
+                </Link>
+                <Link
                     to="/admin/statistics"
                     className={`admin-nav-link ${isActiveLink('/admin/statistics') ? 'active' : ''}`}
                 >
