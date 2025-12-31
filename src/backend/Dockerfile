@@ -12,6 +12,5 @@ COPY tests/database/main.py .
 
 # 3. Tạo thư mục static để hứng volume ảnh
 RUN mkdir -p /app/static/uploads
-
 # 4. Chạy server (lúc này main.py đã nằm ngay tại /app nên gọi bình thường)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

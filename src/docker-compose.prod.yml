@@ -1,0 +1,133 @@
+# ==============================================
+# PRODUCTION DOCKER COMPOSE - AWS DEPLOYMENT
+# ==============================================
+# Services: Frontend (Nginx) + Backend (FastAPI)
+# Database: AWS RDS (external)
+# Storage: AWS S3 (external)
+# ==============================================
+
+version: '3.8'
+
+services:
+  # ==============================================
+  # SERVICE 1: Frontend (React/Vite + Nginx)
+  # ==============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Backend API URL - relative path for nginx proxy (works with ngrok)
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+    container_name: travel_frontend_prod
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    networks:
+      - travel_network_prod
+
+    depends_on:
+      - backend
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # ==============================================
+  # SERVICE 2: Backend (FastAPI + Gunicorn)
+  # ==============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: travel_backend_prod
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      # Environment
+      ENVIRONMENT: production
+      DEBUG: "false"
+
+      # Database - AWS RDS
+      DATABASE_URL: ${DATABASE_URL}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-20}
+
+      # MongoDB
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-hanoi_travel_mongo}
+
+      # Redis (optional)
+      REDIS_URL: ${REDIS_URL:-redis://localhost:6379/0}
+
+      # S3 Configuration
+      S3_BUCKET: ${S3_BUCKET:-travel-img-drive}
+      S3_REGION: ${S3_REGION:-ap-southeast-1}
+      UPLOADS_BASE_URL: ${UPLOADS_BASE_URL:-https://travel-img-drive.s3.ap-southeast-1.amazonaws.com/uploads}
+
+      # JWT & Security
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600}
+      REFRESH_TOKEN_EXPIRATION: ${REFRESH_TOKEN_EXPIRATION:-604800}
+      SESSION_SECRET: ${SESSION_SECRET}
+
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80}
+      CORS_CREDENTIALS: "true"
+
+      # Frontend URL
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+
+      # Server
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8000"
+
+      # Email (SendGrid)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@hanoi-travel.com}
+      FROM_NAME: ${FROM_NAME:-Hanoi Travel}
+
+      # AI Chatbot (Gemini)
+      CHATBOT_ENABLED: ${CHATBOT_ENABLED:-true}
+      CHATBOT_API_KEY: ${CHATBOT_API_KEY}
+
+      # Hunter.io Email Validation
+      HUNTER_IO_API_KEY: ${HUNTER_IO_API_KEY}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+    networks:
+      - travel_network_prod
+
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+# ==============================================
+# NETWORKS
+# ==============================================
+networks:
+  travel_network_prod:
+    driver: bridge
+    name: travel_network_production

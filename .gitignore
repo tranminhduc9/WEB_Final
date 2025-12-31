@@ -5,3 +5,10 @@ node_modules/
 __pycache__
 .pytest_cache
 uploads
+
+# Environment files (sensitive)
+src/.env
+src/.env.prod
+src/.env.production
+*.pem
+src/.env
