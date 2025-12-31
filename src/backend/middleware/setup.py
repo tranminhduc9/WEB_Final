@@ -103,6 +103,11 @@ def setup_middleware(app: FastAPI) -> None:
         add_security_headers(app)
         logger.info("   [OK] Security headers added")
 
+    # 2.5. Request Size Limit Middleware (chống DoS)
+    from .request_size_limit import RequestSizeLimitMiddleware
+    app.add_middleware(RequestSizeLimitMiddleware)
+    logger.info("   [OK] Request size limit middleware added")
+
     # 3. Request ID Middleware
     app.add_middleware(RequestIDMiddleware)
     logger.info("   [OK] Request ID middleware added")

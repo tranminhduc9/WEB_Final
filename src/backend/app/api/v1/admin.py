@@ -352,6 +352,8 @@ async def get_admin_posts(
 ):
     """Lấy danh sách posts cho admin"""
     try:
+        from app.utils.image_helpers import get_avatar_url, normalize_image_list
+        
         await get_mongodb()
         
         query = {}
@@ -368,17 +370,41 @@ async def get_admin_posts(
         
         total = await mongo_client.count("posts", query)
         
-        # Format posts
+        # Format posts with full information
         formatted_posts = []
         for post in posts:
             user = db.query(User).filter(User.id == post.get("author_id")).first()
+            
+            # Get related place info if exists
+            related_place = None
+            if post.get("related_place_id"):
+                place = db.query(Place).filter(Place.id == post.get("related_place_id")).first()
+                if place:
+                    related_place = {
+                        "id": place.id,
+                        "name": place.name
+                    }
+            
+            # Get avatar URL using helper
+            avatar_url = None
+            if user:
+                avatar_url = get_avatar_url(user.avatar_url, user.id)
+            
+            # Normalize images
+            images = normalize_image_list(post.get("images", []))
+            
             formatted_posts.append({
                 "_id": str(post.get("_id")),
                 "title": post.get("title"),
+                "content": post.get("content", ""),
+                "images": images,
+                "rating": post.get("rating"),
                 "author": {
                     "id": user.id if user else None,
-                    "full_name": user.full_name if user else "Unknown"
+                    "full_name": user.full_name if user else "Unknown",
+                    "avatar_url": avatar_url
                 } if user else None,
+                "related_place": related_place,
                 "status": post.get("status"),
                 "likes_count": post.get("likes_count", 0),
                 "comments_count": post.get("comments_count", 0),
@@ -983,6 +1009,20 @@ async def update_place(
         if place_data.close_hour:
             h, m = map(int, place_data.close_hour.split(':'))
             place.close_hour = time(h, m)
+        
+        # Update images if provided
+        if place_data.images is not None:
+            # Remove old images
+            db.query(PlaceImage).filter(PlaceImage.place_id == place_id).delete()
+            
+            # Add new images
+            for i, url in enumerate(place_data.images):
+                img = PlaceImage(
+                    place_id=place.id,
+                    image_url=url,
+                    is_main=(i == 0)
+                )
+                db.add(img)
         
         db.commit()
         

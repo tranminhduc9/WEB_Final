@@ -48,18 +48,20 @@ async def get_audit_logs(
     request: Request,
     limit: int = Query(100, ge=1, le=1000, description="Số lượng log entries"),
     offset: int = Query(0, ge=0, description="Offset để pagination"),
+    user_id: Optional[int] = Query(None, description="Filter theo user ID"),
     action_type: Optional[str] = Query(None, description="Filter theo action type"),
     current_user: dict = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
-    Lấy audit logs từ file
+    Lấy audit logs từ database
 
     Yêu cầu: Admin role
 
     Args:
         limit: Số lượng entries tối đa
         offset: Số entries bỏ qua
+        user_id: Filter theo user ID (xem hoạt động của 1 user cụ thể)
         action_type: Filter theo loại action (login, register, etc.)
         current_user: Current admin user
 
@@ -67,10 +69,16 @@ async def get_audit_logs(
         Danh sách audit log entries
     """
     try:
+        from config.database import User
+        
         # Query database
         query = db.query(ActivityLog)
 
-        # Filter
+        # Filter by user_id
+        if user_id:
+            query = query.filter(ActivityLog.user_id == user_id)
+        
+        # Filter by action_type
         if action_type:
             query = query.filter(ActivityLog.action == action_type)
 
@@ -83,16 +91,28 @@ async def get_audit_logs(
                     .limit(limit)\
                     .all()
 
-        # Format output
+        # Format output with user info
         result_logs = []
         for log in logs:
+            # Get user info
+            user_info = None
+            if log.user_id:
+                user = db.query(User).filter(User.id == log.user_id).first()
+                if user:
+                    user_info = {
+                        "id": user.id,
+                        "full_name": user.full_name,
+                        "email": user.email
+                    }
+            
             result_logs.append({
                 "id": log.id,
                 "user_id": log.user_id,
+                "user": user_info,
                 "action": log.action,
                 "details": log.details,
                 "ip_address": log.ip_address,
-                "created_at": log.created_at
+                "created_at": log.created_at.isoformat() if log.created_at else None
             })
 
         return success_response(
@@ -228,3 +248,156 @@ async def get_logging_stats(
             message=f"Error getting logging stats: {str(e)}",
             error_code="STATS_ERROR"
         )
+
+
+@router.get("/visits", summary="Get Visit Logs")
+async def get_visit_logs(
+    request: Request,
+    limit: int = Query(100, ge=1, le=1000, description="Số lượng log entries"),
+    offset: int = Query(0, ge=0, description="Offset để pagination"),
+    user_id: Optional[int] = Query(None, description="Filter theo user ID"),
+    place_id: Optional[int] = Query(None, description="Filter theo place ID"),
+    post_id: Optional[str] = Query(None, description="Filter theo post ID"),
+    days: int = Query(30, ge=1, le=365, description="Số ngày gần đây"),
+    current_user: dict = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy visit logs
+
+    Yêu cầu: Admin role
+
+    Args:
+        limit: Số lượng entries tối đa
+        offset: Số entries bỏ qua
+        user_id: Filter theo user ID (xem lịch sử truy cập của 1 user)
+        place_id: Filter theo địa điểm (optional)
+        post_id: Filter theo bài viết (optional)
+        days: Số ngày gần đây
+        current_user: Current admin user
+
+    Returns:
+        Danh sách visit log entries
+    """
+    try:
+        from config.database import VisitLog, Place, User
+        from datetime import datetime, timedelta
+        
+        since_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Query database
+        query = db.query(VisitLog).filter(VisitLog.visited_at >= since_date)
+
+        # Filter by user_id
+        if user_id:
+            query = query.filter(VisitLog.user_id == user_id)
+        
+        # Filter by place_id
+        if place_id:
+            query = query.filter(VisitLog.place_id == place_id)
+        
+        # Filter by post_id
+        if post_id:
+            query = query.filter(VisitLog.post_id == post_id)
+
+        # Count total
+        total = query.count()
+
+        # Sort and Paging
+        logs = query.order_by(desc(VisitLog.visited_at))\
+                    .offset(offset)\
+                    .limit(limit)\
+                    .all()
+
+        # Format output with user info
+        result_logs = []
+        for log in logs:
+            # Get place name if available
+            place_name = None
+            if log.place_id:
+                place = db.query(Place).filter(Place.id == log.place_id).first()
+                place_name = place.name if place else None
+            
+            # Get user info if available
+            user_info = None
+            if log.user_id:
+                user = db.query(User).filter(User.id == log.user_id).first()
+                if user:
+                    user_info = {
+                        "id": user.id,
+                        "full_name": user.full_name,
+                        "email": user.email
+                    }
+            
+            result_logs.append({
+                "id": log.id,
+                "user_id": log.user_id,
+                "user": user_info,
+                "place_id": log.place_id,
+                "place_name": place_name,
+                "post_id": log.post_id,
+                "page_url": log.page_url,
+                "ip_address": log.ip_address,
+                "visited_at": log.visited_at.isoformat() if log.visited_at else None
+            })
+
+        return success_response(
+            message=f"Retrieved {len(result_logs)} visit logs",
+            data={
+                "logs": result_logs,
+                "total": total,
+                "limit": limit,
+                "offset": offset,
+                "days": days
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error reading visit logs: {str(e)}")
+        return error_response(
+            message=f"Error reading visit logs: {str(e)}",
+            error_code="LOG_READ_ERROR"
+        )
+
+
+@router.get("/analytics", summary="Get Analytics Summary")
+async def get_analytics_summary(
+    request: Request,
+    days: int = Query(30, ge=1, le=365, description="Số ngày gần đây"),
+    current_user: dict = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy thống kê tổng hợp cho admin dashboard
+
+    Yêu cầu: Admin role
+
+    Args:
+        days: Số ngày gần đây để thống kê
+        current_user: Current admin user
+
+    Returns:
+        Thống kê visits, activities, top places, active users
+    """
+    try:
+        from app.services.logging_service import get_visit_analytics, get_activity_analytics
+        
+        # Get analytics data
+        visit_analytics = get_visit_analytics(db, days)
+        activity_analytics = get_activity_analytics(db, days)
+        
+        return success_response(
+            message="Analytics retrieved successfully",
+            data={
+                "visits": visit_analytics,
+                "activities": activity_analytics
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error getting analytics: {str(e)}")
+        return error_response(
+            message=f"Error getting analytics: {str(e)}",
+            error_code="ANALYTICS_ERROR"
+        )
+
