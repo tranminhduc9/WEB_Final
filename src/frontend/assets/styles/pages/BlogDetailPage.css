@@ -59,6 +59,46 @@
   stroke: #000000;
 }
 
+/* Delete Button (for post owner) */
+.blog-detail__delete {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  background: #dc3545;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+.blog-detail__delete:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.blog-detail__delete:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.blog-detail__delete span {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 20px;
+  color: #FFFFFF;
+}
+
+.blog-detail__delete-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: #FFFFFF;
+}
+
 /* User Info */
 .blog-detail__user-info {
   display: flex;

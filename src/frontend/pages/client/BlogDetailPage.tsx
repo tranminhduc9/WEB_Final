@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
 import { Icons } from '../../config/constants';
@@ -68,6 +68,10 @@ const BlogDetailPage: React.FC = () => {
 
   // Carousel state
   const [currentImageSlide, setCurrentImageSlide] = useState(0);
+
+  // Delete post state
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
+  const navigate = useNavigate();
 
 
   // Fetch post data
@@ -225,6 +229,35 @@ const BlogDetailPage: React.FC = () => {
     }
   };
 
+  // Handle Delete Post (for post owner)
+  const handleDeletePost = async () => {
+    if (!post || !id) return;
+
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.')) {
+      return;
+    }
+
+    setIsDeletingPost(true);
+    try {
+      const response = await postService.deleteOwnPost(id);
+      if (response.success) {
+        alert('Đã xóa bài viết thành công!');
+        navigate('/blogs');
+      } else {
+        alert('Không thể xóa bài viết: ' + (response.message || 'Lỗi không xác định'));
+      }
+    } catch (error: any) {
+      console.error('Delete post error:', error);
+      if (error.response?.status === 403) {
+        alert('Bạn không có quyền xóa bài viết này');
+      } else {
+        alert('Có lỗi xảy ra khi xóa bài viết');
+      }
+    } finally {
+      setIsDeletingPost(false);
+    }
+  };
+
   // Render comment item
   const renderComment = (comment: PostCommentInDetail, isReply = false) => {
     const isCommentOwner = isAuthenticated && user && comment.user?.id === user.id;
@@ -362,14 +395,25 @@ const BlogDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Report Button */}
-          <div
-            className="blog-detail__report"
-            onClick={() => openReportModal('post', post._id)}
-          >
-            <span>Báo cáo</span>
-            <Icons.Flag className="blog-detail__report-icon" />
-          </div>
+          {/* Delete Button for Owner / Report Button for Others */}
+          {isAuthenticated && user && post.author?.id === user.id ? (
+            <button
+              className="blog-detail__delete"
+              onClick={handleDeletePost}
+              disabled={isDeletingPost}
+            >
+              <span>{isDeletingPost ? 'Đang xóa...' : 'Xóa bài viết'}</span>
+              <Icons.Trash className="blog-detail__delete-icon" />
+            </button>
+          ) : (
+            <div
+              className="blog-detail__report"
+              onClick={() => openReportModal('post', post._id)}
+            >
+              <span>Báo cáo</span>
+              <Icons.Flag className="blog-detail__report-icon" />
+            </div>
+          )}
 
           {/* User Info */}
           <Link to={`/user/${post.author?.id}`} className="blog-detail__user-info">
