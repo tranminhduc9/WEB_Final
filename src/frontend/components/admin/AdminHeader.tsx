@@ -37,6 +37,10 @@ function AdminHeader() {
 
     // Check active link
     const isActiveLink = (path: string) => {
+        // /admin và /admin/statistics đều hiển thị AdminHomePage
+        if (path === '/admin/statistics' && (location.pathname === '/admin' || location.pathname === '/admin/')) {
+            return true;
+        }
         return location.pathname === path || location.pathname.startsWith(path + '/');
     };
 
@@ -52,10 +56,10 @@ function AdminHeader() {
             {/* Navigation */}
             <nav className="admin-header__nav">
                 <Link
-                    to="/admin/sql"
-                    className={`admin-nav-link ${isActiveLink('/admin/sql') ? 'active' : ''}`}
+                    to="/admin/posts"
+                    className={`admin-nav-link ${isActiveLink('/admin/posts') ? 'active' : ''}`}
                 >
-                    Truy vấn SQL
+                    Duyệt bài
                 </Link>
                 <Link
                     to="/admin/statistics"

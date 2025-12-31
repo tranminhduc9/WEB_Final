@@ -44,10 +44,17 @@ export const authService = {
     // Lưu tokens và user info
     if (response.success && response.access_token) {
       tokenStorage.setTokens(response.access_token, response.refresh_token);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+
+      // Normalize user data với alias fields cho backward compatibility
+      const normalizedUser = {
+        ...response.user,
+        name: response.user.full_name || response.user.name,
+        avatar: response.user.avatar_url || response.user.avatar,
+      };
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizedUser));
 
       // Dispatch event để components khác biết
-      window.dispatchEvent(new CustomEvent('auth:login', { detail: response.user }));
+      window.dispatchEvent(new CustomEvent('auth:login', { detail: normalizedUser }));
     }
 
     return response;
@@ -121,8 +128,14 @@ export const authService = {
 
       // Update user in localStorage if returned
       if (response.user) {
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
-        window.dispatchEvent(new CustomEvent('user:updated', { detail: response.user }));
+        // Normalize user data với alias fields
+        const normalizedUser = {
+          ...response.user,
+          name: response.user.full_name || response.user.name,
+          avatar: response.user.avatar_url || response.user.avatar,
+        };
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizedUser));
+        window.dispatchEvent(new CustomEvent('user:updated', { detail: normalizedUser }));
       }
     }
 
@@ -137,7 +150,17 @@ export const authService = {
     if (!userStr) return null;
 
     try {
-      return JSON.parse(userStr) as User;
+      const user = JSON.parse(userStr) as User;
+
+      // Normalize: đảm bảo có cả alias fields cho backward compatibility
+      if (user && !user.avatar && user.avatar_url) {
+        user.avatar = user.avatar_url;
+      }
+      if (user && !user.name && user.full_name) {
+        user.name = user.full_name;
+      }
+
+      return user;
     } catch {
       return null;
     }
@@ -160,8 +183,14 @@ export const authService = {
       const response = await axiosClient.get<never, UserMeResponse>('/auth/me');
 
       if (response.success && response.user) {
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
-        return response.user;
+        // Normalize user data với alias fields
+        const normalizedUser = {
+          ...response.user,
+          name: response.user.full_name || response.user.name,
+          avatar: response.user.avatar_url || response.user.avatar,
+        };
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizedUser));
+        return normalizedUser;
       }
       return null;
     } catch {

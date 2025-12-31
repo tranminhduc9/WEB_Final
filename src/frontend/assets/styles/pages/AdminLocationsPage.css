@@ -124,6 +124,34 @@
     height: 66px;
 }
 
+/* Name cell with thumbnail */
+.admin-locations__name-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-locations__thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+/* Rating display */
+.admin-locations__rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.admin-locations__rating small {
+    color: #666;
+    font-size: 12px;
+}
+
+
 /* Table Column Widths */
 .admin-locations-table th:nth-child(1),
 .admin-locations-table td:nth-child(1) {

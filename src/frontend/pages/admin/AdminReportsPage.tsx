@@ -1,55 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AdminHeader from '../../components/admin/AdminHeader';
 import Footer from '../../components/client/Footer';
 import { Icons } from '../../config/constants';
 import { adminService } from '../../services';
 import type { AdminReport } from '../../types/admin';
+import type { Pagination } from '../../types/models';
 import '../../assets/styles/pages/AdminReportsPage.css';
 
-// Mock data for fallback
-const mockReports: AdminReport[] = [
-    { _id: '1', target_type: 'post', target_id: 'post-123', reason: 'Nội dung không phù hợp', reporter: { id: 1, full_name: 'nguyenvana' }, created_at: '2024-12-28' },
-    { _id: '2', target_type: 'comment', target_id: 'cmt-456', reason: 'Spam', reporter: { id: 2, full_name: 'tranthib' }, created_at: '2024-12-27' },
-    { _id: '3', target_type: 'post', target_id: 'post-789', reason: 'Thông tin sai lệch', reporter: { id: 3, full_name: 'levanc' }, created_at: '2024-12-26' },
-    { _id: '4', target_type: 'comment', target_id: 'cmt-101', reason: 'Ngôn từ thù địch', reporter: { id: 4, full_name: 'phamthid' }, created_at: '2024-12-25' },
-    { _id: '5', target_type: 'post', target_id: 'post-102', reason: 'Vi phạm bản quyền', reporter: { id: 5, full_name: 'hoangvane' }, created_at: '2024-12-24' },
-];
+// Format date helper
+const formatDate = (dateString?: string | null): string => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('vi-VN');
+};
 
 function AdminReportsPage() {
     const [reports, setReports] = useState<AdminReport[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
     const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+
     const itemsPerPage = 10;
 
-    // Fetch reports from API
-    useEffect(() => {
-        const fetchReports = async () => {
-            setIsLoading(true);
-            try {
-                const response = await adminService.getReports();
-                if (response.success && response.data && response.data.length > 0) {
-                    setReports(response.data);
-                } else {
-                    console.log('No reports from API, using mock data');
-                    setReports(mockReports);
+    // Fetch reports from API with server-side pagination
+    const fetchReports = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await adminService.getReports({
+                page: currentPage,
+                limit: itemsPerPage
+            });
+            if (response.success && response.data) {
+                setReports(response.data);
+                if (response.pagination) {
+                    setPagination(response.pagination);
                 }
-            } catch (error) {
-                console.error('Error fetching reports:', error);
-                setReports(mockReports);
-            } finally {
-                setIsLoading(false);
+            } else {
+                setReports([]);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+            setReports([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [currentPage]);
 
+    useEffect(() => {
         fetchReports();
-    }, []);
+    }, [fetchReports]);
 
-    // Pagination
-    const totalPages = Math.ceil(reports.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedReports = reports.slice(startIndex, startIndex + itemsPerPage);
+    // Use server pagination
+    const totalPages = pagination?.total_pages || 1;
+    const totalItems = pagination?.total_items || reports.length;
 
     // Handle process violation - delete post/comment
     const handleProcessViolation = async (report: AdminReport) => {
@@ -90,14 +94,26 @@ function AdminReportsPage() {
     // Check if report is resolved
     const isResolved = (reportId: string) => resolvedIds.has(reportId);
 
+    // Handle page change
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     // Generate page numbers
     const getPageNumbers = () => {
         const pages: (number | string)[] = [];
         if (totalPages <= 5) {
             for (let i = 1; i <= totalPages; i++) pages.push(i);
         } else {
-            pages.push(1, 2, 3);
-            if (totalPages > 4) pages.push('...');
+            pages.push(1);
+            if (currentPage > 3) pages.push('...');
+
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+            for (let i = start; i <= end; i++) pages.push(i);
+
+            if (currentPage < totalPages - 2) pages.push('...');
             pages.push(totalPages);
         }
         return pages;
@@ -116,7 +132,7 @@ function AdminReportsPage() {
 
                 {/* Results Count */}
                 <p className="admin-reports-count">
-                    {isLoading ? 'Đang tải...' : `Có ${reports.length} báo cáo`}
+                    {isLoading ? 'Đang tải...' : `Có ${totalItems} báo cáo (Trang ${currentPage}/${totalPages})`}
                 </p>
 
                 {/* Reports Table */}
@@ -127,26 +143,36 @@ function AdminReportsPage() {
                                 <th>ID</th>
                                 <th>Loại</th>
                                 <th>Lý do</th>
+                                <th>Chi tiết</th>
                                 <th>Người báo cáo</th>
+                                <th>Ngày tạo</th>
                                 <th colSpan={2}>Chức năng</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="admin-reports-loading">Đang tải...</td>
+                                    <td colSpan={8} className="admin-reports-loading">Đang tải...</td>
                                 </tr>
-                            ) : paginatedReports.length === 0 ? (
+                            ) : reports.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="admin-reports-empty">Không có báo cáo nào</td>
+                                    <td colSpan={8} className="admin-reports-empty">Không có báo cáo nào</td>
                                 </tr>
                             ) : (
-                                paginatedReports.map((report) => (
+                                reports.map((report) => (
                                     <tr key={report._id} className={isResolved(report._id) ? 'resolved' : ''}>
                                         <td>{report._id.slice(-6)}</td>
-                                        <td>{report.target_type === 'post' ? 'Bài viết' : 'Comment'}</td>
+                                        <td>
+                                            <span className={`admin-reports__type admin-reports__type--${report.target_type}`}>
+                                                {report.target_type === 'post' ? 'Bài viết' : 'Comment'}
+                                            </span>
+                                        </td>
                                         <td>{report.reason}</td>
+                                        <td className="admin-reports__description">
+                                            {report.description || <em className="text-muted">Không có mô tả</em>}
+                                        </td>
                                         <td>{report.reporter?.full_name || 'N/A'}</td>
+                                        <td>{formatDate(report.created_at)}</td>
                                         <td>
                                             <button
                                                 className="admin-reports-action-btn"
@@ -154,7 +180,7 @@ function AdminReportsPage() {
                                                 disabled={isResolved(report._id) || actionLoading === report._id}
                                             >
                                                 <Icons.Ban className="admin-reports-action-icon" />
-                                                {actionLoading === report._id ? 'Đang xử lý...' : 'Xử lý vi phạm'}
+                                                {actionLoading === report._id ? '...' : 'Xử lý'}
                                             </button>
                                         </td>
                                         <td>
@@ -179,10 +205,17 @@ function AdminReportsPage() {
                     <div className="admin-reports-pagination">
                         <button
                             className="admin-reports-pagination__nav"
-                            onClick={() => setCurrentPage(1)}
+                            onClick={() => handlePageChange(1)}
                             disabled={currentPage === 1}
                         >
                             «
+                        </button>
+                        <button
+                            className="admin-reports-pagination__nav"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            ‹
                         </button>
 
                         {getPageNumbers().map((page, index) => (
@@ -190,7 +223,7 @@ function AdminReportsPage() {
                                 key={index}
                                 className={`admin-reports-pagination__page ${page === currentPage ? 'active' : ''
                                     } ${page === '...' ? 'ellipsis' : ''}`}
-                                onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                                onClick={() => typeof page === 'number' && handlePageChange(page)}
                                 disabled={page === '...'}
                             >
                                 {page}
@@ -199,7 +232,14 @@ function AdminReportsPage() {
 
                         <button
                             className="admin-reports-pagination__nav"
-                            onClick={() => setCurrentPage(totalPages)}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            ›
+                        </button>
+                        <button
+                            className="admin-reports-pagination__nav"
+                            onClick={() => handlePageChange(totalPages)}
                             disabled={currentPage === totalPages}
                         >
                             »
@@ -214,4 +254,3 @@ function AdminReportsPage() {
 }
 
 export default AdminReportsPage;
-

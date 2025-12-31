@@ -26,8 +26,9 @@ import AdminHomePage from './pages/admin/AdminHomePage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminLocationsPage from './pages/admin/AdminLocationsPage'
 import AdminAddPlacePage from './pages/admin/AdminAddPlacePage'
+import AdminEditPlacePage from './pages/admin/AdminEditPlacePage'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
-import AdminSQLPage from './pages/admin/AdminSQLPage'
+import AdminPostsPage from './pages/admin/AdminPostsPage'
 
 // Components
 import Chatbot from './components/client/Chatbot'
@@ -154,6 +155,14 @@ const router = createBrowserRouter([
     )
   },
   {
+    path: '/admin/locations/edit/:id',
+    element: (
+      <AdminRoute>
+        <AdminEditPlacePage />
+      </AdminRoute>
+    )
+  },
+  {
     path: '/admin/reports',
     element: (
       <AdminRoute>
@@ -162,10 +171,10 @@ const router = createBrowserRouter([
     )
   },
   {
-    path: '/admin/sql',
+    path: '/admin/posts',
     element: (
       <AdminRoute>
-        <AdminSQLPage />
+        <AdminPostsPage />
       </AdminRoute>
     )
   },

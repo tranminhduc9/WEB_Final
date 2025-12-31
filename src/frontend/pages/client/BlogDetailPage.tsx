@@ -16,7 +16,14 @@ const defaultAvatar = '/duckk.jpg';
 // Format time ago helper
 const formatTimeAgo = (dateStr?: string): string => {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+
+  // Backend returns UTC time without 'Z' suffix, add it if missing
+  let normalizedDateStr = dateStr;
+  if (!dateStr.endsWith('Z') && !dateStr.includes('+') && !dateStr.includes('-', 10)) {
+    normalizedDateStr = dateStr + 'Z';
+  }
+
+  const date = new Date(normalizedDateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -62,60 +69,6 @@ const BlogDetailPage: React.FC = () => {
   // Carousel state
   const [currentImageSlide, setCurrentImageSlide] = useState(0);
 
-  // Mock data for testing
-  const mockPost: PostDetail = {
-    _id: id || 'mock-123',
-    author: {
-      id: 1,
-      full_name: 'Nguyễn Văn A',
-      avatar_url: '/duckk.jpg',
-      role_id: 3
-    },
-    content: `Hồ Hoàn Kiếm (Hán-Nôm: 湖還劍) còn được gọi là Hồ Gươm là một hồ nước ngọt tự nhiên nằm ở phường Hoàn Kiếm, trung tâm thành phố Hà Nội. Hồ có diện tích khoảng 12 ha. Trước kia, hồ còn có các tên gọi là hồ Lục Thủy (vì nước có màu xanh quanh năm), hồ Thủy Quân (dùng để duyệt thủy binh).
-
-Đây là một trong những địa điểm du lịch nổi tiếng nhất Hà Nội, thu hút hàng triệu du khách mỗi năm. Bạn có thể đi dạo quanh hồ vào buổi sáng sớm hoặc chiều tối để ngắm cảnh đẹp nhất.`,
-    title: 'Review Hồ Gươm - Địa điểm không thể bỏ lỡ khi đến Hà Nội',
-    rating: 4.5,
-    images: [
-      'https://images.unsplash.com/photo-1599708153386-62bf3f035e78?w=600&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&h=400&fit=crop'
-    ],
-    likes_count: 128,
-    comments_count: 24,
-    is_liked: false,
-    related_place: {
-      id: 1,
-      name: 'Hồ Gươm - Quận Hoàn Kiếm',
-      district_id: 1,
-      place_type_id: 1,
-      rating_average: 4.8,
-      price_min: 0,
-      price_max: 0,
-      main_image_url: 'https://images.unsplash.com/photo-1599708153386-62bf3f035e78?w=300'
-    },
-    comments: [
-      {
-        _id: 'cmt-1',
-        user: { id: 2, full_name: 'Trần Văn B', avatar_url: '/duckk.jpg', role_id: 3 },
-        content: 'Bài viết rất hay và chi tiết! Mình cũng rất thích đến Hồ Gươm vào buổi tối, không khí rất trong lành.',
-        created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        _id: 'cmt-2',
-        user: { id: 3, full_name: 'Lê Thị C', avatar_url: '/duckk.jpg', role_id: 3 },
-        content: 'Cảm ơn bạn đã chia sẻ! Mình đang plan trip đến Hà Nội tháng tới, chắc chắn sẽ ghé thăm.',
-        parent_id: 'cmt-1',
-        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        _id: 'cmt-3',
-        user: { id: 4, full_name: 'Phạm Văn D', avatar_url: '/duckk.jpg', role_id: 3 },
-        content: 'Hồ Gươm đẹp nhất vào mùa thu, lá vàng rơi rất thơ mộng!',
-        created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
-      }
-    ],
-    created_at: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString()
-  };
 
   // Fetch post data
   const fetchPost = useCallback(async () => {
@@ -129,18 +82,11 @@ const BlogDetailPage: React.FC = () => {
         setIsLiked(response.data.is_liked || false);
         setLikesCount(response.data.likes_count || 0);
       } else {
-        // Fallback to mock data
-        console.log('API returned empty, using mock data');
-        setPost(mockPost);
-        setIsLiked(mockPost.is_liked || false);
-        setLikesCount(mockPost.likes_count || 0);
+        setError('Không tìm thấy bài viết');
       }
     } catch (err) {
-      console.error('Error fetching post, using mock data:', err);
-      // Fallback to mock data for testing
-      setPost(mockPost);
-      setIsLiked(mockPost.is_liked || false);
-      setLikesCount(mockPost.likes_count || 0);
+      console.error('Error fetching post:', err);
+      setError('Không thể tải bài viết');
     } finally {
       setIsLoading(false);
     }

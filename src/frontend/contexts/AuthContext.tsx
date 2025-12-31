@@ -125,9 +125,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const response = await authService.login(credentials);
-      // authService.login trả về AuthResponse, extract user từ đó
+      // authService.login đã normalize và lưu vào localStorage
+      // Lấy lại normalized user để đảm bảo có avatar alias
       if (response.user) {
-        setUser(response.user);
+        const normalizedUser = authService.getCurrentUser();
+        setUser(normalizedUser || response.user);
       }
     } catch (err) {
       // Xử lý error từ axios interceptor (ApiErrorResponse object)
@@ -169,7 +171,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         message = err.message;
       }
       setError(message);
-      // Don't re-throw - let the component handle the error through context.error
+      // Re-throw để component biết đăng ký thất bại
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }

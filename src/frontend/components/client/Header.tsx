@@ -91,11 +91,11 @@ function Header() {
             >
               <div className="user-avatar-wrapper">
                 <div className="user-avatar">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} />
+                  {(user.avatar || user.avatar_url) ? (
+                    <img src={user.avatar || user.avatar_url || ''} alt={user.name || user.full_name} />
                   ) : (
                     <div className="avatar-placeholder">
-                      {user.name?.[0]?.toUpperCase() || 'U'}
+                      {(user.name || user.full_name)?.[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>
@@ -126,13 +126,16 @@ function Header() {
                   Hồ sơ
                 </Link>
                 {user.role === 'admin' && (
-                  <Link
-                    to="/admin"
-                    className="user-menu-item"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    Quản trị
-                  </Link>
+                  <>
+                    <div className="user-menu-divider"></div>
+                    <Link
+                      to="/admin"
+                      className="user-menu-item"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      Quản trị
+                    </Link>
+                  </>
                 )}
                 <div className="user-menu-divider"></div>
                 <button

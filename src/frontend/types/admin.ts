@@ -99,6 +99,9 @@ export interface PlaceCreateRequest {
   images?: string[];
 }
 
+// PlaceUpdateRequest is same as PlaceCreateRequest
+export type PlaceUpdateRequest = PlaceCreateRequest;
+
 // ============================
 // POST MANAGEMENT
 // ============================
@@ -111,4 +114,22 @@ export interface AdminPostListParams {
 export interface UpdatePostStatusRequest {
   status: 'published' | 'rejected';
   reason?: string;
+}
+
+// ============================
+// PLACE LIST PARAMS
+// ============================
+
+export interface AdminPlaceListParams {
+  page?: number;
+  limit?: number;
+}
+
+// ============================
+// REPORT LIST PARAMS
+// ============================
+
+export interface AdminReportListParams {
+  page?: number;
+  limit?: number;
 }

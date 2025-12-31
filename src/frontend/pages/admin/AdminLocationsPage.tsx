@@ -1,24 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../../components/admin/AdminHeader';
 import Footer from '../../components/client/Footer';
 import { Icons } from '../../config/constants';
 import { adminService } from '../../services';
-import type { PlaceDetail } from '../../types/models';
+import type { PlaceDetail, Pagination } from '../../types/models';
 import '../../assets/styles/pages/AdminLocationsPage.css';
 
-// Mock data fallback
-const mockLocations = [
-    { id: 1, name: 'Hồ Hoàn Kiếm', rating_average: 4.5, latitude: 21.0285, longitude: 105.8542 },
-    { id: 2, name: 'Văn Miếu - Quốc Tử Giám', rating_average: 4.7, latitude: 21.0267, longitude: 105.8355 },
-    { id: 3, name: 'Lăng Chủ Tịch Hồ Chí Minh', rating_average: 4.8, latitude: 21.0369, longitude: 105.8344 },
-    { id: 4, name: 'Chùa Một Cột', rating_average: 4.3, latitude: 21.0359, longitude: 105.8334 },
-    { id: 5, name: 'Hồ Tây', rating_average: 4.2, latitude: 21.0538, longitude: 105.8194 },
-];
+// Format date helper
+const formatDate = (dateString?: string | null): string => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('vi-VN');
+};
+
+// Format price helper
+const formatPrice = (min?: number | null, max?: number | null): string => {
+    if (!min && !max) return 'Miễn phí';
+    if (min && max) return `${min.toLocaleString('vi-VN')} - ${max.toLocaleString('vi-VN')}đ`;
+    if (min) return `Từ ${min.toLocaleString('vi-VN')}đ`;
+    if (max) return `Đến ${max.toLocaleString('vi-VN')}đ`;
+    return '-';
+};
 
 function AdminLocationsPage() {
     const navigate = useNavigate();
     const [locations, setLocations] = useState<PlaceDetail[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
@@ -26,43 +33,50 @@ function AdminLocationsPage() {
 
     const itemsPerPage = 10;
 
-    // Fetch locations from API
-    useEffect(() => {
-        const fetchLocations = async () => {
-            setIsLoading(true);
-            try {
-                const response = await adminService.getPlaces();
-                if (response.success && response.data && response.data.length > 0) {
-                    setLocations(response.data);
-                } else {
-                    console.log('No places from API, using mock data');
-                    setLocations(mockLocations as any);
+    // Fetch locations from API with server-side pagination
+    const fetchLocations = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await adminService.getPlaces({
+                page: currentPage,
+                limit: itemsPerPage
+            });
+            if (response.success && response.data) {
+                setLocations(response.data);
+                if (response.pagination) {
+                    setPagination(response.pagination);
                 }
-            } catch (error) {
-                console.error('Error fetching places:', error);
-                setLocations(mockLocations as any);
-            } finally {
-                setIsLoading(false);
+            } else {
+                setLocations([]);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching places:', error);
+            setLocations([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [currentPage]);
 
+    useEffect(() => {
         fetchLocations();
-    }, []);
+    }, [fetchLocations]);
 
-    // Filter locations based on search
-    const filteredLocations = locations.filter(location =>
-        location.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Client-side search (only within current page data)
+    const filteredLocations = searchQuery
+        ? locations.filter(location =>
+            location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            location.district_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            location.address?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : locations;
 
-    // Pagination
-    const totalPages = Math.ceil(filteredLocations.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedLocations = filteredLocations.slice(startIndex, startIndex + itemsPerPage);
+    // Use server pagination
+    const totalPages = pagination?.total_pages || 1;
+    const totalItems = pagination?.total_items || locations.length;
 
     // Handle edit
     const handleEdit = (locationId: number) => {
-        console.log('Edit location:', locationId);
-        alert('Chức năng chỉnh sửa đang được phát triển');
+        navigate(`/admin/locations/edit/${locationId}`);
     };
 
     // Handle delete
@@ -73,7 +87,8 @@ function AdminLocationsPage() {
         try {
             const response = await adminService.deletePlace(locationId);
             if (response.success) {
-                setLocations(prev => prev.filter(loc => loc.id !== locationId));
+                // Refresh list after delete
+                fetchLocations();
                 alert('Đã xóa địa điểm thành công!');
             } else {
                 alert('Không thể xóa địa điểm');
@@ -86,14 +101,26 @@ function AdminLocationsPage() {
         }
     };
 
+    // Handle page change
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     // Generate page numbers
     const getPageNumbers = () => {
         const pages: (number | string)[] = [];
         if (totalPages <= 5) {
             for (let i = 1; i <= totalPages; i++) pages.push(i);
         } else {
-            pages.push(1, 2, 3);
-            if (totalPages > 4) pages.push('...');
+            pages.push(1);
+            if (currentPage > 3) pages.push('...');
+
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+            for (let i = start; i <= end; i++) pages.push(i);
+
+            if (currentPage < totalPages - 2) pages.push('...');
             pages.push(totalPages);
         }
         return pages;
@@ -114,7 +141,7 @@ function AdminLocationsPage() {
                 <div className="admin-locations-search">
                     <input
                         type="text"
-                        placeholder="Tìm kiếm Địa điểm"
+                        placeholder="Tìm kiếm trong trang hiện tại..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="admin-locations-search__input"
@@ -125,7 +152,7 @@ function AdminLocationsPage() {
                 {/* Results Count and Add Button */}
                 <div className="admin-locations-toolbar">
                     <p className="admin-locations-count">
-                        {isLoading ? 'Đang tải...' : `Có ${filteredLocations.length} kết quả`}
+                        {isLoading ? 'Đang tải...' : `Có ${totalItems} địa điểm (Trang ${currentPage}/${totalPages})`}
                     </p>
                     <button
                         className="admin-locations-add-btn"
@@ -140,36 +167,56 @@ function AdminLocationsPage() {
                     <table className="admin-locations-table">
                         <thead>
                             <tr>
-                                <th>place_id</th>
-                                <th>place_name</th>
-                                <th>rating</th>
-                                <th>long/lat</th>
+                                <th>ID</th>
+                                <th>Tên địa điểm</th>
+                                <th>Quận/Huyện</th>
+                                <th>Đánh giá</th>
+                                <th>Giá</th>
+                                <th>Ngày tạo</th>
                                 <th colSpan={2}>Chức năng</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="admin-locations-loading">Đang tải...</td>
+                                    <td colSpan={8} className="admin-locations-loading">Đang tải...</td>
                                 </tr>
-                            ) : paginatedLocations.length === 0 ? (
+                            ) : filteredLocations.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="admin-locations-empty">Không có địa điểm nào</td>
+                                    <td colSpan={8} className="admin-locations-empty">Không có địa điểm nào</td>
                                 </tr>
                             ) : (
-                                paginatedLocations.map((location) => (
+                                filteredLocations.map((location) => (
                                     <tr key={location.id}>
                                         <td>{location.id}</td>
-                                        <td>{location.name}</td>
-                                        <td>{location.rating_average?.toFixed(1) || 'N/A'}</td>
-                                        <td>{location.longitude?.toFixed(4)}/{location.latitude?.toFixed(4)}</td>
+                                        <td>
+                                            <div className="admin-locations__name-cell">
+                                                {location.main_image_url && (
+                                                    <img
+                                                        src={location.main_image_url}
+                                                        alt={location.name}
+                                                        className="admin-locations__thumbnail"
+                                                    />
+                                                )}
+                                                <span>{location.name}</span>
+                                            </div>
+                                        </td>
+                                        <td>{location.district_name || '-'}</td>
+                                        <td>
+                                            <span className="admin-locations__rating">
+                                                ⭐ {location.rating_average?.toFixed(1) || '0'}
+                                                <small>({location.rating_count || 0})</small>
+                                            </span>
+                                        </td>
+                                        <td>{formatPrice(location.price_min, location.price_max)}</td>
+                                        <td>{formatDate(location.created_at)}</td>
                                         <td>
                                             <button
                                                 className="admin-locations-action-btn"
                                                 onClick={() => handleEdit(location.id)}
                                             >
                                                 <Icons.Edit className="admin-locations-action-icon" />
-                                                Chỉnh sửa
+                                                Sửa
                                             </button>
                                         </td>
                                         <td>
@@ -179,7 +226,7 @@ function AdminLocationsPage() {
                                                 disabled={actionLoading === location.id}
                                             >
                                                 <Icons.Trash className="admin-locations-action-icon" />
-                                                {actionLoading === location.id ? 'Đang xóa...' : 'Xóa'}
+                                                {actionLoading === location.id ? '...' : 'Xóa'}
                                             </button>
                                         </td>
                                     </tr>
@@ -194,10 +241,17 @@ function AdminLocationsPage() {
                     <div className="admin-locations-pagination">
                         <button
                             className="admin-locations-pagination__nav"
-                            onClick={() => setCurrentPage(1)}
+                            onClick={() => handlePageChange(1)}
                             disabled={currentPage === 1}
                         >
                             «
+                        </button>
+                        <button
+                            className="admin-locations-pagination__nav"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            ‹
                         </button>
 
                         {getPageNumbers().map((page, index) => (
@@ -205,7 +259,7 @@ function AdminLocationsPage() {
                                 key={index}
                                 className={`admin-locations-pagination__page ${page === currentPage ? 'active' : ''
                                     } ${page === '...' ? 'ellipsis' : ''}`}
-                                onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                                onClick={() => typeof page === 'number' && handlePageChange(page)}
                                 disabled={page === '...'}
                             >
                                 {page}
@@ -214,7 +268,14 @@ function AdminLocationsPage() {
 
                         <button
                             className="admin-locations-pagination__nav"
-                            onClick={() => setCurrentPage(totalPages)}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            ›
+                        </button>
+                        <button
+                            className="admin-locations-pagination__nav"
+                            onClick={() => handlePageChange(totalPages)}
                             disabled={currentPage === totalPages}
                         >
                             »

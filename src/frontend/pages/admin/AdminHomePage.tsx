@@ -28,7 +28,7 @@ const mockFeaturedLocations = [
         priceMin: 0,
         priceMax: 0,
         rating: 4.5,
-        reviewCount: '360',
+        reviewCount: 360,
     },
     {
         id: '2',
@@ -38,7 +38,7 @@ const mockFeaturedLocations = [
         priceMin: 30000,
         priceMax: 50000,
         rating: 4.7,
-        reviewCount: '280',
+        reviewCount: 280,
     },
     {
         id: '3',
@@ -48,7 +48,7 @@ const mockFeaturedLocations = [
         priceMin: 0,
         priceMax: 0,
         rating: 4.9,
-        reviewCount: '520',
+        reviewCount: 520,
     },
 ];
 
@@ -133,7 +133,7 @@ function AdminHomePage() {
             priceMin: place.price_min || 0,
             priceMax: place.price_max || 0,
             rating: place.rating_average || 0,
-            reviewCount: String(place.rating_count || 0),
+            reviewCount: place.rating_count || 0,
         }))
         : mockFeaturedLocations;
 

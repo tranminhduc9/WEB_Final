@@ -26,42 +26,6 @@ const formatTimeAgo = (dateStr?: string): string => {
   return 'Vừa xong';
 };
 
-// Mock data for fallback
-const mockFavoritePlaces: PlaceCompact[] = [
-  {
-    id: 1,
-    name: 'Hồ Gươm - Quận Hoàn Kiếm',
-    district_id: 1,
-    place_type_id: 1,
-    rating_average: 4.5,
-    rating_count: 3600,
-    price_min: 0,
-    price_max: 0,
-    main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg'
-  },
-  {
-    id: 2,
-    name: 'Văn Miếu - Quốc Tử Giám',
-    district_id: 2,
-    place_type_id: 1,
-    rating_average: 4.7,
-    rating_count: 2800,
-    price_min: 30000,
-    price_max: 30000,
-    main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg'
-  },
-  {
-    id: 3,
-    name: 'Lăng Bác',
-    district_id: 3,
-    place_type_id: 1,
-    rating_average: 4.8,
-    rating_count: 5000,
-    price_min: 0,
-    price_max: 0,
-    main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg'
-  }
-];
 
 const UserProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -95,17 +59,7 @@ const UserProfilePage: React.FC = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
-  // Mock profile for fallback
-  const mockProfile: UserDetailResponse = {
-    id: parseInt(id || '1'),
-    email: 'user@example.com',
-    full_name: currentUser?.name || 'Người dùng',
-    avatar_url: currentUser?.avatar || null,
-    bio: 'Yêu thích du lịch và khám phá Hà Nội',
-    role_id: 3,
-    reputation_score: 256,
-    recent_posts: []
-  };
+
 
   // Fetch profile data
   const fetchProfile = useCallback(async () => {
@@ -136,20 +90,13 @@ const UserProfilePage: React.FC = () => {
       }
 
       // Set favorite places from API response
-      if (profileData.recent_favorites && profileData.recent_favorites.length > 0) {
+      if (profileData.recent_favorites) {
         setFavoritePlaces(profileData.recent_favorites);
-      } else {
-        // Fallback to mock data if no favorites
-        setFavoritePlaces(mockFavoritePlaces);
       }
 
     } catch (err) {
-      console.error('Error fetching profile, using mock data:', err);
-      // Fallback to mock data
-      setProfile(mockProfile);
-      setFavoritePlaces(mockFavoritePlaces);
-      setEditName(mockProfile.full_name || '');
-      setEditBio(mockProfile.bio || '');
+      console.error('Error fetching profile:', err);
+      setError('Không thể tải thông tin người dùng');
     } finally {
       setIsLoading(false);
     }

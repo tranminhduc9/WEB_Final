@@ -30,6 +30,16 @@ export interface ToggleLikeResponse {
     is_liked: boolean;
 }
 
+// Upload Response interface
+export interface UploadResponse {
+    success: boolean;
+    message?: string;
+    urls: string[];           // Full URLs for frontend display
+    relative_paths?: string[]; // Relative paths for database storage
+    filenames?: string[];
+    errors?: string[];
+}
+
 // ============================
 // POST SERVICE
 // ============================
@@ -83,6 +93,29 @@ export const postService = {
         const response = await axiosClient.post<CreatePostRequest, BaseResponse>(
             '/posts',
             data
+        );
+        return response;
+    },
+
+    /**
+     * Upload ảnh cho bài viết
+     * POST /upload?upload_type=post&entity_id=temp
+     * Returns: { success, urls, relative_paths, filenames, errors }
+     */
+    uploadPostImages: async (files: File[]): Promise<UploadResponse> => {
+        const formData = new FormData();
+        files.forEach((file) => {
+            formData.append('files', file);
+        });
+
+        const response = await axiosClient.post<never, UploadResponse>(
+            '/upload?upload_type=post&entity_id=temp',
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
         );
         return response;
     },

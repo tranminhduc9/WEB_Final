@@ -71,6 +71,7 @@ export default function Register() {
         full_name: name.trim(),
       });
 
+      // Nếu không có error (không throw) thì đăng ký thành công
       setSuccess(true);
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -79,7 +80,7 @@ export default function Register() {
         });
       }, 2000);
     } catch (err) {
-      // Error đã được xử lý trong AuthContext
+      // Error đã được xử lý trong AuthContext và throw ra
       console.error('Register failed:', err);
     } finally {
       setIsSubmitting(false);
