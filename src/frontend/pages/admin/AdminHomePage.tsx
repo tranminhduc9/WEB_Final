@@ -103,22 +103,22 @@ function AdminHomePage() {
     const overallStats = stats ? [
         {
             label: 'Số người hoạt động',
-            value: formatNumber(stats.total_users),
-            change: `Hôm nay: +${stats.new_users_today}`
+            value: formatNumber(stats.total_users ?? 0),
+            change: `Hôm nay: +${stats.new_users_today ?? 0}`
         },
         {
             label: 'Số bài viết',
-            value: formatNumber(stats.total_posts),
-            change: `Hôm nay: +${stats.new_posts_today}`
+            value: formatNumber(stats.total_posts ?? 0),
+            change: `Hôm nay: +${stats.new_posts_today ?? 0}`
         },
         {
             label: 'Chờ duyệt',
-            value: stats.pending_posts.toString(),
+            value: (stats.pending_posts ?? 0).toString(),
             change: 'Bài viết cần xử lý'
         },
         {
             label: 'Báo cáo',
-            value: stats.total_reports.toString(),
+            value: (stats.total_reports ?? 0).toString(),
             change: 'Cần xem xét'
         },
     ] : [];
@@ -127,13 +127,13 @@ function AdminHomePage() {
     const displayLocations = featuredPlaces.length > 0
         ? featuredPlaces.map(place => ({
             id: String(place.id),
-            imageSrc: place.main_image_url || 'https://via.placeholder.com/400x300',
-            title: place.name,
+            imageSrc: place.main_image_url || 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600',
+            title: place.name || 'Địa điểm chưa có tên',
             address: place.address || place.district_name || 'Hà Nội',
-            priceMin: place.price_min || 0,
-            priceMax: place.price_max || 0,
-            rating: place.rating_average || 0,
-            reviewCount: place.rating_count || 0,
+            priceMin: place.price_min ?? 0,
+            priceMax: place.price_max ?? 0,
+            rating: place.rating_average ?? 0,
+            reviewCount: place.rating_count ?? 0,
         }))
         : mockFeaturedLocations;
 

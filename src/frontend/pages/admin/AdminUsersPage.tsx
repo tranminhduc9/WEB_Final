@@ -244,35 +244,41 @@ function AdminUsersPage() {
                                         </td>
                                         <td>{user.reputation_score}</td>
                                         <td>
-                                            {user.is_active ? (
-                                                <button
-                                                    className="admin-users-action-btn"
-                                                    onClick={() => setBanModal({ open: true, userId: user.id, userName: user.full_name })}
-                                                    disabled={actionLoading === user.id}
-                                                >
-                                                    <Icons.Ban className="admin-users-action-icon" />
-                                                    Ban
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    className="admin-users-action-btn admin-users-action-btn--unban"
-                                                    onClick={() => handleUnban(user.id)}
-                                                    disabled={actionLoading === user.id}
-                                                >
-                                                    <Icons.Ban className="admin-users-action-icon" />
-                                                    Unban
-                                                </button>
+                                            {/* Ẩn nút Ban/Unban nếu user là Admin (role_id = 1) */}
+                                            {user.role_id !== 1 && (
+                                                user.is_active ? (
+                                                    <button
+                                                        className="admin-users-action-btn"
+                                                        onClick={() => setBanModal({ open: true, userId: user.id, userName: user.full_name })}
+                                                        disabled={actionLoading === user.id}
+                                                    >
+                                                        <Icons.Ban className="admin-users-action-icon" />
+                                                        Ban
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        className="admin-users-action-btn admin-users-action-btn--unban"
+                                                        onClick={() => handleUnban(user.id)}
+                                                        disabled={actionLoading === user.id}
+                                                    >
+                                                        <Icons.Ban className="admin-users-action-icon" />
+                                                        Unban
+                                                    </button>
+                                                )
                                             )}
                                         </td>
                                         <td>
-                                            <button
-                                                className="admin-users-action-btn admin-users-action-btn--delete"
-                                                onClick={() => handleDelete(user.id)}
-                                                disabled={actionLoading === user.id}
-                                            >
-                                                <Icons.Ban className="admin-users-action-icon" />
-                                                Xóa
-                                            </button>
+                                            {/* Ẩn nút Xóa nếu user là Admin (role_id = 1) */}
+                                            {user.role_id !== 1 && (
+                                                <button
+                                                    className="admin-users-action-btn admin-users-action-btn--delete"
+                                                    onClick={() => handleDelete(user.id)}
+                                                    disabled={actionLoading === user.id}
+                                                >
+                                                    <Icons.Ban className="admin-users-action-icon" />
+                                                    Xóa
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
