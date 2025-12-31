@@ -27,9 +27,10 @@
     display: none;
 }
 
-/* Card Container - từ Figma Rectangle 1532578303 */
+/* Card Container - sử dụng Flexbox thay vì absolute positioning */
 .place-card {
-    position: relative;
+    display: flex;
+    flex-direction: column;
     width: 350px;
     height: 512px;
     flex: 0 0 auto;
@@ -44,42 +45,42 @@
     transform: translateY(-4px);
 }
 
-/* Image - từ Figma Rectangle 1532578300 */
+/* Image Container */
 .place-card img {
-    position: absolute;
-    left: 0;
-    top: 0;
     width: 100%;
     height: 73%;
-    /* từ top 0 đến bottom 27% */
+    min-height: 73%;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+}
+
+/* Placeholder khi không có ảnh */
+.place-card img[src=""],
+.place-card img:not([src]) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 /* Info Container */
 .place-info {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    top: 73%;
-    bottom: 0;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 8px 0;
+    padding: 10px 12px;
 }
 
 .place-info-top {
     flex: 0 0 auto;
 }
 
-/* Title - từ Figma "Hồ Gươm - Quận Hoàn Kiếm" - top 75.59% */
+/* Title */
 .place-info h3 {
     margin: 0 0 4px 0;
     font-family: 'Roboto', sans-serif;
     font-style: normal;
     font-weight: 700;
-    font-size: 24px;
-    line-height: 28px;
+    font-size: 22px;
+    line-height: 26px;
     color: #000000;
     /* Giới hạn 1 dòng */
     display: -webkit-box;
@@ -89,7 +90,13 @@
     overflow: hidden;
 }
 
-/* Address - từ Figma "Phường Hoàn Kiếm - Thành phố Hà Nội" - top 81.84% */
+/* Fallback khi title trống */
+.place-info h3:empty::before {
+    content: "Địa điểm chưa có tên";
+    color: #999;
+}
+
+/* Address */
 .place-address {
     display: flex;
     align-items: center;
@@ -98,8 +105,8 @@
     font-family: 'Roboto', sans-serif;
     font-style: normal;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 19px;
+    font-size: 14px;
+    line-height: 18px;
     color: #000000;
 }
 
@@ -117,8 +124,6 @@
     display: flex;
     align-items: center;
     transform: scale(0.85);
-    margin-top: 2px;
-    /* Đẩy icon xuống để căn ngang với text */
 }
 
 .place-address-icon svg {
@@ -135,7 +140,7 @@
     margin-top: auto;
 }
 
-/* Price Display - từ Figma Group 38, Rectangle 1532578320 - top 87.3% */
+/* Price Display */
 .place-price {
     display: inline-block;
 }
@@ -148,19 +153,19 @@
     font-family: 'Inter', sans-serif;
     font-style: normal;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 19px;
+    font-size: 14px;
+    line-height: 18px;
     text-align: center;
     color: rgba(62, 60, 60, 0.8);
 }
 
-/* Rating - từ Figma "⭐ 4,5 (360) ~ 3,6K + reviews" - top 93.36% */
+/* Rating */
 .place-rating {
     font-family: 'Roboto', sans-serif;
     font-style: normal;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 19px;
+    font-size: 14px;
+    line-height: 18px;
 }
 
 .rating-value {
