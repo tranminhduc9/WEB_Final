@@ -287,8 +287,10 @@ class AuthService:
                 "user": {
                     "id": user.id,  # Swagger spec: integer, không phải string
                     "full_name": user.full_name,
+                    "email": user.email,  # Required for frontend User type
                     "avatar_url": get_avatar_url(user.avatar_url),
-                    "role_id": user.role_id
+                    "role_id": user.role_id,
+                    "role": user.role_name  # Frontend checks this field first
                 }
             }, user.to_dict(include_sensitive=True)
 
@@ -408,8 +410,10 @@ class AuthService:
                 "user": {
                     "id": user.id,
                     "full_name": user.full_name,
+                    "email": user.email,  # Required for frontend User type
                     "avatar_url": get_avatar_url(user.avatar_url),
-                    "role_id": user.role_id
+                    "role_id": user.role_id,
+                    "role": user.role_name  # Frontend checks this field first
                 }
             }
 
@@ -498,8 +502,10 @@ class AuthService:
                 "user": {
                     "id": user.id,  # Swagger spec: integer
                     "full_name": user.full_name,
+                    "email": user.email,  # Required for frontend User type
                     "avatar_url": get_avatar_url(user.avatar_url),
-                    "role_id": user.role_id
+                    "role_id": user.role_id,
+                    "role": user.role_name  # Frontend checks this field first
                 }
             }, user.to_dict()
 

@@ -320,6 +320,36 @@ class MongoDBClient:
 
         return await coll.count_documents(query or {})
 
+    async def aggregate(
+        self,
+        collection: str,
+        pipeline: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Run aggregation pipeline
+
+        Args:
+            collection: Tên collection
+            pipeline: Aggregation pipeline stages
+
+        Returns:
+            List: Aggregation results
+        """
+        if not self.is_connected:
+            raise Exception("MongoDB not connected")
+
+        collection_name = self.config.COLLECTIONS.get(collection, collection)
+        coll = self.db[collection_name]
+
+        results = []
+        async for doc in coll.aggregate(pipeline):
+            if "_id" in doc and hasattr(doc["_id"], '__str__'):
+                # Don't convert _id if it's used as a grouping key
+                pass
+            results.append(doc)
+
+        return results
+
     # Specialized methods for posts
     async def create_post(self, post_data: Dict[str, Any]) -> str:
         """
@@ -343,7 +373,21 @@ class MongoDBClient:
         Returns:
             Dict: Post data
         """
-        return await self.find_one("posts", {"_id": post_id})
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        # Try ObjectId first
+        post = None
+        try:
+            post = await self.find_one("posts", {"_id": ObjectId(post_id)})
+        except InvalidId:
+            pass
+        
+        # Fall back to string _id
+        if not post:
+            post = await self.find_one("posts", {"_id": post_id})
+        
+        return post
 
     async def get_posts(
         self,
@@ -453,8 +497,19 @@ class MongoDBClient:
         Returns:
             str: Reply comment ID
         """
-        # Get parent comment to extract post_id
-        parent = await self.find_one("post_comments", {"_id": parent_id})
+        # Get parent comment to extract post_id - handle both ObjectId and string _id
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        parent = None
+        try:
+            parent = await self.find_one("post_comments", {"_id": ObjectId(parent_id)})
+        except InvalidId:
+            pass
+        
+        if not parent:
+            parent = await self.find_one("post_comments", {"_id": parent_id})
+        
         if not parent:
             raise Exception("Parent comment not found")
 
