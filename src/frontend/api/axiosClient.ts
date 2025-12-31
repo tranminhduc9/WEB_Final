@@ -167,6 +167,24 @@ axiosClient.interceptors.response.use(
       }
     }
 
+    // Thêm xử lý 429 Too Many Requests
+    if (error.response?.status === 429) {
+      const errorData = error.response.data;
+
+      // Handle throttle error format
+      const errorObject: ApiErrorObject = {
+        code: errorData?.error?.code || errorData?.error || 'TOO_MANY_REQUESTS',
+        message: errorData?.error?.message || errorData?.message || 'Quá nhiều yêu cầu. Vui lòng thử lại sau.',
+        details: errorData?.details,
+      };
+
+      return Promise.reject({
+        success: false,
+        error: errorObject,
+        status: 429,
+      } as ApiErrorResponse & { status: number });
+    }
+
     // Xử lý 422 Validation Error - theo API spec
     if (error.response?.status === 422) {
       const errorData = error.response.data;
