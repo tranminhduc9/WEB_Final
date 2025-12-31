@@ -83,7 +83,9 @@ const BlogDetailPage: React.FC = () => {
       const response = await postService.getPostById(id);
       if (response.success && response.data) {
         setPost(response.data);
-        setIsLiked(response.data.is_liked || false);
+        // Ensure is_liked is properly set (handle both boolean and undefined)
+        const likedStatus = response.data.is_liked === true;
+        setIsLiked(likedStatus);
         setLikesCount(response.data.likes_count || 0);
       } else {
         setError('Không tìm thấy bài viết');
@@ -112,8 +114,10 @@ const BlogDetailPage: React.FC = () => {
     try {
       const response = await postService.toggleLike(id);
       if (response.success) {
-        setIsLiked(response.is_liked);
-        setLikesCount(response.likes_count);
+        // Ensure is_liked is properly set (handle both boolean and undefined)
+        const likedStatus = response.is_liked === true;
+        setIsLiked(likedStatus);
+        setLikesCount(response.likes_count || 0);
       }
     } catch (err) {
       console.error('Error toggling like:', err);

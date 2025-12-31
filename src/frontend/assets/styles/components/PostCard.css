@@ -55,6 +55,8 @@
   padding: 20px 16px 12px;
   /* tăng padding-top để đẩy content xuống */
   justify-content: flex-start;
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* Thông tin tác giả - từ Figma "Trần Minh Đức 36 phút trước" */
@@ -64,6 +66,8 @@
   flex-direction: column;
   gap: 0;
   /* name và time sát nhau theo Figma */
+  flex-shrink: 0;
+  /* Không co lại */
 }
 
 .post-card__author-name {
@@ -111,6 +115,19 @@
   margin-top: 12.5%;
   /* 12.5% gap từ author theo Figma */
   margin-bottom: 0;
+  /* Giới hạn số dòng để tránh tràn - tối đa 9 dòng */
+  display: -webkit-box;
+  -webkit-line-clamp: 9;
+  line-clamp: 9;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  /* Giới hạn chiều cao cụ thể: 9 dòng * line-height (19px) = 171px */
+  max-height: 171px;
+  /* Cho phép text co lại để nhường chỗ cho actions */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Like và Comment actions */
@@ -121,12 +138,29 @@
   gap: 16px;
   margin-top: auto;
   /* đẩy xuống cuối */
+  flex-shrink: 0;
+  /* Không co lại */
 }
 
 .post-card__action {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.post-card__action--like {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.post-card__action--like:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .post-card__icon {
@@ -144,11 +178,32 @@
 
 .post-card__icon--love {
   color: #000000;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .post-card__icon--love svg {
-  fill: #000000;
+  fill: none;
   stroke: #000000;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+/* Liked state - Red heart */
+.post-card__icon--loved {
+  color: #e74c3c;
+}
+
+.post-card__icon--loved svg {
+  fill: #e74c3c !important;
+  stroke: #e74c3c !important;
+}
+
+.post-card__action--like:hover .post-card__icon--love:not(.post-card__icon--loved) {
+  color: #e74c3c;
+  transform: scale(1.1);
+}
+
+.post-card__action--like:hover .post-card__icon--love:not(.post-card__icon--loved) svg {
+  stroke: #e74c3c;
 }
 
 .post-card__icon--comment {

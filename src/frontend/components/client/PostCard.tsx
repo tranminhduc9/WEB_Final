@@ -1,5 +1,8 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icons } from '../../config/constants';
+import { useAuthContext } from '../../contexts';
+import { postService } from '../../services';
 import '../../assets/styles/components/PostCard.css';
 
 interface PostCardProps {
@@ -10,6 +13,7 @@ interface PostCardProps {
   content: string;
   likeCount: number;
   commentCount: number;
+  isLiked?: boolean; // Initial like state from parent
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -18,9 +22,41 @@ const PostCard: React.FC<PostCardProps> = ({
   authorName,
   timeAgo,
   content,
-  likeCount,
-  commentCount
+  likeCount: initialLikeCount,
+  commentCount,
+  isLiked: initialIsLiked = false,
 }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthContext();
+  const [liked, setLiked] = useState(initialIsLiked);
+  const [currentLikeCount, setCurrentLikeCount] = useState(initialLikeCount);
+  const [isLiking, setIsLiking] = useState(false);
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation when clicking like
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để thích bài viết');
+      navigate('/login');
+      return;
+    }
+
+    if (!id || isLiking) return;
+
+    setIsLiking(true);
+    try {
+      const response = await postService.toggleLike(String(id));
+      if (response.success) {
+        setLiked(response.is_liked);
+        setCurrentLikeCount(response.likes_count);
+      }
+    } catch (error) {
+      console.error('Like error:', error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
   const cardContent = (
     <>
       {/* Ảnh bên trái */}
@@ -41,10 +77,14 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Like và Comment */}
         <div className="post-card__actions">
-          <div className="post-card__action">
-            <Icons.Heart className="post-card__icon post-card__icon--love" />
-            <span className="post-card__count">{likeCount}</span>
-          </div>
+          <button
+            className={`post-card__action post-card__action--like ${liked ? 'post-card__action--liked' : ''}`}
+            onClick={handleLikeClick}
+            disabled={isLiking}
+          >
+            <Icons.Heart className={`post-card__icon post-card__icon--love ${liked ? 'post-card__icon--loved' : ''}`} />
+            <span className="post-card__count">{currentLikeCount}</span>
+          </button>
           <div className="post-card__action">
             <Icons.Comment className="post-card__icon post-card__icon--comment" />
             <span className="post-card__count">{commentCount}</span>
