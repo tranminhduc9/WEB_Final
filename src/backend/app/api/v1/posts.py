@@ -92,6 +92,12 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
     # Get post images - chỉ cần gọi helper function
     post_images = get_post_images(post)
     
+    # Fallback: Nếu không có ảnh nhưng có related_place_id, dùng ảnh của địa điểm
+    if not post_images and post.get("related_place_id"):
+        place_image = get_main_image_url(post.get("related_place_id"), db)
+        if place_image:
+            post_images = [place_image]
+    
     return {
         "_id": str(post.get("_id")),
         "author": author,
@@ -128,16 +134,26 @@ async def get_posts(
         
         skip = (page - 1) * limit
         
-        # Query posts from MongoDB
-        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort="newest")
+        # Query posts from MongoDB - sắp xếp theo popular (nhiều like nhất)
+        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort="popular")
+        
+        # Sync stats batch cho tất cả posts
+        from app.services.post_stats_sync import sync_posts_stats_batch
+        post_ids = [str(post.get("_id")) for post in posts]
+        synced_stats = await sync_posts_stats_batch(post_ids, mongo_client)
         
         # Count total
         total = await mongo_client.count("posts", {"status": "approved"})
         
-        # Format response
+        # Format response with synced stats
         current_user_id = current_user.get("user_id") if current_user else None
         formatted_posts = []
         for post in posts:
+            post_id = str(post.get("_id"))
+            # Apply synced stats to post
+            if post_id in synced_stats:
+                post["likes_count"] = synced_stats[post_id]["likes_count"]
+                post["comments_count"] = synced_stats[post_id]["comments_count"]
             formatted = await format_post_response(post, db, current_user_id)
             formatted_posts.append(formatted)
         
@@ -351,11 +367,9 @@ async def toggle_like(
         # Toggle like
         result = await mongo_client.toggle_like(post_id, user_id)
         
-        # Update likes_count in post using the same query that found the post
-        if post_query:
-            await mongo_client.update_one("posts", post_query, {
-                "likes_count": result["total_likes"]
-            })
+        # Update likes_count using real-time handler
+        from app.services.post_stats_sync import on_like_toggled
+        await on_like_toggled(post_id, result["liked"], result["total_likes"], mongo_client)
         
         # Log activity
         await log_activity(
@@ -440,11 +454,9 @@ async def add_comment(
         
         comment_id = await mongo_client.create_comment(comment_doc)
         
-        # Update comments_count using the same query
-        if post_query:
-            await mongo_client.update_one("posts", post_query, {
-                "comments_count": post.get("comments_count", 0) + 1
-            })
+        # Update comments_count using real-time handler
+        from app.services.post_stats_sync import on_comment_added
+        await on_comment_added(post_id, mongo_client)
         
         # Log activity
         await log_activity(
@@ -522,24 +534,10 @@ async def reply_to_comment(
             content=clean_content
         )
         
-        # Update comments_count of post - handle both ObjectId and string _id
+        # Update comments_count of post using real-time handler
         post_id = parent.get("post_id")
-        post = None
-        post_query = None
-        try:
-            post_query = {"_id": ObjectId(post_id)}
-            post = await mongo_client.find_one("posts", post_query)
-        except InvalidId:
-            pass
-        
-        if not post:
-            post_query = {"_id": post_id}
-            post = await mongo_client.find_one("posts", post_query)
-        
-        if post and post_query:
-            await mongo_client.update_one("posts", post_query, {
-                "comments_count": post.get("comments_count", 0) + 1
-            })
+        from app.services.post_stats_sync import on_comment_added
+        await on_comment_added(post_id, mongo_client)
         
         return success_response(
             message="Reply thành công",
@@ -766,26 +764,11 @@ async def delete_comment(
         # Delete the comment
         await mongo_client.delete_one("post_comments", comment_query)
         
-        # Update post's comments_count
+        # Update post's comments_count using real-time handler
         post_id = comment.get("post_id")
         if post_id:
-            post = None
-            post_query = None
-            try:
-                post_query = {"_id": ObjectId(post_id)}
-                post = await mongo_client.find_one("posts", post_query)
-            except InvalidId:
-                pass
-            
-            if not post:
-                post_query = {"_id": post_id}
-                post = await mongo_client.find_one("posts", post_query)
-            
-            if post and post_query:
-                new_count = max(0, post.get("comments_count", 1) - 1)
-                await mongo_client.update_one("posts", post_query, {
-                    "comments_count": new_count
-                })
+            from app.services.post_stats_sync import on_comment_deleted
+            await on_comment_deleted(post_id, mongo_client)
         
         # Log activity
         await log_activity(
@@ -802,6 +785,106 @@ async def delete_comment(
         logger.error(f"Error deleting comment: {str(e)}")
         return error_response(
             message="Lỗi xóa comment",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.delete("/posts/{post_id}", summary="Delete Own Post")
+async def delete_own_post(
+    request: Request,
+    post_id: str = Path(..., description="Post ID"),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Xóa bài viết của mình
+    - Kiểm tra ownership: chỉ author mới xóa được
+    - Cập nhật lại rating của place nếu bài viết có liên kết
+    """
+    try:
+        await get_mongodb()
+        
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        user_id = current_user.get("user_id")
+        
+        # Find post - handle both ObjectId and string _id
+        post = None
+        post_query = None
+        try:
+            post_query = {"_id": ObjectId(post_id)}
+            post = await mongo_client.find_one("posts", post_query)
+        except InvalidId:
+            pass
+        
+        if not post:
+            post_query = {"_id": post_id}
+            post = await mongo_client.find_one("posts", post_query)
+        
+        if not post:
+            return error_response(
+                message="Bài viết không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
+        
+        # Check ownership: only author can delete
+        author_id = post.get("author_id")
+        if author_id != user_id:
+            return error_response(
+                message="Bạn không có quyền xóa bài viết này",
+                error_code="FORBIDDEN",
+                status_code=403
+            )
+        
+        # Delete the post
+        success = await mongo_client.delete_one("posts", post_query)
+        
+        if not success:
+            return error_response(
+                message="Lỗi xóa bài viết",
+                error_code="DELETE_FAILED",
+                status_code=500
+            )
+        
+        # Recalculate rating if post has related_place_id and rating
+        rating_synced = False
+        if post.get("related_place_id") and post.get("rating") is not None and post.get("status") == "approved":
+            try:
+                from app.services.rating_sync import on_post_rejected_or_deleted
+                rating_synced = await on_post_rejected_or_deleted(post, db, mongo_client)
+            except Exception as sync_error:
+                logger.warning(f"Rating sync failed after post deletion: {sync_error}")
+        
+        # Also delete related favorites from PostgreSQL
+        try:
+            db.query(UserPostFavorite).filter(UserPostFavorite.post_id == post_id).delete()
+            db.commit()
+        except Exception as fav_error:
+            logger.warning(f"Error deleting post favorites: {fav_error}")
+            db.rollback()
+        
+        # Log activity
+        await log_activity(
+            db=db,
+            user_id=user_id,
+            action="delete_own_post",
+            details=f"Xóa bài viết của mình ID: {post_id}",
+            request=request
+        )
+        
+        message = "Đã xóa bài viết thành công"
+        if rating_synced:
+            message += " và đã cập nhật lại rating của địa điểm"
+        
+        return success_response(message=message)
+        
+    except Exception as e:
+        logger.error(f"Error deleting own post: {str(e)}")
+        return error_response(
+            message="Lỗi xóa bài viết",
             error_code="INTERNAL_ERROR",
             status_code=500
         )
