@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminHeader from '../../components/admin/AdminHeader';
 import Footer from '../../components/client/Footer';
-import { adminService, placeService } from '../../services';
+import { adminService, placeService, uploadService } from '../../services';
 import type { PlaceUpdateRequest } from '../../types/admin';
 import type { District, PlaceType } from '../../types/models';
 import '../../assets/styles/pages/AdminAddPlacePage.css';
@@ -15,6 +15,7 @@ function AdminEditPlacePage() {
     // States
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [districts, setDistricts] = useState<District[]>([]);
     const [placeTypes, setPlaceTypes] = useState<PlaceType[]>([]);
     const [images, setImages] = useState<string[]>([]);
@@ -94,13 +95,24 @@ function AdminEditPlacePage() {
     };
 
     // Handle image upload
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        if (files && files.length > 0) {
-            // In real app, upload to server and get URL
-            // For now, create local URLs
-            const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-            setImages(prev => [...prev, ...newImages]);
+        if (files && files.length > 0 && id) {
+            setIsUploading(true);
+            try {
+                const response = await uploadService.uploadPlaceImages(
+                    Array.from(files),
+                    parseInt(id)
+                );
+                if (response.urls && response.urls.length > 0) {
+                    setImages(prev => [...prev, ...response.urls]);
+                }
+            } catch (error) {
+                console.error('Error uploading images:', error);
+                alert('Có lỗi khi tải ảnh lên');
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 
@@ -308,8 +320,9 @@ function AdminEditPlacePage() {
                                 type="button"
                                 className="admin-add-place-upload-btn"
                                 onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
                             >
-                                Thêm ảnh
+                                {isUploading ? 'Đang tải...' : 'Thêm ảnh'}
                             </button>
                             <input
                                 ref={fileInputRef}
