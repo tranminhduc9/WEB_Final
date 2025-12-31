@@ -112,8 +112,13 @@ axiosClient.interceptors.response.use(
   async (error: AxiosError<ApiErrorResponse>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Xử lý 401 Unauthorized - Refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Không xử lý refresh token cho các endpoint auth (login, register)
+    // vì 401 ở đây nghĩa là sai thông tin đăng nhập, không phải token hết hạn
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/register');
+
+    // Xử lý 401 Unauthorized - Refresh token (chỉ cho các request không phải auth)
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({
@@ -164,12 +169,22 @@ axiosClient.interceptors.response.use(
       } else {
         tokenStorage.clearTokens();
         window.dispatchEvent(new CustomEvent('auth:logout'));
+        // Return error to prevent code from continuing
+        return Promise.reject({
+          success: false,
+          error: {
+            code: 'UNAUTHORIZED',
+            message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+          },
+          status: 401,
+        } as ApiErrorResponse & { status: number });
       }
     }
 
     // Thêm xử lý 429 Too Many Requests
     if (error.response?.status === 429) {
-      const errorData = error.response.data;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorData = error.response.data as any;
 
       // Handle throttle error format
       const errorObject: ApiErrorObject = {
