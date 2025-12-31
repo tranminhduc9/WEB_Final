@@ -171,7 +171,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         message = err.message;
       }
       setError(message);
-      // Don't re-throw - let the component handle the error through context.error
+      // Re-throw để component biết đăng ký thất bại
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }
