@@ -150,7 +150,8 @@ const BlogPage: React.FC = () => {
     imageSrc2: post.images?.[1] || post.images?.[0] || placeholderImage,
     likeCount: post.likes_count || 0,
     commentCount: post.comments_count || 0,
-    description: post.content?.slice(0, 150) || ''
+    description: post.content?.slice(0, 150) || '',
+    isLiked: post.is_liked || false
   });
 
   const handlePageChange = (page: number) => {

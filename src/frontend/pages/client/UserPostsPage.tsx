@@ -162,6 +162,7 @@ const UserPostsPage: React.FC = () => {
                                     likeCount={post.likes_count || 0}
                                     commentCount={post.comments_count || 0}
                                     description={post.content?.slice(0, 100) || ''}
+                                    isLiked={post.is_liked || false}
                                     onDeleted={() => {
                                         // Remove from local state after delete
                                         setPosts(prev => prev.filter(p => p._id !== post._id));

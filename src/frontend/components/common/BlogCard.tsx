@@ -18,7 +18,9 @@ interface BlogCardProps {
   likeCount: number;
   commentCount: number;
   description: string;
+  isLiked?: boolean;   // Initial like state from parent
   onDeleted?: () => void; // Callback when post is deleted
+  onLikeChanged?: (isLiked: boolean, newCount: number) => void; // Callback when like changes
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({
@@ -34,7 +36,9 @@ const BlogCard: React.FC<BlogCardProps> = ({
   likeCount,
   commentCount,
   description,
+  isLiked: initialIsLiked = false,
   onDeleted,
+  onLikeChanged,
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthContext();
@@ -42,6 +46,11 @@ const BlogCard: React.FC<BlogCardProps> = ({
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [isReporting, setIsReporting] = useState(false);
+
+  // Like state
+  const [liked, setLiked] = useState(initialIsLiked);
+  const [currentLikeCount, setCurrentLikeCount] = useState(likeCount);
+  const [isLiking, setIsLiking] = useState(false);
 
   // Check if current user is the author
   const isOwner = isAuthenticated && user && authorId && user.id === authorId;
@@ -54,6 +63,32 @@ const BlogCard: React.FC<BlogCardProps> = ({
     e.stopPropagation(); // Prevent card click
     if (authorId) {
       navigate(`/user/${authorId}`);
+    }
+  };
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+
+    if (!isAuthenticated) {
+      alert('Vui lòng đăng nhập để thích bài viết');
+      navigate('/login');
+      return;
+    }
+
+    if (isLiking) return;
+
+    setIsLiking(true);
+    try {
+      const response = await postService.toggleLike(String(id));
+      if (response.success) {
+        setLiked(response.is_liked);
+        setCurrentLikeCount(response.likes_count);
+        onLikeChanged?.(response.is_liked, response.likes_count);
+      }
+    } catch (error) {
+      console.error('Like error:', error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -179,10 +214,14 @@ const BlogCard: React.FC<BlogCardProps> = ({
 
         {/* Actions */}
         <div className="blog-card__actions">
-          <div className="blog-card__action">
-            <Icons.Heart className="blog-card__icon blog-card__icon--love" />
-            <span>{likeCount}</span>
-          </div>
+          <button
+            className={`blog-card__action blog-card__action--like ${liked ? 'blog-card__action--liked' : ''}`}
+            onClick={handleLikeClick}
+            disabled={isLiking}
+          >
+            <Icons.Heart className={`blog-card__icon blog-card__icon--love ${liked ? 'blog-card__icon--loved' : ''}`} />
+            <span>{currentLikeCount}</span>
+          </button>
           <div className="blog-card__action">
             <Icons.Comment className="blog-card__icon blog-card__icon--comment" />
             <span>{commentCount}</span>
@@ -222,4 +261,3 @@ const BlogCard: React.FC<BlogCardProps> = ({
 };
 
 export default BlogCard;
-
