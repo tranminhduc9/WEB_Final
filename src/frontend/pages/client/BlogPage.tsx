@@ -235,6 +235,7 @@ const BlogPage: React.FC = () => {
                   likeCount={post.likeCount}
                   commentCount={post.commentCount}
                   description={post.description}
+                  isLiked={post.isLiked}
                 />
               ))}
             </div>

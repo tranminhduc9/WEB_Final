@@ -240,6 +240,7 @@ const LocationInfoPage: React.FC = () => {
                             likeCount={post.likes_count}
                             commentCount={post.comments_count}
                             description={post.content}
+                            isLiked={post.is_liked || false}
                         />
                     </div>
                 ))}
