@@ -2,14 +2,15 @@
 Admin API Routes
 
 Module này định nghĩa các API endpoints cho Admin Panel:
-- POST /admin/login - Đăng nhập admin
-- POST /admin/logout - Đăng xuất admin
 - GET /admin/dashboard - Thống kê dashboard
 - User Management: GET, DELETE, PATCH ban/unban
 - Post Management: GET, POST, PUT, DELETE, PATCH status
 - Comment Management: GET, DELETE
 - Report Management: GET
 - Place Management: GET, POST, PUT, DELETE
+
+Note: Admin authentication sử dụng /auth/login chung với users.
+      AdminRoute ở frontend sẽ kiểm tra role để bảo vệ admin routes.
 
 Swagger v1.0.5 Compatible
 """
@@ -105,90 +106,6 @@ class PlaceCreateRequest(BaseModel):
     cuisine_type: Optional[str] = None  # Restaurant
     star_rating: Optional[int] = None  # Hotel
     ticket_price: Optional[float] = None  # Attraction
-
-
-# ==================== AUTH ENDPOINTS ====================
-
-@router.post("/login", summary="Admin Login")
-async def admin_login(
-    request: Request,
-    login_data: LoginRequest,
-    db: Session = Depends(get_db)
-):
-    """Đăng nhập admin"""
-    try:
-        # Find user
-        user = db.query(User).filter(User.email == login_data.email).first()
-        if not user:
-            return error_response(
-                message="Email hoặc mật khẩu không đúng",
-                error_code="INVALID_CREDENTIALS",
-                status_code=401
-            )
-        
-        # Check password
-        if not auth_middleware.verify_password(login_data.password, user.password_hash):
-            return error_response(
-                message="Email hoặc mật khẩu không đúng",
-                error_code="INVALID_CREDENTIALS",
-                status_code=401
-            )
-        
-        # Check role
-        if user.role_id not in [1, 2]:  # 1=admin, 2=moderator
-            return error_response(
-                message="Bạn không có quyền truy cập admin",
-                error_code="FORBIDDEN",
-                status_code=403
-            )
-        
-        # Check active
-        if not user.is_active:
-            return error_response(
-                message="Tài khoản đã bị khóa",
-                error_code="ACCOUNT_BANNED",
-                status_code=403
-            )
-        
-        # Generate tokens - pass dictionary with correct role information
-        user_data = {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role_name,  # Use role_name property: "admin", "moderator", or "user"
-            "role_id": user.role_id
-        }
-        access_token = auth_middleware.create_access_token(user_data)
-        
-        return {
-            "success": True,
-            "message": "Đăng nhập thành công",
-            "access_token": access_token,
-            "user": {
-                "id": user.id,
-                "full_name": user.full_name,
-                "email": user.email,  # Required for frontend User type
-                "avatar_url": get_avatar_url(user.avatar_url),
-                "role_id": user.role_id,
-                "role": user.role_name  # Frontend checks this field first
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"Admin login error: {str(e)}")
-        return error_response(
-            message="Lỗi đăng nhập",
-            error_code="INTERNAL_ERROR",
-            status_code=500
-        )
-
-
-@router.post("/logout", summary="Admin Logout")
-async def admin_logout(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(require_admin)
-):
-    """Đăng xuất admin"""
-    return success_response(message="Đăng xuất thành công")
 
 
 # ==================== DASHBOARD ====================
