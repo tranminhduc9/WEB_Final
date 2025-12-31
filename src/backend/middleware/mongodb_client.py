@@ -320,6 +320,36 @@ class MongoDBClient:
 
         return await coll.count_documents(query or {})
 
+    async def aggregate(
+        self,
+        collection: str,
+        pipeline: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Run aggregation pipeline
+
+        Args:
+            collection: Tên collection
+            pipeline: Aggregation pipeline stages
+
+        Returns:
+            List: Aggregation results
+        """
+        if not self.is_connected:
+            raise Exception("MongoDB not connected")
+
+        collection_name = self.config.COLLECTIONS.get(collection, collection)
+        coll = self.db[collection_name]
+
+        results = []
+        async for doc in coll.aggregate(pipeline):
+            if "_id" in doc and hasattr(doc["_id"], '__str__'):
+                # Don't convert _id if it's used as a grouping key
+                pass
+            results.append(doc)
+
+        return results
+
     # Specialized methods for posts
     async def create_post(self, post_data: Dict[str, Any]) -> str:
         """

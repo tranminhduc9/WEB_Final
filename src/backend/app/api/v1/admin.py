@@ -515,9 +515,9 @@ async def create_admin_post(
         
         post_id = await mongo_client.create_post(post_doc)
         
-        # Sync rating nếu post có related_place_id và rating
+        # Sync rating nếu post có related_place_id và rating (bao gồm cả rating = 0)
         rating_synced = False
-        if post_data.related_place_id and post_data.rating and post_data.rating > 0:
+        if post_data.related_place_id and post_data.rating is not None:
             rating_synced = await on_post_approved(post_doc, db, mongo_client)
         
         message = "Tạo bài viết thành công"
@@ -612,9 +612,9 @@ async def delete_post(
                 status_code=500
             )
         
-        # Recalculate rating nếu post có related_place_id và rating
+        # Recalculate rating nếu post có related_place_id và rating (bao gồm cả rating = 0)
         rating_synced = False
-        if post.get("related_place_id") and post.get("rating") and post.get("status") == "approved":
+        if post.get("related_place_id") and post.get("rating") is not None and post.get("status") == "approved":
             rating_synced = await on_post_rejected_or_deleted(post, db, mongo_client)
         
         message = "Đã xóa post"
@@ -672,9 +672,9 @@ async def update_post_status(
                 status_code=500
             )
         
-        # Sync rating nếu post có related_place_id và rating
+        # Sync rating nếu post có related_place_id và rating (bao gồm cả rating = 0)
         rating_synced = False
-        if post.get("related_place_id") and post.get("rating"):
+        if post.get("related_place_id") and post.get("rating") is not None:
             if new_status == "approved":
                 # Post được approve -> cập nhật rating
                 rating_synced = await on_post_approved(post, db, mongo_client)
@@ -870,6 +870,22 @@ async def get_admin_places(
                       .offset((page - 1) * limit)\
                       .limit(limit)\
                       .all()
+        
+        # Batch sync ratings from MongoDB for all places on screen
+        place_ids = [place.id for place in places]
+        if place_ids:
+            try:
+                from app.services.rating_sync import sync_places_ratings_batch
+                synced_ratings = await sync_places_ratings_batch(place_ids, db, mongo_client)
+                logger.info(f"[ADMIN] Synced ratings for {len(synced_ratings)} places")
+                # Refresh places after sync
+                db.expire_all()
+                places = query.order_by(desc(Place.created_at))\
+                              .offset((page - 1) * limit)\
+                              .limit(limit)\
+                              .all()
+            except Exception as sync_error:
+                logger.warning(f"[ADMIN] Rating sync failed: {sync_error}")
         
         place_list = []
         for place in places:

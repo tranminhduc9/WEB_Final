@@ -252,7 +252,27 @@ async def get_places(
         
         result = db.execute(query, params).fetchall()
         
-        data = [place_row_to_compact(row, db) for row in result]
+        # Batch sync ratings from MongoDB for all places on screen (optimized - single query)
+        place_ids = [row.id for row in result]
+        synced_ratings = {}
+        if place_ids:
+            try:
+                from middleware.mongodb_client import mongo_client, get_mongodb
+                from app.services.rating_sync import sync_places_ratings_batch
+                await get_mongodb()
+                synced_ratings = await sync_places_ratings_batch(place_ids, db, mongo_client)
+            except Exception as sync_error:
+                logger.warning(f"[PLACES] Rating sync failed: {sync_error}")
+        
+        # Build data using synced ratings (no re-query needed)
+        data = []
+        for row in result:
+            place_data = place_row_to_compact(row, db)
+            # Override with synced values if available
+            if row.id in synced_ratings:
+                place_data["rating_average"] = synced_ratings[row.id].get("rating_average", place_data["rating_average"])
+                place_data["rating_count"] = synced_ratings[row.id].get("review_count", place_data["rating_count"])
+            data.append(place_data)
         
         filter_info = []
         if district_id:
@@ -331,7 +351,26 @@ async def search_places(
         
         result = db.execute(query, params).fetchall()
         
-        data = [place_row_to_compact(row, db) for row in result]
+        # Batch sync ratings from MongoDB for all places on screen
+        place_ids = [row.id for row in result]
+        synced_ratings = {}
+        if place_ids:
+            try:
+                from middleware.mongodb_client import mongo_client, get_mongodb
+                from app.services.rating_sync import sync_places_ratings_batch
+                await get_mongodb()
+                synced_ratings = await sync_places_ratings_batch(place_ids, db, mongo_client)
+            except Exception as sync_error:
+                logger.warning(f"[PLACES] Rating sync failed: {sync_error}")
+        
+        # Build data using synced ratings (no re-query needed)
+        data = []
+        for row in result:
+            place_data = place_row_to_compact(row, db)
+            if row.id in synced_ratings:
+                place_data["rating_average"] = synced_ratings[row.id].get("rating_average", place_data["rating_average"])
+                place_data["rating_count"] = synced_ratings[row.id].get("review_count", place_data["rating_count"])
+            data.append(place_data)
         
         logger.info(f"[PLACES] Search places - keyword='{keyword}', district_id={district_id}, found {len(data)} places")
         
@@ -440,7 +479,26 @@ async def get_nearby_places(
             "limit": limit
         }).fetchall()
         
-        data = [place_row_to_horizontal(row, db, lat, long) for row in result]
+        # Batch sync ratings from MongoDB for all places on screen
+        place_ids = [row.id for row in result]
+        synced_ratings = {}
+        if place_ids:
+            try:
+                from middleware.mongodb_client import mongo_client, get_mongodb
+                from app.services.rating_sync import sync_places_ratings_batch
+                await get_mongodb()
+                synced_ratings = await sync_places_ratings_batch(place_ids, db, mongo_client)
+            except Exception as sync_error:
+                logger.warning(f"[PLACES] Rating sync failed: {sync_error}")
+        
+        # Build data using synced ratings (no re-query needed)
+        data = []
+        for row in result:
+            place_data = place_row_to_horizontal(row, db, lat, long)
+            if row.id in synced_ratings:
+                place_data["rating_average"] = synced_ratings[row.id].get("rating_average", place_data["rating_average"])
+                place_data["rating_count"] = synced_ratings[row.id].get("review_count", place_data["rating_count"])
+            data.append(place_data)
         
         logger.info(f"[PLACES] Nearby places at ({lat}, {long}) - Found {len(data)} places")
         
@@ -628,10 +686,21 @@ async def get_place_detail(
         
         # Fetch related posts from MongoDB
         from middleware.mongodb_client import mongo_client, get_mongodb
+        from app.services.rating_sync import calculate_place_rating_from_mongodb
         
         related_posts = []
+        # Real-time rating calculation from MongoDB (includes rating=0)
+        real_time_rating_count = 0
+        real_time_rating_average = 0.0
+        
         try:
             await get_mongodb()
+            
+            # Calculate real-time rating from MongoDB posts (bao gồm cả rating=0)
+            rating_data = await calculate_place_rating_from_mongodb(place_id, mongo_client)
+            real_time_rating_count = rating_data.get("rating_count", 0)
+            real_time_rating_average = rating_data.get("rating_average", 0.0)
+            logger.info(f"[PLACES] Real-time rating for place {place_id}: count={real_time_rating_count}, avg={real_time_rating_average}")
             
             # Query posts with $or to match both int and string related_place_id
             logger.info(f"[PLACES] Fetching related posts for place_id={place_id}")
@@ -697,6 +766,20 @@ async def get_place_detail(
             logger.error(f"Error fetching related posts: {e}")
             logger.error(f"Traceback: {traceback.format_exc()}")
             related_posts = []
+        
+        # Use real-time values if available, fallback to PostgreSQL
+        if real_time_rating_count > 0 or rating_count == 0:
+            rating_count = real_time_rating_count
+            rating = real_time_rating_average
+            
+            # Sync back to PostgreSQL to keep data consistent
+            try:
+                from app.services.rating_sync import update_place_rating
+                await update_place_rating(place_id, db, mongo_client)
+                logger.info(f"[PLACES] Synced rating to PostgreSQL for place {place_id}")
+            except Exception as sync_error:
+                logger.warning(f"[PLACES] Failed to sync rating to PostgreSQL: {sync_error}")
+
         
         # Response theo Swagger PlaceDetailResponse schema
         # PlaceDetail extends PlaceCompact nên cần đầy đủ các trường

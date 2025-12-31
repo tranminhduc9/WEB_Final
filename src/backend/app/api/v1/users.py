@@ -79,6 +79,13 @@ async def get_user_profile(
             UserPlaceFavorite.user_id == user_id
         ).order_by(UserPlaceFavorite.created_at.desc()).limit(5).all()
         
+        # Collect place IDs for batch rating sync
+        place_ids = [fav.place_id for fav in favorites]
+        
+        # Sync ratings from MongoDB to PostgreSQL (bao gồm cả rating=0)
+        from app.services.rating_sync import sync_places_ratings_batch
+        synced_ratings = await sync_places_ratings_batch(place_ids, db, mongo_client)
+        
         recent_favorites = []
         for fav in favorites:
             place = db.query(Place).filter(Place.id == fav.place_id).first()
@@ -95,6 +102,11 @@ async def get_user_profile(
                 district_name = district.name if district else f"Quận {place.district_id}"
                 address = place.address_detail or f"Quận {district_name}, Hà Nội"
                 
+                # Use synced rating from MongoDB if available
+                rating_data = synced_ratings.get(place.id, {})
+                rating_avg = rating_data.get("rating_average", float(place.rating_average) if place.rating_average else 0)
+                rating_count = rating_data.get("rating_count", place.rating_count or 0)
+                
                 recent_favorites.append({
                     "id": place.id,
                     "name": place.name,
@@ -102,12 +114,13 @@ async def get_user_profile(
                     "district_name": district_name,
                     "address": address,
                     "place_type_id": place.place_type_id,
-                    "rating_average": float(place.rating_average) if place.rating_average else 0,
-                    "rating_count": place.rating_count or 0,
+                    "rating_average": rating_avg,
+                    "rating_count": rating_count,
                     "price_min": price_min,
                     "price_max": price_max,
                     "main_image_url": get_main_image_url(place.id, db)
                 })
+
         
         # Get recent posts from MongoDB
         recent_posts = []
@@ -355,6 +368,13 @@ async def get_profile_alias(
             UserPlaceFavorite.user_id == user_id
         ).order_by(UserPlaceFavorite.created_at.desc()).limit(5).all()
         
+        # Collect place IDs for batch rating sync
+        place_ids = [fav.place_id for fav in favorites]
+        
+        # Sync ratings from MongoDB to PostgreSQL (bao gồm cả rating=0)
+        from app.services.rating_sync import sync_places_ratings_batch
+        synced_ratings = await sync_places_ratings_batch(place_ids, db, mongo_client)
+        
         recent_favorites = []
         for fav in favorites:
             place = db.query(Place).filter(Place.id == fav.place_id).first()
@@ -368,6 +388,11 @@ async def get_profile_alias(
                 district = db.query(District).filter(District.id == place.district_id).first()
                 district_name = district.name if district else f"Quận {place.district_id}"
                 
+                # Use synced rating from MongoDB if available
+                rating_data = synced_ratings.get(place.id, {})
+                rating_avg = rating_data.get("rating_average", float(place.rating_average) if place.rating_average else 0)
+                rating_count = rating_data.get("rating_count", place.rating_count or 0)
+                
                 recent_favorites.append({
                     "id": place.id,
                     "name": place.name,
@@ -375,8 +400,8 @@ async def get_profile_alias(
                     "district_name": district_name,
                     "address": place.address_detail or f"Quận {district_name}, Hà Nội",
                     "place_type_id": place.place_type_id,
-                    "rating_average": float(place.rating_average) if place.rating_average else 0,
-                    "rating_count": place.rating_count or 0,
+                    "rating_average": rating_avg,
+                    "rating_count": rating_count,
                     "price_min": price_min,
                     "price_max": price_max,
                     "main_image_url": get_main_image_url(place.id, db)
@@ -519,6 +544,13 @@ async def get_user_by_id(
             UserPlaceFavorite.user_id == user_id
         ).order_by(UserPlaceFavorite.created_at.desc()).limit(5).all()
         
+        # Collect place IDs for batch rating sync
+        place_ids = [fav.place_id for fav in favorites]
+        
+        # Sync ratings from MongoDB to PostgreSQL (bao gồm cả rating=0)
+        from app.services.rating_sync import sync_places_ratings_batch
+        synced_ratings = await sync_places_ratings_batch(place_ids, db, mongo_client)
+        
         recent_favorites = []
         for fav in favorites:
             place = db.query(Place).filter(Place.id == fav.place_id).first()
@@ -531,6 +563,11 @@ async def get_user_by_id(
                 district = db.query(District).filter(District.id == place.district_id).first()
                 district_name = district.name if district else f"Quận {place.district_id}"
                 
+                # Use synced rating from MongoDB if available
+                rating_data = synced_ratings.get(place.id, {})
+                rating_avg = rating_data.get("rating_average", float(place.rating_average) if place.rating_average else 0)
+                rating_count = rating_data.get("rating_count", place.rating_count or 0)
+                
                 recent_favorites.append({
                     "id": place.id,
                     "name": place.name,
@@ -538,8 +575,8 @@ async def get_user_by_id(
                     "district_name": district_name,
                     "address": place.address_detail or f"Quận {district_name}, Hà Nội",
                     "place_type_id": place.place_type_id,
-                    "rating_average": float(place.rating_average) if place.rating_average else 0,
-                    "rating_count": place.rating_count or 0,
+                    "rating_average": rating_avg,
+                    "rating_count": rating_count,
                     "price_min": price_min,
                     "price_max": price_max,
                     "main_image_url": get_main_image_url(place.id, db)
