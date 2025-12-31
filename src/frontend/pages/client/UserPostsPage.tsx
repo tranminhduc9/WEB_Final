@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
+import BlogCard from '../../components/common/BlogCard';
 import { useAuthContext } from '../../contexts';
 import { userService } from '../../services';
 import type { PostDetail } from '../../types/models';
@@ -147,71 +148,25 @@ const UserPostsPage: React.FC = () => {
                     <>
                         <section className="user-posts-list">
                             {currentItems.map((post) => (
-                                <article key={post._id} className="blog-card">
-                                    {/* Header: Avatar, Username, Time, Rating */}
-                                    <div className="blog-card__header">
-                                        <div className="blog-card__user">
-                                            {post.author?.avatar_url ? (
-                                                <img
-                                                    src={post.author.avatar_url}
-                                                    alt={post.author.full_name}
-                                                    className="blog-card__avatar"
-                                                />
-                                            ) : (
-                                                <div className="blog-card__avatar blog-card__avatar--placeholder">
-                                                    {post.author?.full_name?.charAt(0) || 'U'}
-                                                </div>
-                                            )}
-                                            <div className="blog-card__user-info">
-                                                <span className="blog-card__username">
-                                                    {post.author?.full_name || 'Ẩn danh'} • {formatTimeAgo(post.created_at)}
-                                                </span>
-                                                {post.related_place && (
-                                                    <span className="blog-card__location">
-                                                        📍 {post.related_place.name}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {post.rating && (
-                                            <div className="blog-card__rating">
-                                                {post.rating}/5
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Images */}
-                                    <div className="blog-card__images">
-                                        {post.images?.slice(0, 2).map((img, idx) => (
-                                            <img
-                                                key={idx}
-                                                src={img}
-                                                alt={`Post image ${idx + 1}`}
-                                                className="blog-card__image"
-                                            />
-                                        ))}
-                                    </div>
-
-                                    {/* Footer: Likes, Comments, Content */}
-                                    <div className="blog-card__footer">
-                                        <div className="blog-card__stats">
-                                            <span className="blog-card__stat">
-                                                ❤️ {post.likes_count || 0}
-                                            </span>
-                                            <span className="blog-card__stat">
-                                                💬 {post.comments_count || 0}
-                                            </span>
-                                        </div>
-                                        <p className="blog-card__content">
-                                            {post.content?.slice(0, 100)}
-                                            {post.content && post.content.length > 100 && (
-                                                <Link to={`/blog/${post._id}`} className="blog-card__read-more">
-                                                    xem toàn bộ bài viết...
-                                                </Link>
-                                            )}
-                                        </p>
-                                    </div>
-                                </article>
+                                <BlogCard
+                                    key={post._id}
+                                    id={post._id}
+                                    authorId={post.author?.id}
+                                    avatarSrc={post.author?.avatar_url || '/default-avatar.png'}
+                                    username={post.author?.full_name || 'Ẩn danh'}
+                                    timeAgo={formatTimeAgo(post.created_at)}
+                                    location={post.related_place?.name || 'Hà Nội'}
+                                    rating={post.rating || 0}
+                                    imageSrc1={post.images?.[0] || '/placeholder.jpg'}
+                                    imageSrc2={post.images?.[1] || post.images?.[0] || '/placeholder.jpg'}
+                                    likeCount={post.likes_count || 0}
+                                    commentCount={post.comments_count || 0}
+                                    description={post.content?.slice(0, 100) || ''}
+                                    onDeleted={() => {
+                                        // Remove from local state after delete
+                                        setPosts(prev => prev.filter(p => p._id !== post._id));
+                                    }}
+                                />
                             ))}
                         </section>
 
