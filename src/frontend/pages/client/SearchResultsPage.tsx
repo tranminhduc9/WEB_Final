@@ -8,39 +8,6 @@ import { Icons } from '../../config/constants';
 import type { PlaceCompact } from '../../types/models';
 import '../../assets/styles/pages/SearchResultsPage.css';
 
-// Mock data fallback
-const MOCK_LOCATIONS = [
-  {
-    id: 1,
-    name: 'Hồ Gươm - Quận Hoàn Kiếm',
-    district_id: 1,
-    place_type_id: 1,
-    rating_average: 4.5,
-    price_min: 0,
-    price_max: 0,
-    main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-  },
-  {
-    id: 2,
-    name: 'Phố Cổ Hà Nội',
-    district_id: 1,
-    place_type_id: 2,
-    rating_average: 4.2,
-    price_min: 50000,
-    price_max: 200000,
-    main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-  },
-  {
-    id: 3,
-    name: 'Văn Miếu - Quốc Tử Giám',
-    district_id: 2,
-    place_type_id: 1,
-    rating_average: 4.8,
-    price_min: 30000,
-    price_max: 50000,
-    main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-  },
-];
 
 const SearchResultsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -67,15 +34,11 @@ const SearchResultsPage: React.FC = () => {
     setIsLoadingSearch(true);
     try {
       const response = await placeService.searchPlaces({ keyword: query, page: 1 });
-      if (response.success && response.data.length > 0) {
+      if (response.success && response.data) {
         setSearchResults(response.data);
-      } else {
-        // Fallback to mock data
-        setSearchResults(MOCK_LOCATIONS as PlaceCompact[]);
       }
     } catch (error) {
       console.error('Search error:', error);
-      setSearchResults(MOCK_LOCATIONS as PlaceCompact[]);
     } finally {
       setIsLoadingSearch(false);
     }
@@ -94,13 +57,11 @@ const SearchResultsPage: React.FC = () => {
                 lat: position.coords.latitude,
                 long: position.coords.longitude,
               });
-              if (response.success && response.data.length > 0) {
+              if (response.success && response.data) {
                 setNearbyPlaces(response.data);
-              } else {
-                setNearbyPlaces(MOCK_LOCATIONS as PlaceCompact[]);
               }
             } catch {
-              setNearbyPlaces(MOCK_LOCATIONS as PlaceCompact[]);
+              // Keep empty
             } finally {
               setIsLoadingNearby(false);
             }
@@ -109,14 +70,12 @@ const SearchResultsPage: React.FC = () => {
             // Không lấy được vị trí, dùng vị trí mặc định (Hà Nội)
             placeService.getNearbyPlaces({ lat: 21.0285, long: 105.8542 })
               .then((response) => {
-                if (response.success && response.data.length > 0) {
+                if (response.success && response.data) {
                   setNearbyPlaces(response.data);
-                } else {
-                  setNearbyPlaces(MOCK_LOCATIONS as PlaceCompact[]);
                 }
               })
               .catch(() => {
-                setNearbyPlaces(MOCK_LOCATIONS as PlaceCompact[]);
+                // Keep empty
               })
               .finally(() => {
                 setIsLoadingNearby(false);
@@ -126,16 +85,13 @@ const SearchResultsPage: React.FC = () => {
       } else {
         // Không hỗ trợ geolocation
         const response = await placeService.getNearbyPlaces({ lat: 21.0285, long: 105.8542 });
-        if (response.success && response.data.length > 0) {
+        if (response.success && response.data) {
           setNearbyPlaces(response.data);
-        } else {
-          setNearbyPlaces(MOCK_LOCATIONS as PlaceCompact[]);
         }
         setIsLoadingNearby(false);
       }
     } catch (error) {
       console.error('Nearby error:', error);
-      setNearbyPlaces(MOCK_LOCATIONS as PlaceCompact[]);
       setIsLoadingNearby(false);
     }
   }, []);
@@ -145,14 +101,11 @@ const SearchResultsPage: React.FC = () => {
     setIsLoadingSuggestions(true);
     try {
       const response = await placeService.getPlaces({ page: 1, limit: 5 });
-      if (response.success && response.data.length > 0) {
+      if (response.success && response.data) {
         setSuggestions(response.data);
-      } else {
-        setSuggestions(MOCK_LOCATIONS as PlaceCompact[]);
       }
     } catch (error) {
       console.error('Suggestions error:', error);
-      setSuggestions(MOCK_LOCATIONS as PlaceCompact[]);
     } finally {
       setIsLoadingSuggestions(false);
     }
