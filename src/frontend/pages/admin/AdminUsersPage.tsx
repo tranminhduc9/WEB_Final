@@ -174,7 +174,7 @@ function AdminUsersPage() {
                     <div className="admin-users-search">
                         <input
                             type="text"
-                            placeholder="Tìm kiếm người dùng"
+                            placeholder="Tìm trong trang hiện tại..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="admin-users-search__input"
@@ -199,7 +199,8 @@ function AdminUsersPage() {
 
                 {/* Results Count */}
                 <p className="admin-users-count">
-                    {isLoading ? 'Đang tải...' : `Có ${filteredUsers.length} kết quả`}
+                    {isLoading ? 'Đang tải...' : `Có ${totalItems} người dùng (Trang ${currentPage}/${totalPages})`}
+                    {searchQuery && <span className="admin-users-search-notice"> - Đang tìm kiếm trong trang hiện tại</span>}
                 </p>
 
                 {/* Users Table */}

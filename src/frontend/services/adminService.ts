@@ -21,6 +21,8 @@ import type {
   PlaceCreateRequest,
   AdminUserListParams,
   AdminPostListParams,
+  AdminPlaceListParams,
+  AdminReportListParams,
 } from '../types/admin';
 import type {
   ListResponse,
@@ -190,19 +192,31 @@ export const adminService = {
   // ===== REPORT MANAGEMENT =====
   /**
    * Lấy danh sách reports
-   * GET /admin/reports
+   * GET /admin/reports?page=1&limit=20
    */
-  getReports: async (): Promise<ListResponse<AdminReport>> => {
-    return axiosClient.get<never, ListResponse<AdminReport>>('/admin/reports');
+  getReports: async (params?: AdminReportListParams): Promise<ListResponse<AdminReport>> => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', String(params.page));
+    if (params?.limit) query.append('limit', String(params.limit));
+    const queryString = query.toString();
+    return axiosClient.get<never, ListResponse<AdminReport>>(
+      queryString ? `/admin/reports?${queryString}` : '/admin/reports'
+    );
   },
 
   // ===== PLACE MANAGEMENT =====
   /**
    * Lấy danh sách places
-   * GET /admin/places
+   * GET /admin/places?page=1&limit=20
    */
-  getPlaces: async (): Promise<ListResponse<PlaceDetail>> => {
-    return axiosClient.get<never, ListResponse<PlaceDetail>>('/admin/places');
+  getPlaces: async (params?: AdminPlaceListParams): Promise<ListResponse<PlaceDetail>> => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', String(params.page));
+    if (params?.limit) query.append('limit', String(params.limit));
+    const queryString = query.toString();
+    return axiosClient.get<never, ListResponse<PlaceDetail>>(
+      queryString ? `/admin/places?${queryString}` : '/admin/places'
+    );
   },
 
   /**

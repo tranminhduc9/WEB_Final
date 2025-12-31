@@ -115,3 +115,21 @@ export interface UpdatePostStatusRequest {
   status: 'published' | 'rejected';
   reason?: string;
 }
+
+// ============================
+// PLACE LIST PARAMS
+// ============================
+
+export interface AdminPlaceListParams {
+  page?: number;
+  limit?: number;
+}
+
+// ============================
+// REPORT LIST PARAMS
+// ============================
+
+export interface AdminReportListParams {
+  page?: number;
+  limit?: number;
+}
