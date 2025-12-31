@@ -242,6 +242,43 @@ export const adminService = {
   deletePlace: async (id: number): Promise<BaseResponse> => {
     return axiosClient.delete<never, BaseResponse>(`/admin/places/${id}`);
   },
+
+  // ===== AUDIT LOGS =====
+  /**
+   * Lấy danh sách audit logs
+   * GET /api/v1/logs/audit
+   */
+  getAuditLogs: async (params?: {
+    limit?: number;
+    offset?: number;
+    user_id?: number;
+    action_type?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    data?: {
+      logs: Array<{
+        id: number;
+        user_id: number;
+        user?: { id: number; full_name: string; email: string };
+        action: string;
+        details?: string;
+        ip_address?: string;
+        created_at: string;
+      }>;
+      total: number;
+      limit: number;
+      offset: number;
+    };
+  }> => {
+    const query = new URLSearchParams();
+    if (params?.limit) query.append('limit', String(params.limit));
+    if (params?.offset) query.append('offset', String(params.offset));
+    if (params?.user_id) query.append('user_id', String(params.user_id));
+    if (params?.action_type) query.append('action_type', params.action_type);
+    const queryString = query.toString();
+    return axiosClient.get(queryString ? `/logs/audit?${queryString}` : '/logs/audit');
+  },
 };
 
 export default adminService;

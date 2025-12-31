@@ -29,6 +29,7 @@ import AdminAddPlacePage from './pages/admin/AdminAddPlacePage'
 import AdminEditPlacePage from './pages/admin/AdminEditPlacePage'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
 import AdminPostsPage from './pages/admin/AdminPostsPage'
+import AdminLogPage from './pages/admin/AdminLogPage'
 
 // Components
 import Chatbot from './components/client/Chatbot'
@@ -175,6 +176,14 @@ const router = createBrowserRouter([
     element: (
       <AdminRoute>
         <AdminPostsPage />
+      </AdminRoute>
+    )
+  },
+  {
+    path: '/admin/log',
+    element: (
+      <AdminRoute>
+        <AdminLogPage />
       </AdminRoute>
     )
   },
