@@ -8,73 +8,9 @@ import { Icons } from '../../config/constants';
 import { placeService } from '../../services';
 import { useAuthContext } from '../../contexts';
 import { useScrollToTop } from '../../hooks';
-import type { PlaceDetail, PlaceCompact, PostDetail } from '../../types/models';
+import type { PlaceDetail, PlaceCompact } from '../../types/models';
 import '../../assets/styles/pages/LocationInfoPage.css';
 
-// ============================
-// MOCK DATA (Fallback khi API fail)
-// ============================
-const MOCK_LOCATION: PlaceDetail = {
-    id: 1,
-    name: 'Hồ Hoàn Kiếm',
-    district_id: 1,
-    place_type_id: 1,
-    rating_average: 3.6,
-    price_min: 0,
-    price_max: 100000,
-    main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-    address: 'Phường Hoàn Kiếm, thành phố Hà Nội',
-    description: 'Hồ Hoàn Kiếm (Hán-Nôm: 湖還劍) còn được gọi là Hồ Gươm là một hồ nước ngọt tự nhiên nằm ở phường Hoàn Kiếm, trung tâm thành phố Hà Nội.',
-    opening_hours: 'Tất cả các ngày trong tuần / Cuối tuần mở phố đi bộ',
-    images: [
-        'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-        'https://images.unsplash.com/photo-1599708153386-09f68a3f6d66?w=800',
-    ],
-    reviews_count: 3600,
-    latitude: 21.0285,
-    longitude: 105.8542,
-};
-
-const MOCK_NEARBY: PlaceCompact[] = [
-    {
-        id: 2,
-        name: 'Hồ Tây',
-        district_id: 1,
-        place_type_id: 1,
-        rating_average: 4.2,
-        price_min: 0,
-        price_max: 0,
-        main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-    },
-    {
-        id: 3,
-        name: 'Văn Miếu Quốc Tử Giám',
-        district_id: 2,
-        place_type_id: 1,
-        rating_average: 4.5,
-        price_min: 30000,
-        price_max: 50000,
-        main_image_url: 'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-    },
-];
-
-const MOCK_POSTS: PostDetail[] = [
-    {
-        _id: '1',
-        author: { id: 1, full_name: 'Entekie', avatar_url: 'https://i.pravatar.cc/150?img=1', role_id: 1 },
-        title: 'Trải nghiệm Hồ Hoàn Kiếm',
-        content: 'Thấy Hà Nội okee phết!!',
-        rating: 5,
-        images: [
-            'https://cdn.vntrip.vn/cam-nang/wp-content/uploads/2017/07/ho-hoan-kiem-1.jpg',
-            'https://images.unsplash.com/photo-1599708153386-09f68a3f6d66?w=400'
-        ],
-        likes_count: 36,
-        comments_count: 36,
-        is_liked: false,
-        created_at: new Date(Date.now() - 36 * 60 * 1000).toISOString(),
-    },
-];
 
 // Helper: Format time ago
 const formatTimeAgo = (dateString?: string): string => {
@@ -154,9 +90,6 @@ const LocationInfoPage: React.FC = () => {
         } catch (err) {
             console.error('Error fetching place:', err);
             setError('Không thể tải thông tin địa điểm');
-            // Fallback to mock data
-            setPlace(MOCK_LOCATION);
-            setNearbyPlaces(MOCK_NEARBY);
         } finally {
             setIsLoading(false);
         }
@@ -170,16 +103,13 @@ const LocationInfoPage: React.FC = () => {
         setIsLoadingNearby(true);
         try {
             const response = await placeService.getNearbyPlaces({ lat, long });
-            if (response.success && response.data.length > 0) {
+            if (response.success && response.data) {
                 // Filter out current place from nearby
                 const filtered = response.data.filter(p => p.id !== Number(id));
                 setNearbyPlaces(filtered.slice(0, 5));
-            } else {
-                setNearbyPlaces(MOCK_NEARBY);
             }
         } catch (err) {
             console.error('Error fetching nearby:', err);
-            setNearbyPlaces(MOCK_NEARBY);
         } finally {
             setIsLoadingNearby(false);
         }
@@ -197,19 +127,16 @@ const LocationInfoPage: React.FC = () => {
                 long: long || 105.8542
             };
             const response = await placeService.getNearbyPlaces(coords);
-            if (response.success && response.data.length > 0) {
+            if (response.success && response.data) {
                 // Filter out current place and nearby places to avoid duplicates
                 const nearbyIds = new Set(nearbyPlaces.map(p => p.id));
                 const filtered = response.data.filter(p =>
                     p.id !== Number(id) && !nearbyIds.has(p.id)
                 );
                 setSuggestions(filtered.slice(0, 5));
-            } else {
-                setSuggestions(MOCK_NEARBY);
             }
         } catch (err) {
             console.error('Error fetching suggestions:', err);
-            setSuggestions(MOCK_NEARBY);
         } finally {
             setIsLoadingSuggestions(false);
         }
@@ -295,7 +222,7 @@ const LocationInfoPage: React.FC = () => {
     );
 
     const renderPosts = () => {
-        const posts = place?.related_posts || MOCK_POSTS;
+        const posts = place?.related_posts || [];
 
         return (
             <div className="location-posts">
@@ -383,8 +310,21 @@ const LocationInfoPage: React.FC = () => {
         );
     }
 
-    // Use place data or fallback
-    const location = place || MOCK_LOCATION;
+    if (!place) {
+        return (
+            <div className="location-info-page">
+                <Header />
+                <main className="location-info-main">
+                    <div className="location-error">
+                        <h2>Không tìm thấy địa điểm</h2>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        );
+    }
+
+    const location = place;
 
     return (
         <div className="location-info-page">
