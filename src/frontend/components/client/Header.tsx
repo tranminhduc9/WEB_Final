@@ -126,13 +126,16 @@ function Header() {
                   Hồ sơ
                 </Link>
                 {user.role === 'admin' && (
-                  <Link
-                    to="/admin"
-                    className="user-menu-item"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    Quản trị
-                  </Link>
+                  <>
+                    <div className="user-menu-divider"></div>
+                    <Link
+                      to="/admin"
+                      className="user-menu-item"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      Quản trị
+                    </Link>
+                  </>
                 )}
                 <div className="user-menu-divider"></div>
                 <button
