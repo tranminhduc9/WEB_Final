@@ -18,6 +18,7 @@ import logging
 
 from config.database import get_db, User, UserPlaceFavorite, UserPostFavorite, Place, PlaceImage, District
 from app.utils.image_helpers import get_main_image_url, normalize_image_list, get_avatar_url
+from app.utils.place_helpers import get_place_compact
 from app.utils.content_sanitizer import sanitize_full_name, sanitize_bio, sanitize_url
 from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
@@ -470,6 +471,7 @@ async def get_profile_alias(
                     "content": post.get("content", ""),
                     "images": images,
                     "related_place_id": post.get("related_place_id"),
+                    "related_place": get_place_compact(post.get("related_place_id"), db) if post.get("related_place_id") else None,
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
                     "created_at": to_iso_string(post.get("created_at"))
@@ -668,6 +670,7 @@ async def get_user_by_id(
                     "content": post.get("content", ""),
                     "images": images,
                     "related_place_id": post.get("related_place_id"),
+                    "related_place": get_place_compact(post.get("related_place_id"), db) if post.get("related_place_id") else None,
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
                     "created_at": to_iso_string(post.get("created_at"))

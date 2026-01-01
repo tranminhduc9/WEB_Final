@@ -78,8 +78,16 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
     """Format post cho response"""
     author = get_user_compact(post.get("author_id"), db)
     related_place = None
-    if post.get("related_place_id"):
-        related_place = get_place_compact(post.get("related_place_id"), db)
+    related_place_id = post.get("related_place_id")
+    if related_place_id:
+        # Convert to int if string (MongoDB may store as string or int)
+        if isinstance(related_place_id, str):
+            try:
+                related_place_id = int(related_place_id)
+            except ValueError:
+                related_place_id = None
+        if related_place_id:
+            related_place = get_place_compact(related_place_id, db)
     
     # Check if current user liked
     is_liked = False

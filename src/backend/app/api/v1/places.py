@@ -716,27 +716,8 @@ async def get_place_detail(
             )
             logger.info(f"[PLACES] Found {len(posts) if posts else 0} posts with related_place_id={place_id}")
             
-            # Fallback 1: if no posts for this place, get general approved posts
-            if not posts or len(posts) == 0:
-                logger.info("[PLACES] No related posts found, trying general approved posts...")
-                posts = await mongo_client.find_many(
-                    "posts",
-                    {"status": "approved"},
-                    sort=[("likes_count", -1), ("comments_count", -1)],
-                    limit=5
-                )
-                logger.info(f"[PLACES] Found {len(posts) if posts else 0} approved posts")
-            
-            # Fallback 2: if still no approved posts, get any posts (for development/testing)
-            if not posts or len(posts) == 0:
-                logger.info("[PLACES] No approved posts found, trying any posts...")
-                posts = await mongo_client.find_many(
-                    "posts",
-                    {},  # Get all posts regardless of status
-                    sort=[("created_at", -1)],
-                    limit=5
-                )
-                logger.info(f"[PLACES] Found {len(posts) if posts else 0} total posts in MongoDB")
+            # NOTE: Removed fallback logic that was fetching unrelated posts
+            # If no posts for this place, we should show empty list, not random posts
             
             # Format related posts - chỉ cần gọi helper function
             for post in posts:
