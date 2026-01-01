@@ -1,0 +1,447 @@
+﻿docker : [2025-12-31 05:17:00 
++0000] [1] [INFO] Starting gunicorn 
+23.0.0
+At line:1 char:1
++ docker logs travel_backend_prod 
+2>&1 | Out-File -FilePath 
+backend_log ...
++ 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSp 
+   ecified: ([2025-12-31 05:...gun  
+  icorn 23.0.0:String) [], Remote   
+ Exception
+    + FullyQualifiedErrorId : Nativ 
+   eCommandError
+ 
+[OK] Environment already loaded
+[2025-12-31 05:17:00 +0000] [1] 
+[INFO] Listening at: 
+http://0.0.0.0:8000 (1)
+[2025-12-31 05:17:00 +0000] [1] 
+[INFO] Using worker: 
+uvicorn.workers.UvicornWorker
+[2025-12-31 05:17:00 +0000] [7] 
+[INFO] Booting worker with pid: 7
+.env file not found at: /.env
+Please create .env file in src/ 
+directory
+[2025-12-31 05:17:00 +0000] [8] 
+[INFO] Booting worker with pid: 8
+.env file not found at: /.env
+Please create .env file in src/ 
+directory
+Configuration warnings:
+Configuration warnings:
+[WARN] Production: Please change 
+JWT_SECRET_KEY
+[WARN] Production: Please change 
+JWT_SECRET_KEY
+[WARN] Production: CORS_ORIGINS 
+contains localhost
+[WARN] Production: Consider using 
+external Redis service
+[WARN] Production: CORS_ORIGINS 
+contains localhost
+[WARN] Production: Consider using 
+external Redis service
+====================================
+========================
+====================================
+========================
+ΓÜá∩╕Å  Cß║óNH B├üO Bß║óO Mß║¼T: 
+─Éang sß╗¡ dß╗Ñng SESSION_SECRET 
+mß║╖c ─æß╗ïnh!
+ΓÜá∩╕Å  Cß║óNH B├üO Bß║óO Mß║¼T: 
+─Éang sß╗¡ dß╗Ñng SESSION_SECRET 
+mß║╖c ─æß╗ïnh!
+    Vui l├▓ng tß║ío secret mß╗¢i 
+bß║▒ng: python -c "import secrets; 
+print(secrets.token_urlsafe(32))"
+====================================
+========================
+    Vui l├▓ng tß║ío secret mß╗¢i 
+bß║▒ng: python -c "import secrets; 
+print(secrets.token_urlsafe(32))"
+====================================
+========================
+2025-12-31 05:17:01,318 - 
+middleware.setup - INFO - [SETUP] 
+Setting up middleware chain...
+2025-12-31 05:17:01,318 - 
+middleware.setup - INFO - [SETUP] 
+Setting up middleware chain...
+2025-12-31 05:17:01,318 - 
+middleware.setup - INFO -    [OK] 
+CORS configured for: 
+http://localhost, 
+http://localhost:80, 
+http://127.0.0.1, 
+http://127.0.0.1:80
+2025-12-31 05:17:01,318 - 
+middleware.setup - INFO -    [OK] 
+CORS configured for: 
+http://localhost, 
+http://localhost:80, 
+http://127.0.0.1, 
+http://127.0.0.1:80
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO - Security 
+headers middleware added 
+(Environment: production)
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO - Security 
+headers middleware added 
+(Environment: production)
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO -   - HSTS 
+enabled: max-age=31536000, 
+includeSubDomains=True, preload=True
+[OK] Environment already loaded
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO -   - HSTS 
+enabled: max-age=31536000, 
+includeSubDomains=True, preload=True
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO -   - 
+Permissions-Policy: enabled
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO -   - CSP: 
+enabled
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO -   - 
+Permissions-Policy: enabled
+2025-12-31 05:17:01,319 - 
+middleware.cors - INFO -   - CSP: 
+enabled
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Security headers added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Request ID middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Security headers added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Request ID middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Timing middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Error handling middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Timing middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Audit logging middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Error handling middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Search logging middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Audit logging middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Rate limiting enabled (using 
+dependency injection pattern)
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Search logging middleware added
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -       
+Storage: redis
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -       
+Applied to auth endpoints via depend
+encies=[Depends(apply_rate_limit)]
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -    [OK] 
+Rate limiting enabled (using 
+dependency injection pattern)
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO - [DONE] 
+Middleware chain setup completed!
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -       
+Storage: redis
+2025-12-31 05:17:01,319 - app.main 
+- INFO - Middleware configured 
+successfully
+2025-12-31 05:17:01,319 - app.main 
+- INFO -   - Audit Logging: True
+2025-12-31 05:17:01,319 - app.main 
+- INFO -   - Rate Limiting: True
+2025-12-31 05:17:01,319 - app.main 
+- INFO -   - Search Logging: True
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO -       
+Applied to auth endpoints via depend
+encies=[Depends(apply_rate_limit)]
+2025-12-31 05:17:01,319 - 
+middleware.setup - INFO - [DONE] 
+Middleware chain setup completed!
+2025-12-31 05:17:01,319 - app.main 
+- INFO - Middleware configured 
+successfully
+2025-12-31 05:17:01,319 - app.main 
+- INFO -   - Audit Logging: True
+2025-12-31 05:17:01,319 - app.main 
+- INFO -   - Rate Limiting: True
+2025-12-31 05:17:01,319 - app.main 
+- INFO -   - Search Logging: True
+2025-12-31 05:17:01,351 - app.main 
+- INFO - [Static Files] Mounted 
+/static/uploads from: 
+/static/uploads
+2025-12-31 05:17:01,351 - app.main 
+- INFO - [Static Files] Base URL: ht
+tps://travel-img-drive.s3.ap-southea
+st-1.amazonaws.com/uploads
+2025-12-31 05:17:01,351 - app.main 
+- INFO - [Static Files] Mounted 
+/static/uploads from: 
+/static/uploads
+2025-12-31 05:17:01,351 - app.main 
+- INFO - [Static Files] Base URL: ht
+tps://travel-img-drive.s3.ap-southea
+st-1.amazonaws.com/uploads
+[2025-12-31 05:17:01 +0000] [7] 
+[INFO] Started server process [7]
+[2025-12-31 05:17:01 +0000] [8] 
+[INFO] Started server process [8]
+[2025-12-31 05:17:01 +0000] [8] 
+[INFO] Waiting for application 
+startup.
+[2025-12-31 05:17:01 +0000] [7] 
+[INFO] Waiting for application 
+startup.
+2025-12-31 05:17:01,386 - app.main 
+- INFO - ===========================
+=================================
+2025-12-31 05:17:01,386 - app.main 
+- INFO - ===========================
+=================================
+2025-12-31 05:17:01,386 - app.main 
+- INFO - KHß╗₧I ─Éß╗ÿNG M├üY CHß╗ª 
+HANOI TRAVEL API
+2025-12-31 05:17:01,386 - app.main 
+- INFO - KHß╗₧I ─Éß╗ÿNG M├üY CHß╗ª 
+HANOI TRAVEL API
+2025-12-31 05:17:01,386 - app.main 
+- INFO - ===========================
+=================================
+2025-12-31 05:17:01,386 - app.main 
+- INFO - ===========================
+=================================
+2025-12-31 05:17:02,441 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:17:02,441 - app.main 
+- INFO - [OK] Kiem tra ket noi 
+database: THANH CONG
+2025-12-31 05:17:02,473 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:17:02,473 - app.main 
+- INFO - [OK] Kiem tra ket noi 
+database: THANH CONG
+2025-12-31 05:17:02,773 - 
+config.database - INFO - C├íc 
+bß║úng hiß╗çn c├│ trong database: 
+['restaurants', 
+'tourist_attractions', 'districts', 
+'user_place_favorites', 
+'token_refresh', 'hotels', 
+'visit_logs', 'roles', 'places', 
+'place_images', 
+'user_post_favorites', 
+'activity_logs', 'users', 
+'place_types']
+2025-12-31 05:17:02,774 - 
+config.database - INFO - [OK] Tat 
+ca bang da ton tai, khong tao bang 
+moi
+2025-12-31 05:17:02,824 - 
+config.database - INFO - C├íc 
+bß║úng hiß╗çn c├│ trong database: 
+['restaurants', 
+'tourist_attractions', 'districts', 
+'user_place_favorites', 
+'token_refresh', 'hotels', 
+'visit_logs', 'roles', 'places', 
+'place_images', 
+'user_post_favorites', 
+'activity_logs', 'users', 
+'place_types']
+2025-12-31 05:17:02,824 - 
+config.database - INFO - [OK] Tat 
+ca bang da ton tai, khong tao bang 
+moi
+2025-12-31 05:17:03,092 - 
+config.database - INFO - [OK] 
+Database schema verification 
+complete
+2025-12-31 05:17:03,092 - app.main 
+- INFO - [OK] Da khoi tao database
+2025-12-31 05:17:03,092 - app.main 
+- INFO - [OK] Hoan tat khoi dong 
+may chu
+2025-12-31 05:17:03,092 - app.main 
+- INFO - ===========================
+=================================
+[2025-12-31 05:17:03 +0000] [8] 
+[INFO] Application startup complete.
+2025-12-31 05:17:03,171 - 
+config.database - INFO - [OK] 
+Database schema verification 
+complete
+2025-12-31 05:17:03,172 - app.main 
+- INFO - [OK] Da khoi tao database
+2025-12-31 05:17:03,172 - app.main 
+- INFO - [OK] Hoan tat khoi dong 
+may chu
+2025-12-31 05:17:03,172 - app.main 
+- INFO - ===========================
+=================================
+[2025-12-31 05:17:03 +0000] [7] 
+[INFO] Application startup complete.
+2025-12-31 05:17:05,090 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:17:05,091 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/health - 200 | IP: 127.0.0.1 | 
+Time: 224.30ms
+2025-12-31 05:17:35,539 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:17:35,540 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/health - 200 | IP: 127.0.0.1 | 
+Time: 242.43ms
+2025-12-31 05:17:44,362 - 
+app.api.v1.places - INFO - [PLACES] 
+Get places - outstanding only, 
+found 5 places (page 1)
+2025-12-31 05:17:44,363 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/api/v1/places - 200 | IP: 
+113.179.253.21 | Time: 802.26ms
+2025-12-31 05:17:44,852 - 
+middleware.search_logging - INFO - 
+Search logged:  by anonymous
+2025-12-31 05:17:45,480 - 
+middleware.mongodb_client - INFO - 
+MongoDB indexes setup completed
+2025-12-31 05:17:45,480 - 
+middleware.mongodb_client - INFO - 
+Connected to MongoDB: mongodb+srv://
+ocococ2005:123456aA@webserver.lyvsqx
+8.mongodb.net/
+2025-12-31 05:17:46,464 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/api/v1/posts - 200 | IP: 
+113.179.253.21 | Time: 2907.88ms
+2025-12-31 05:17:46,988 - 
+middleware.search_logging - INFO - 
+Search logged:  by anonymous
+2025-12-31 05:18:02,760 - 
+app.utils.email_validator - INFO - 
+Email validation result for 
+mle29022@gmail.com: status=valid, 
+score=88, result=deliverable, 
+deliverable=True
+2025-12-31 05:18:02,762 - 
+app.services.auth_service - INFO - 
+Email validation passed for 
+mle29022@gmail.com: Email is valid 
+and deliverable
+2025-12-31 05:18:03,270 - 
+app.services.auth_service - ERROR - 
+Database integrity error during 
+registration: (psycopg2.errors.Forei
+gnKeyViolation) insert or update on 
+table "users" violates foreign key 
+constraint "users_role_id_fkey"
+DETAIL:  Key (role_id)=(3) is not 
+present in table "roles".
+
+[SQL: INSERT INTO users (full_name, 
+email, password_hash, avatar_url, 
+bio, role_id, reputation_score, 
+is_active, ban_reason, deleted_at, 
+last_login_at, created_at, 
+updated_at) VALUES (%(full_name)s, 
+%(email)s, %(password_hash)s, 
+%(avatar_url)s, %(bio)s, 
+%(role_id)s, %(reputation_score)s, 
+%(is_active)s, %(ban_reason)s, 
+%(deleted_at)s, %(last_login_at)s, 
+%(created_at)s, %(updated_at)s) 
+RETURNING users.id]
+[parameters: {'full_name': 'Tien 
+Manhh', 'email': 
+'mle29022@gmail.com', 
+'password_hash': '$2b$12$lj/GVUDhMsW
+Rw0vYXh4w0eIKw9g4.qkuO4fJVxeNqW2UCOH
+hbONY2', 'avatar_url': None, 'bio': 
+None, 'role_id': 3, 
+'reputation_score': 0, 'is_active': 
+True, 'ban_reason': None, 
+'deleted_at': None, 
+'last_login_at': None, 
+'created_at': 
+datetime.datetime(2025, 12, 31, 5, 
+18, 3, 174966), 'updated_at': 
+datetime.datetime(2025, 12, 31, 5, 
+18, 3, 174970)}]
+(Background on this error at: 
+https://sqlalche.me/e/20/gkpj)
+2025-12-31 05:18:03,271 - 
+middleware.audit_log - WARNING - 
+[api_call] Request completed: POST 
+/api/v1/auth/register - 400 | IP: 
+113.179.253.21 | Time: 2919.66ms
+2025-12-31 05:18:06,106 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:18:06,107 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/health - 200 | IP: 127.0.0.1 | 
+Time: 259.48ms
+2025-12-31 05:18:36,557 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:18:36,558 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/health - 200 | IP: 127.0.0.1 | 
+Time: 236.35ms
+2025-12-31 05:19:07,013 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:19:07,015 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/health - 200 | IP: 127.0.0.1 | 
+Time: 244.50ms
+2025-12-31 05:19:37,489 - 
+config.database - INFO - Database 
+connection test: SUCCESS
+2025-12-31 05:19:37,490 - 
+middleware.audit_log - INFO - 
+[api_call] Request completed: GET 
+/health - 200 | IP: 127.0.0.1 | 
+Time: 253.71ms

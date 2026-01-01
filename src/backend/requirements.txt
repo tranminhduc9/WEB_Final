@@ -33,8 +33,18 @@ cloudinary>=1.36.0
 python-multipart>=0.0.6
 aiofiles>=23.0.0
 
-# AI/ML (Chatbot)
+# AI/ML (Chatbot) - Adaptive RAG with LangGraph
 google-generativeai>=0.3.0
+langchain>=0.3.0
+langgraph>=0.2.0
+langchain-google-genai>=2.0.0
+langsmith>=0.1.0
+
+# Retry & Rate Limit Handling
+tenacity>=8.2.0
+
+# Content Moderation (Guardrails)
+better-profanity>=0.7.0
 
 # HTTP Client
 httpx>=0.25.0

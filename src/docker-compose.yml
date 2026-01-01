@@ -111,6 +111,18 @@ services:
     environment:
       # Kết nối DB dùng tên service 'db' thay vì localhost
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      
+      # MongoDB Atlas cho chatbot
+      MONGO_URI_ATLAS: ${MONGO_URI_ATLAS}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-hanoi_travel_mongo}
+      
+      # Google Gemini API cho chatbot
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      
+      # LangSmith tracing (optional)
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-hanoi-travel-chatbot}
     
     networks:
       - travel_network
