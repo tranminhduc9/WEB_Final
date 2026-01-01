@@ -93,11 +93,17 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
     # Get post images - chỉ cần gọi helper function
     post_images = get_post_images(post)
     
-    # Fallback: Nếu không có ảnh nhưng có related_place_id, dùng ảnh của địa điểm
-    if not post_images and post.get("related_place_id"):
-        place_image = get_main_image_url(post.get("related_place_id"), db)
-        if place_image:
-            post_images = [place_image]
+    # Fallback: Đảm bảo ít nhất 2 ảnh nếu có related_place_id
+    if post.get("related_place_id") and len(post_images) < 2:
+        from app.utils.image_helpers import get_all_place_images
+        place_images = get_all_place_images(post.get("related_place_id"), db)
+        
+        # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
+        for place_img in place_images:
+            if place_img not in post_images:
+                post_images.append(place_img)
+            if len(post_images) >= 2:
+                break
     
     return {
         "_id": str(post.get("_id")),
@@ -221,6 +227,23 @@ async def create_post(
             "comments_count": 0,
             "status": "pending"
         }
+        
+        # Fallback: Đảm bảo ít nhất 2 ảnh nếu có related_place_id
+        # Nếu user upload ít hơn 2 ảnh, bù thêm từ ảnh của địa điểm
+        if post_data.related_place_id and len(clean_images) < 2:
+            from app.utils.image_helpers import get_all_place_images
+            place_images = get_all_place_images(post_data.related_place_id, db)
+            
+            # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
+            for place_img in place_images:
+                if place_img not in clean_images:
+                    clean_images.append(place_img)
+                if len(clean_images) >= 2:
+                    break
+            
+            post_doc["images"] = clean_images
+            if len(clean_images) > len(post_data.images or []):
+                logger.info(f"Post filled with place images: {clean_images}")
         
         # Insert to MongoDB
         post_id = await mongo_client.create_post(post_doc)

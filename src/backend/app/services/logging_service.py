@@ -393,15 +393,17 @@ def get_visit_analytics(db: Session, days: int = 30) -> Dict[str, Any]:
             VisitLog.visited_at >= since_date
         ).count()
         
-        # Unique visitors (theo IP)
-        unique_visitors = db.query(func.count(func.distinct(VisitLog.ip_address))).filter(
-            VisitLog.visited_at >= since_date
-        ).scalar() or 0
-        
-        # Logged-in visitors
-        logged_in_visitors = db.query(func.count(func.distinct(VisitLog.user_id))).filter(
+        # Unique visitors (theo user_id - số tài khoản đăng nhập)
+        # Đếm số user unique đã đăng nhập thay vì đếm IP
+        unique_visitors = db.query(func.count(func.distinct(VisitLog.user_id))).filter(
             VisitLog.visited_at >= since_date,
             VisitLog.user_id.isnot(None)
+        ).scalar() or 0
+        
+        # Guest visitors (không đăng nhập - đếm theo IP)
+        guest_visitors = db.query(func.count(func.distinct(VisitLog.ip_address))).filter(
+            VisitLog.visited_at >= since_date,
+            VisitLog.user_id.is_(None)
         ).scalar() or 0
         
         # Top places (by visits)
@@ -463,8 +465,8 @@ def get_visit_analytics(db: Session, days: int = 30) -> Dict[str, Any]:
             "period_days": days,
             "summary": {
                 "total_visits": total_visits,
-                "unique_visitors": unique_visitors,
-                "logged_in_visitors": logged_in_visitors
+                "unique_visitors": unique_visitors,  # Số tài khoản đăng nhập unique
+                "guest_visitors": guest_visitors      # Số khách vãng lai (theo IP)
             },
             "top_places": top_places_data,
             "top_posts": top_posts_data,

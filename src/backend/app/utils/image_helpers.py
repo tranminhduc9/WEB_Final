@@ -289,21 +289,63 @@ def normalize_image_list(images: List[str]) -> List[str]:
     return [build_image_url_from_db(img) for img in images if img]
 
 
-def get_avatar_url(avatar_path: str = None, user_id: int = None) -> Optional[str]:
+def get_avatar_url(avatar_path: str = None, user_id: int = None, full_name: str = None) -> str:
     """
     Lấy URL avatar của user.
     API chỉ cần gọi hàm này.
     
     Args:
         avatar_path: Avatar path/URL from database
-        user_id: User ID (optional, for generating default)
+        user_id: User ID (optional, for fallback)
+        full_name: User's full name (optional, for generating personalized avatar)
         
     Returns:
-        Full URL to avatar or None
+        Full URL to avatar (fallback to default if no avatar)
     """
+    # Default avatar URL - using a stable, reliable placeholder service
+    DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User&background=F88622&color=fff&size=150&bold=true"
+    
     if avatar_path:
         return build_image_url_from_db(avatar_path)
-    return None
+    
+    # Generate personalized default avatar using first letter of name
+    if full_name:
+        # URL encode the name for safe URL usage
+        import urllib.parse
+        # Use first 2 characters or initials for better display
+        name_parts = full_name.strip().split()
+        if len(name_parts) >= 2:
+            # Get initials: "Nguyen Van A" -> "NA"
+            initials = name_parts[0][0] + name_parts[-1][0]
+        else:
+            # Single name: take first 2 chars
+            initials = full_name[:2] if len(full_name) >= 2 else full_name
+        encoded_name = urllib.parse.quote(initials.upper())
+        return f"https://ui-avatars.com/api/?name={encoded_name}&background=F88622&color=fff&size=150&bold=true"
+    
+    # Fallback to user_id if no name available
+    if user_id:
+        return f"https://ui-avatars.com/api/?name=U{user_id}&background=F88622&color=fff&size=150&bold=true"
+    
+    return DEFAULT_AVATAR
+
+
+def get_banned_user_avatar() -> str:
+    """
+    Trả về avatar cho tài khoản bị ban.
+    Hiển thị dấu chấm than (!) với nền đỏ.
+    """
+    # Exclamation mark with red background
+    return "https://ui-avatars.com/api/?name=!&background=DC3545&color=fff&size=150&bold=true"
+
+
+def get_deleted_user_avatar() -> str:
+    """
+    Trả về avatar cho tài khoản đã xóa.
+    Hiển thị ký tự X với nền xám.
+    """
+    # X mark with gray background
+    return "https://ui-avatars.com/api/?name=X&background=6C757D&color=fff&size=150&bold=true"
 
 
 def get_post_images(post: dict) -> List[str]:
