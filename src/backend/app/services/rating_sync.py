@@ -181,7 +181,8 @@ async def sync_places_ratings_batch(
         # Execute aggregation
         aggregation_results = await mongo_client.aggregate("posts", pipeline)
         
-        # Process results
+        # Process results - ACCUMULATE data from both int and string place_id groups
+        # MongoDB may group related_place_id=48 (int) and related_place_id="48" (string) separately
         place_data_map = {}
         for doc in aggregation_results:
             place_id = doc["_id"]
@@ -192,12 +193,32 @@ async def sync_places_ratings_batch(
                 except ValueError:
                     continue
             
-            place_data_map[place_id] = {
-                "rating_average": doc.get("rating_average", 0.0),
-                "review_count": doc.get("review_count", 0),
-                "rating_total": doc.get("rating_total", 0.0),
-                "rating_count": doc.get("review_count", 0)  # For compatibility
-            }
+            # If place_id already exists, ACCUMULATE instead of overwrite
+            if place_id in place_data_map:
+                existing = place_data_map[place_id]
+                new_review_count = existing["review_count"] + doc.get("review_count", 0)
+                new_rating_total = existing["rating_total"] + doc.get("rating_total", 0.0)
+                new_rating_count_for_avg = existing.get("rating_count_for_avg", 0) + doc.get("rating_count_for_avg", 0)
+                
+                # Recalculate average from accumulated totals
+                new_rating_average = round(new_rating_total / new_rating_count_for_avg, 2) if new_rating_count_for_avg > 0 else 0.0
+                
+                place_data_map[place_id] = {
+                    "rating_average": new_rating_average,
+                    "review_count": new_review_count,
+                    "rating_total": new_rating_total,
+                    "rating_count": new_review_count,  # For compatibility
+                    "rating_count_for_avg": new_rating_count_for_avg  # Keep track for future accumulation
+                }
+                logger.info(f"[RATING_SYNC] Accumulated data for place_id={place_id}: review_count={new_review_count}, avg={new_rating_average}")
+            else:
+                place_data_map[place_id] = {
+                    "rating_average": doc.get("rating_average", 0.0),
+                    "review_count": doc.get("review_count", 0),
+                    "rating_total": doc.get("rating_total", 0.0),
+                    "rating_count": doc.get("review_count", 0),  # For compatibility
+                    "rating_count_for_avg": doc.get("rating_count_for_avg", 0)  # Store for potential accumulation
+                }
         
         # Build results for all requested place_ids
         for place_id in place_ids:
@@ -264,10 +285,11 @@ async def update_place_rating(
         rating_data = await calculate_place_rating_from_mongodb(place_id, mongo_client)
         
         # Cập nhật PostgreSQL
+        # NOTE: rating_count in PostgreSQL = review_count (total posts), not just posts with ratings
         update_query = text("""
             UPDATE places 
             SET rating_average = :rating_average,
-                rating_count = :rating_count,
+                rating_count = :review_count,
                 rating_total = :rating_total,
                 updated_at = NOW()
             WHERE id = :place_id
@@ -276,12 +298,12 @@ async def update_place_rating(
         db.execute(update_query, {
             "place_id": place_id,
             "rating_average": rating_data["rating_average"],
-            "rating_count": rating_data["rating_count"],
+            "review_count": rating_data["review_count"],  # Use review_count (total posts) for consistency
             "rating_total": rating_data["rating_total"]
         })
         db.commit()
         
-        logger.info(f"[RATING_SYNC] Updated place {place_id}: avg={rating_data['rating_average']}, count={rating_data['rating_count']}")
+        logger.info(f"[RATING_SYNC] Updated place {place_id}: avg={rating_data['rating_average']}, review_count={rating_data['review_count']}")
         return True
         
     except Exception as e:
