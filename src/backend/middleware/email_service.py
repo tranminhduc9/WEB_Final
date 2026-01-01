@@ -355,7 +355,8 @@ Trân trọng,
     @staticmethod
     def password_changed_notification(email: str) -> Dict[str, str]:
         """Template cho thông báo đổi mật khẩu - Modern Vietnamese Design"""
-        current_time = datetime.now().strftime('%H:%M:%S ngày %d/%m/%Y')
+        from app.utils.timezone_helper import vietnam_now
+        current_time = vietnam_now().strftime('%H:%M:%S ngày %d/%m/%Y')
         escaped_email = html.escape(email)
         
         return {

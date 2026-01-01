@@ -19,6 +19,7 @@ import uuid
 from config.database import get_db, Place
 from app.utils.image_helpers import get_main_image_url
 from app.utils.place_helpers import get_place_compact
+from app.utils.timezone_helper import to_iso_string
 from middleware.auth import get_current_user, get_optional_user
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
@@ -181,7 +182,7 @@ async def get_chat_history(
                 "conversation_id": log.get("conversation_id"),
                 "user_message": log.get("user_message"),
                 "bot_response": log.get("bot_response"),
-                "created_at": log.get("created_at").isoformat() if log.get("created_at") else None
+                "created_at": to_iso_string(log.get("created_at"))
             })
         
         return success_response(

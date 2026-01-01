@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from datetime import datetime
-from app.utils.timezone_helper import utc_now
+from app.utils.timezone_helper import utc_now, to_iso_string
 import logging
 import os
 
@@ -118,7 +118,7 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
         "comments_count": post.get("comments_count", 0),
         "is_liked": is_liked,
         "status": post.get("status"),
-        "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+        "created_at": to_iso_string(post.get("created_at"))
     }
 
 
@@ -319,7 +319,7 @@ async def get_post_detail(
                 "content": comment.get("content"),
                 "parent_id": comment.get("parent_id"),
                 "images": comment.get("images", []),
-                "created_at": comment.get("created_at").isoformat() if comment.get("created_at") else None
+                "created_at": to_iso_string(comment.get("created_at"))
             })
         
         formatted_post["comments"] = formatted_comments
@@ -495,7 +495,7 @@ async def add_comment(
             message="Thêm comment thành công",
             data={
                 "comment_id": comment_id,
-                "created_at": utc_now().isoformat()
+                "created_at": to_iso_string(utc_now())
             }
         )
         
@@ -567,7 +567,7 @@ async def reply_to_comment(
             message="Reply thành công",
             data={
                 "comment_id": reply_id,
-                "created_at": utc_now().isoformat()
+                "created_at": to_iso_string(utc_now())
             }
         )
         
