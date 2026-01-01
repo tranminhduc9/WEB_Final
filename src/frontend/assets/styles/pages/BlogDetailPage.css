@@ -122,6 +122,12 @@
   color: #000000;
 }
 
+/* Banned/Deleted User Name - Italic Style */
+.blog-detail__username--banned {
+  font-style: italic;
+  color: #999;
+}
+
 /* Location */
 .blog-detail__location {
   display: flex;

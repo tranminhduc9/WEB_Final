@@ -279,7 +279,7 @@ const BlogDetailPage: React.FC = () => {
         <div className="blog-detail__comment-content">
           <div className="blog-detail__comment-header">
             <Link to={`/user/${comment.user?.id}`} className="blog-detail__comment-username-link">
-              <span className="blog-detail__comment-username">
+              <span className={`blog-detail__comment-username ${comment.user?.is_banned ? 'blog-detail__username--banned' : ''}`}>
                 {comment.user?.full_name || 'Người dùng'}
               </span>
             </Link>
@@ -426,7 +426,7 @@ const BlogDetailPage: React.FC = () => {
               alt={post.author?.full_name || 'User'}
               className="blog-detail__avatar"
             />
-            <span className="blog-detail__username">
+            <span className={`blog-detail__username ${post.author?.is_banned ? 'blog-detail__username--banned' : ''}`}>
               {post.author?.full_name || 'Người dùng'} • {formatTimeAgo(post.created_at)}
             </span>
           </Link>

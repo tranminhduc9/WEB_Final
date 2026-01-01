@@ -21,6 +21,7 @@ interface BlogCardProps {
   isLiked?: boolean;   // Initial like state from parent
   onDeleted?: () => void; // Callback when post is deleted
   onLikeChanged?: (isLiked: boolean, newCount: number) => void; // Callback when like changes
+  isBanned?: boolean; // User banned status
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({
@@ -39,6 +40,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
   isLiked: initialIsLiked = false,
   onDeleted,
   onLikeChanged,
+  isBanned = false,
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthContext();
@@ -169,7 +171,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
             />
             <div className="blog-card__user-info">
               <span
-                className={`blog-card__username ${authorId ? 'blog-card__username--clickable' : ''}`}
+                className={`blog-card__username ${authorId ? 'blog-card__username--clickable' : ''} ${isBanned ? 'blog-card__username--banned' : ''}`}
                 onClick={handleUserClick}
               >
                 {username} • {timeAgo}

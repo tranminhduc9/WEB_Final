@@ -115,7 +115,8 @@ const BlogPage: React.FC = () => {
     likeCount: post.likes_count || 0,
     commentCount: post.comments_count || 0,
     description: post.content?.slice(0, 150) || '',
-    isLiked: post.is_liked || false
+    isLiked: post.is_liked || false,
+    isBanned: post.author?.is_banned
   });
 
   const handlePageChange = (page: number) => {

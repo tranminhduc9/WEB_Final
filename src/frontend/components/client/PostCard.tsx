@@ -14,6 +14,7 @@ interface PostCardProps {
   likeCount: number;
   commentCount: number;
   isLiked?: boolean; // Initial like state from parent
+  isBanned?: boolean;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -25,6 +26,7 @@ const PostCard: React.FC<PostCardProps> = ({
   likeCount: initialLikeCount,
   commentCount,
   isLiked: initialIsLiked = false,
+  isBanned = false,
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthContext();
@@ -68,7 +70,7 @@ const PostCard: React.FC<PostCardProps> = ({
       <div className="post-card__content">
         {/* Thông tin tác giả */}
         <div className="post-card__author">
-          <span className="post-card__author-name">{authorName}</span>
+          <span className={`post-card__author-name ${isBanned ? 'post-card__author-name--banned' : ''}`}>{authorName}</span>
           <span className="post-card__time">{timeAgo}</span>
         </div>
 

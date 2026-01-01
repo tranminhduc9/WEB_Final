@@ -241,6 +241,7 @@ const LocationInfoPage: React.FC = () => {
                             commentCount={post.comments_count}
                             description={post.content}
                             isLiked={post.is_liked || false}
+                            isBanned={post.author?.is_banned}
                         />
                     </div>
                 ))}

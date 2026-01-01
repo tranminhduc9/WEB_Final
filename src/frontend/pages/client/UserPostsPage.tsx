@@ -167,6 +167,7 @@ const UserPostsPage: React.FC = () => {
                                         // Remove from local state after delete
                                         setPosts(prev => prev.filter(p => p._id !== post._id));
                                     }}
+                                    isBanned={post.author?.is_banned}
                                 />
                             ))}
                         </section>
