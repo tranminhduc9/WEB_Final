@@ -9,6 +9,7 @@ Chuẩn hóa lỗi cho tất cả các phiên bản.
 import traceback
 import uuid
 from datetime import datetime
+from app.utils.timezone_helper import utc_now
 from enum import Enum
 from typing import Dict, Any, Optional, List, Union
 from fastapi import Request, Response, HTTPException
@@ -136,7 +137,7 @@ class APIError(Exception):
             "error_code": self.error_code,
             "message": self.user_message,
             "details": self.details if os.getenv("DEBUG", "false").lower() == "true" else {},
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utc_now().isoformat(),
             "category": self.category.value
         }
 

@@ -7,6 +7,7 @@ vào bảng visit_logs cho phân tích và tối ưu.
 
 import time
 from datetime import datetime
+from app.utils.timezone_helper import utc_now
 from typing import Dict, Any, Optional
 from fastapi import Request, Query
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -59,7 +60,7 @@ class SearchLogger:
                 "ip_address": ip_address,
                 "user_agent": user_agent,
                 "page_url": str(request.url),
-                "visited_at": datetime.utcnow()
+                "visited_at": utc_now()
             }
 
             # Log vào database (implement sau)

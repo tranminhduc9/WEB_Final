@@ -21,6 +21,7 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from datetime import datetime
+from app.utils.timezone_helper import utc_now
 import logging
 
 from config.database import (
@@ -125,7 +126,7 @@ async def get_dashboard(
         active_users = db.query(User).filter(User.is_active == True).count()
         
         # New users today
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = utc_now().replace(hour=0, minute=0, second=0, microsecond=0)
         new_users_today = db.query(User).filter(User.created_at >= today_start).count()
         
         # Place stats
@@ -256,7 +257,7 @@ async def delete_user(
             )
         
         # Soft delete
-        user.deleted_at = datetime.utcnow()
+        user.deleted_at = utc_now()
         user.is_active = False
         db.commit()
         
@@ -1055,7 +1056,7 @@ async def delete_place(
                 status_code=404
             )
         
-        place.deleted_at = datetime.utcnow()
+        place.deleted_at = utc_now()
         db.commit()
         
         return success_response(message="Đã xóa địa điểm")

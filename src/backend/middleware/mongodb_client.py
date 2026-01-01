@@ -8,6 +8,7 @@ chatbot_logs_mongo, reports_mongo.
 
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime
+from app.utils.timezone_helper import utc_now
 import logging
 import os
 import json
@@ -179,8 +180,8 @@ class MongoDBClient:
         coll = self.db[collection_name]
 
         # Add timestamps
-        document["created_at"] = datetime.utcnow()
-        document["updated_at"] = datetime.utcnow()
+        document["created_at"] = utc_now()
+        document["updated_at"] = utc_now()
 
         result = await coll.insert_one(document)
         return str(result.inserted_id)
@@ -276,7 +277,7 @@ class MongoDBClient:
         coll = self.db[collection_name]
 
         # Add updated_at timestamp
-        update["updated_at"] = datetime.utcnow()
+        update["updated_at"] = utc_now()
 
         result = await coll.update_one(query, {"$set": update})
         return result.modified_count > 0
@@ -454,7 +455,7 @@ class MongoDBClient:
             like_data = {
                 "post_id": post_id,
                 "user_id": user_id,
-                "created_at": datetime.utcnow()
+                "created_at": utc_now()
             }
             await self.insert_one("post_likes", like_data)
             total_likes = await self.count("post_likes", {"post_id": post_id})

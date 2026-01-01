@@ -681,11 +681,12 @@ async def forgot_password(
         if user:
             # Generate reset token (1 hour expiry)
             secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+            from app.utils.timezone_helper import utc_now
             payload = {
                 "user_id": user.id,
                 "email": email,
                 "type": "password_reset",
-                "exp": datetime.utcnow() + timedelta(hours=1)
+                "exp": utc_now() + timedelta(hours=1)
             }
             reset_token = jwt.encode(payload, secret_key, algorithm="HS256")
             

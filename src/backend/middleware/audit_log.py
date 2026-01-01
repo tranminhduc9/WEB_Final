@@ -10,6 +10,7 @@ import json
 import time
 import uuid
 from datetime import datetime
+from app.utils.timezone_helper import utc_now
 from typing import Dict, Any, Optional, List
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -110,7 +111,7 @@ class AuditLogEntry:
             response_time: Thời gian xử lý (ms)
         """
         self.id = str(uuid.uuid4())
-        self.timestamp = datetime.utcnow()
+        self.timestamp = utc_now()
         # Handle both enum and string values
         self.action_type = action_type.value if hasattr(action_type, 'value') else action_type
         self.message = message

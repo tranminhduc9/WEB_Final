@@ -9,6 +9,7 @@ Logic giữ ổn định qua các phiên bản.
 import jwt
 import bcrypt
 from datetime import datetime, timedelta
+from app.utils.timezone_helper import utc_now
 from typing import Optional, Dict, Any, List
 from fastapi import Request, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -85,7 +86,7 @@ class JWTAuthMiddleware:
         Returns:
             str: JWT access token
         """
-        now = datetime.utcnow()
+        now = utc_now()
         exp = expires_delta or JWT_EXPIRATION
 
         payload = {
@@ -109,7 +110,7 @@ class JWTAuthMiddleware:
         Returns:
             str: JWT refresh token
         """
-        now = datetime.utcnow()
+        now = utc_now()
         payload = {
             "sub": str(user_data.get("id")),
             "email": user_data.get("email"),
@@ -151,7 +152,7 @@ class JWTAuthMiddleware:
                 )
 
             # Kiểm tra token có hết hạn không
-            if datetime.utcnow() > datetime.fromtimestamp(payload.get("exp", 0)):
+            if utc_now() > datetime.fromtimestamp(payload.get("exp", 0)):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token đã hết hạn"
@@ -326,7 +327,7 @@ def is_token_expired(payload: Dict[str, Any]) -> bool:
     else:
         exp_datetime = exp_timestamp
 
-    return datetime.utcnow() > exp_datetime
+    return utc_now() > exp_datetime
 
 
 def extract_user_info(payload: Dict[str, Any]) -> Dict[str, Any]:

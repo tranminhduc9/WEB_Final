@@ -283,7 +283,8 @@ async def get_visit_logs(
         from config.database import VisitLog, Place, User
         from datetime import datetime, timedelta
         
-        since_date = datetime.utcnow() - timedelta(days=days)
+        from app.utils.timezone_helper import utc_now
+        since_date = utc_now() - timedelta(days=days)
         
         # Query database
         query = db.query(VisitLog).filter(VisitLog.visited_at >= since_date)
