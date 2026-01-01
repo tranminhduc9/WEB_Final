@@ -232,7 +232,7 @@ class EmailTemplate:
 
         <div class="footer">
             <p><strong>Hanoivivu</strong> - Khám phá Hà Nội theo cách của bạn</p>
-            <p>© 2024 Hanoivivu. All rights reserved.</p>
+            <p>© 2026 Hanoivivu. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -322,7 +322,7 @@ Trân trọng,
 
         <div class="footer">
             <p><strong>Hanoivivu</strong> - Khám phá Hà Nội theo cách của bạn</p>
-            <p>© 2024 Hanoivivu. All rights reserved.</p>
+            <p>© 2026 Hanoivivu. All rights reserved.</p>
             <p class="small-text">Đây là email tự động, vui lòng không trả lời email này.</p>
         </div>
     </div>
@@ -413,7 +413,7 @@ Trân trọng,
 
         <div class="footer">
             <p><strong>Hanoivivu</strong> - Khám phá Hà Nội theo cách của bạn</p>
-            <p>© 2024 Hanoivivu. All rights reserved.</p>
+            <p>© 2026 Hanoivivu. All rights reserved.</p>
             <p class="small-text">Đây là email tự động từ hệ thống bảo mật.</p>
         </div>
     </div>
