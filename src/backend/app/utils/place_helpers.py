@@ -58,9 +58,8 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
     UserCompact fields:
     - id, full_name, avatar_url, role_id, is_banned
     
-    Nếu user bị ban hoặc bị xóa:
-    - full_name sẽ hiển thị "Tài khoản bị khóa"
-    - is_banned = True
+    Nếu user bị xóa: full_name = "Tài khoản bị xóa"
+    Nếu user bị ban: full_name = "Tài khoản bị ban"
     
     Args:
         user_id: ID của user
@@ -74,24 +73,35 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
     
     user = db.query(User).filter(User.id == user_id).first()
     if user:
-        # Check if user is banned or deleted
-        is_banned = (not user.is_active) or (user.deleted_at is not None)
-        
-        if is_banned:
+        # Check if user is deleted first (higher priority)
+        if user.deleted_at is not None:
             return {
                 "id": user.id,
-                "full_name": "Tài khoản bị khóa",
-                "avatar_url": None,  # Hide avatar for banned users
+                "full_name": "Tài khoản bị xóa",
+                "avatar_url": None,
                 "role_id": user.role_id,
-                "is_banned": True
+                "is_banned": True,
+                "status": "deleted"
+            }
+        
+        # Check if user is banned
+        if not user.is_active:
+            return {
+                "id": user.id,
+                "full_name": "Tài khoản bị ban",
+                "avatar_url": None,
+                "role_id": user.role_id,
+                "is_banned": True,
+                "status": "banned"
             }
         
         return {
             "id": user.id,
             "full_name": user.full_name,
-            "avatar_url": get_avatar_url(user.avatar_url),  # Normalized to full URL
+            "avatar_url": get_avatar_url(user.avatar_url),
             "role_id": user.role_id,
-            "is_banned": False
+            "is_banned": False,
+            "status": "active"
         }
     return None
 

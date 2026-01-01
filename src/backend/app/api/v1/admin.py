@@ -395,6 +395,20 @@ async def get_admin_posts(
             # Normalize images
             images = normalize_image_list(post.get("images", []))
             
+            # Check user status for display
+            user_status = "active"
+            user_display_name = user.full_name if user else "Unknown"
+            user_avatar = avatar_url
+            if user:
+                if user.deleted_at is not None:
+                    user_status = "deleted"
+                    user_display_name = "Tài khoản bị xóa"
+                    user_avatar = None
+                elif not user.is_active:
+                    user_status = "banned"
+                    user_display_name = "Tài khoản bị ban"
+                    user_avatar = None
+            
             formatted_posts.append({
                 "_id": str(post.get("_id")),
                 "title": post.get("title"),
@@ -403,8 +417,10 @@ async def get_admin_posts(
                 "rating": post.get("rating"),
                 "author": {
                     "id": user.id if user else None,
-                    "full_name": user.full_name if user else "Unknown",
-                    "avatar_url": avatar_url
+                    "full_name": user_display_name,
+                    "avatar_url": user_avatar,
+                    "is_banned": user_status != "active",
+                    "status": user_status
                 } if user else None,
                 "related_place": related_place,
                 "status": post.get("status"),
@@ -669,12 +685,25 @@ async def get_admin_comments(
         formatted_comments = []
         for comment in comments:
             user = db.query(User).filter(User.id == comment.get("user_id")).first()
+            # Check user status for display
+            user_status = "active"
+            user_display_name = user.full_name if user else "Unknown"
+            if user:
+                if user.deleted_at is not None:
+                    user_status = "deleted"
+                    user_display_name = "Tài khoản bị xóa"
+                elif not user.is_active:
+                    user_status = "banned"
+                    user_display_name = "Tài khoản bị ban"
+            
             formatted_comments.append({
                 "_id": str(comment.get("_id")),
                 "post_id": comment.get("post_id"),
                 "user": {
                     "id": user.id if user else None,
-                    "full_name": user.full_name if user else "Unknown"
+                    "full_name": user_display_name,
+                    "is_banned": user_status != "active",
+                    "status": user_status
                 },
                 "content": comment.get("content"),
                 "parent_id": comment.get("parent_id"),
@@ -760,13 +789,26 @@ async def get_reports(
         formatted_reports = []
         for report in reports:
             reporter = db.query(User).filter(User.id == report.get("reporter_id")).first()
+            # Check reporter status for display
+            reporter_status = "active"
+            reporter_display_name = reporter.full_name if reporter else "Unknown"
+            if reporter:
+                if reporter.deleted_at is not None:
+                    reporter_status = "deleted"
+                    reporter_display_name = "Tài khoản bị xóa"
+                elif not reporter.is_active:
+                    reporter_status = "banned"
+                    reporter_display_name = "Tài khoản bị ban"
+            
             formatted_reports.append({
                 "_id": str(report.get("_id")),
                 "target_type": report.get("target_type"),
                 "target_id": report.get("target_id"),
                 "reporter": {
                     "id": reporter.id if reporter else None,
-                    "full_name": reporter.full_name if reporter else "Unknown"
+                    "full_name": reporter_display_name,
+                    "is_banned": reporter_status != "active",
+                    "status": reporter_status
                 },
                 "reason": report.get("reason"),
                 "description": report.get("description"),
