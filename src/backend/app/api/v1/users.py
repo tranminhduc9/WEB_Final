@@ -23,6 +23,7 @@ from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
 from app.services.logging_service import log_activity
+from app.utils.timezone_helper import to_iso_string
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +138,7 @@ async def get_user_profile(
                 recent_posts.append({
                     "_id": str(post.get("_id")),
                     "title": post.get("title"),
-                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                    "created_at": to_iso_string(post.get("created_at"))
                 })
         except Exception as e:
             logger.warning(f"Error getting user posts: {e}")
@@ -471,7 +472,7 @@ async def get_profile_alias(
                     "related_place_id": post.get("related_place_id"),
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
-                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                    "created_at": to_iso_string(post.get("created_at"))
                 })
         except Exception as e:
             logger.warning(f"Error getting user posts: {e}")
@@ -669,7 +670,7 @@ async def get_user_by_id(
                     "related_place_id": post.get("related_place_id"),
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
-                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                    "created_at": to_iso_string(post.get("created_at"))
                 })
         except Exception as e:
             logger.warning(f"Error getting user posts: {e}")

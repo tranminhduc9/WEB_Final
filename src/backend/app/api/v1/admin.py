@@ -21,7 +21,7 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from datetime import datetime
-from app.utils.timezone_helper import utc_now
+from app.utils.timezone_helper import utc_now, to_iso_string
 import logging
 
 from config.database import (
@@ -437,7 +437,7 @@ async def get_admin_posts(
                 "status": post.get("status"),
                 "likes_count": post.get("likes_count", 0),
                 "comments_count": post.get("comments_count", 0),
-                "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                "created_at": to_iso_string(post.get("created_at"))
             })
         
         return success_response(
@@ -770,7 +770,7 @@ async def get_admin_comments(
                 },
                 "content": comment.get("content"),
                 "parent_id": comment.get("parent_id"),
-                "created_at": comment.get("created_at").isoformat() if comment.get("created_at") else None
+                "created_at": to_iso_string(comment.get("created_at"))
             })
         
         return success_response(
@@ -901,7 +901,7 @@ async def get_reports(
                 },
                 "reason": report.get("reason"),
                 "description": report.get("description"),
-                "created_at": report.get("created_at").isoformat() if report.get("created_at") else None
+                "created_at": to_iso_string(report.get("created_at"))
             })
         
         return success_response(

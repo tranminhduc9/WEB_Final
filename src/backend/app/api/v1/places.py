@@ -35,10 +35,9 @@ from middleware.response import (
     server_error_response
 )
 from app.services.logging_service import log_visit, log_activity
+from app.utils.timezone_helper import to_iso_string
 
 logger = logging.getLogger(__name__)
-
-# Tạo router cho places endpoints
 router = APIRouter(prefix="/places", tags=["Places"])
 
 
@@ -758,7 +757,7 @@ async def get_place_detail(
                     "comments_count": post.get("comments_count", 0),
                     "is_liked": False,
                     "status": post.get("status"),
-                    "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
+                    "created_at": to_iso_string(post.get("created_at"))
                 })
         except Exception as e:
             import traceback
