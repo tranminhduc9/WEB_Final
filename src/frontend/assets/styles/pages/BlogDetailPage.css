@@ -102,6 +102,7 @@
 /* User Info */
 .blog-detail__user-info {
   display: flex;
+  width: fit-content;
   align-items: center;
   gap: 16px;
   margin-bottom: 12px;
