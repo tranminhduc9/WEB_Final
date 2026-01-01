@@ -97,7 +97,7 @@ def get_connect_args() -> dict:
     """
     connect_args = {
         # Application name for connection identification
-        "application_name": f"hanoi_travel_{ENVIRONMENT}",
+        "application_name": f"hanoivivu_{ENVIRONMENT}",
         
         # Connection timeout (seconds)
         "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "10")),
@@ -761,3 +761,4 @@ def create_admin_user(email: str, password: str, full_name: str = "Admin"):
         raise
     finally:
         db.close()
+

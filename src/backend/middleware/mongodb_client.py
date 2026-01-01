@@ -24,7 +24,7 @@ class MongoConfig:
 
     # Connection settings
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "hanoi_travel_mongo")
+    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "hanoivivu_mongo")
     MONGO_TIMEOUT = int(os.getenv("MONGO_TIMEOUT", "5000"))  # ms
 
     # Collections
@@ -77,7 +77,7 @@ class MongoDBClient:
     MongoDB client với các phương thức tiện ích
 
     Cung cấp các phương thức thao tác với MongoDB collections
-    cho hệ thống Hanoi Travel.
+    cho hệ thống Hanoivivu.
     """
 
     def __init__(self, mongo_uri: str = None, db_name: str = None):

@@ -32,8 +32,8 @@ class EmailConfig:
     SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
     
     # From settings
-    FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@hanoi-travel.com")
-    FROM_NAME = os.getenv("FROM_NAME", "Hanoi Travel")
+    FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@hanoivivu.com")
+    FROM_NAME = os.getenv("FROM_NAME", "Hanoivivu")
 
     # Frontend URLs
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
@@ -179,35 +179,35 @@ class EmailTemplate:
         frontend_url = EmailConfig.FRONTEND_URL
         
         return {
-            "subject": "🎉 Chào mừng bạn đến với Hanoi Travel!",
+            "subject": "🎉 Chào mừng bạn đến với Hanoivivu!",
             "html": f"""
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chào mừng - Hanoi Travel</title>
+    <title>Chào mừng - Hanoivivu</title>
     <style>{EmailTemplate.BASE_STYLES}</style>
 </head>
 <body>
     <div class="email-wrapper">
         <div class="header">
             <div class="icon">🏛️</div>
-            <h1>Chào mừng đến với Hanoi Travel!</h1>
+            <h1>Chào mừng đến với Hanoivivu!</h1>
             <p>Khám phá vẻ đẹp ngàn năm của Thủ đô</p>
         </div>
 
         <div class="content">
             <h2>Xin chào {escaped_name}! 👋</h2>
             
-            <p>Cảm ơn bạn đã tạo tài khoản tại <strong>Hanoi Travel</strong> - nền tảng khám phá du lịch Hà Nội hàng đầu!</p>
+            <p>Cảm ơn bạn đã tạo tài khoản tại <strong>Hanoivivu</strong> - nền tảng khám phá du lịch Hà Nội hàng đầu!</p>
             
             <div class="highlight-box">
                 <strong>🎁 Tài khoản của bạn đã được kích hoạt thành công!</strong><br>
                 <span class="small-text">Email: {escaped_email}</span>
             </div>
 
-            <p>Với Hanoi Travel, bạn có thể:</p>
+            <p>Với Hanoivivu, bạn có thể:</p>
             
             <ul class="feature-list">
                 <li>Khám phá hơn 1000+ địa điểm du lịch tuyệt đẹp tại Hà Nội</li>
@@ -231,24 +231,24 @@ class EmailTemplate:
         </div>
 
         <div class="footer">
-            <p><strong>Hanoi Travel</strong> - Khám phá Hà Nội theo cách của bạn</p>
-            <p>© 2024 Hanoi Travel. All rights reserved.</p>
+            <p><strong>Hanoivivu</strong> - Khám phá Hà Nội theo cách của bạn</p>
+            <p>© 2024 Hanoivivu. All rights reserved.</p>
         </div>
     </div>
 </body>
 </html>
             """,
             "text": f"""
-Chào mừng đến với Hanoi Travel!
+Chào mừng đến với Hanoivivu!
 
 Xin chào {full_name}!
 
-Cảm ơn bạn đã tạo tài khoản tại Hanoi Travel - nền tảng khám phá du lịch Hà Nội hàng đầu!
+Cảm ơn bạn đã tạo tài khoản tại Hanoivivu - nền tảng khám phá du lịch Hà Nội hàng đầu!
 
 Tài khoản của bạn đã được kích hoạt thành công!
 Email: {email}
 
-Với Hanoi Travel, bạn có thể:
+Với Hanoivivu, bạn có thể:
 • Khám phá hơn 1000+ địa điểm du lịch tuyệt đẹp tại Hà Nội
 • Chia sẻ trải nghiệm và đánh giá các điểm đến yêu thích
 • Kết nối với cộng đồng du lịch sôi động
@@ -258,7 +258,7 @@ Với Hanoi Travel, bạn có thể:
 Truy cập {frontend_url} để bắt đầu khám phá!
 
 Trân trọng,
-Đội ngũ Hanoi Travel
+Đội ngũ Hanoivivu
             """
         }
 
@@ -269,14 +269,14 @@ Trân trọng,
         escaped_email = html.escape(email)
         
         return {
-            "subject": "🔐 Đặt lại mật khẩu - Hanoi Travel",
+            "subject": "🔐 Đặt lại mật khẩu - Hanoivivu",
             "html": f"""
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt lại mật khẩu - Hanoi Travel</title>
+    <title>Đặt lại mật khẩu - Hanoivivu</title>
     <style>{EmailTemplate.BASE_STYLES}</style>
 </head>
 <body>
@@ -290,7 +290,7 @@ Trân trọng,
         <div class="content">
             <h2>Xin chào {escaped_name}!</h2>
             
-            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Hanoi Travel của bạn.</p>
+            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Hanoivivu của bạn.</p>
 
             <div class="highlight-box">
                 <strong>📧 Tài khoản:</strong> {escaped_email}<br>
@@ -321,8 +321,8 @@ Trân trọng,
         </div>
 
         <div class="footer">
-            <p><strong>Hanoi Travel</strong> - Khám phá Hà Nội theo cách của bạn</p>
-            <p>© 2024 Hanoi Travel. All rights reserved.</p>
+            <p><strong>Hanoivivu</strong> - Khám phá Hà Nội theo cách của bạn</p>
+            <p>© 2024 Hanoivivu. All rights reserved.</p>
             <p class="small-text">Đây là email tự động, vui lòng không trả lời email này.</p>
         </div>
     </div>
@@ -330,11 +330,11 @@ Trân trọng,
 </html>
             """,
             "text": f"""
-Yêu cầu đặt lại mật khẩu - Hanoi Travel
+Yêu cầu đặt lại mật khẩu - Hanoivivu
 
 Xin chào {full_name}!
 
-Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Hanoi Travel của bạn.
+Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Hanoivivu của bạn.
 
 Tài khoản: {email}
 Thời hạn: Link có hiệu lực trong 1 giờ
@@ -348,7 +348,7 @@ LƯU Ý BẢO MẬT:
 • Đường dẫn sẽ hết hạn sau 1 giờ
 
 Trân trọng,
-Đội ngũ Hanoi Travel
+Đội ngũ Hanoivivu
             """
         }
 
@@ -359,14 +359,14 @@ Trân trọng,
         escaped_email = html.escape(email)
         
         return {
-            "subject": "✅ Mật khẩu đã được thay đổi - Hanoi Travel",
+            "subject": "✅ Mật khẩu đã được thay đổi - Hanoivivu",
             "html": f"""
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thông báo đổi mật khẩu - Hanoi Travel</title>
+    <title>Thông báo đổi mật khẩu - Hanoivivu</title>
     <style>{EmailTemplate.BASE_STYLES}</style>
 </head>
 <body>
@@ -412,8 +412,8 @@ Trân trọng,
         </div>
 
         <div class="footer">
-            <p><strong>Hanoi Travel</strong> - Khám phá Hà Nội theo cách của bạn</p>
-            <p>© 2024 Hanoi Travel. All rights reserved.</p>
+            <p><strong>Hanoivivu</strong> - Khám phá Hà Nội theo cách của bạn</p>
+            <p>© 2024 Hanoivivu. All rights reserved.</p>
             <p class="small-text">Đây là email tự động từ hệ thống bảo mật.</p>
         </div>
     </div>
@@ -421,7 +421,7 @@ Trân trọng,
 </html>
             """,
             "text": f"""
-Thông báo: Mật khẩu đã được thay đổi - Hanoi Travel
+Thông báo: Mật khẩu đã được thay đổi - Hanoivivu
 
 Xin chào!
 
@@ -445,7 +445,7 @@ MẸO BẢO MẬT TÀI KHOẢN:
 • Không sử dụng lại mật khẩu ở nhiều trang web
 
 Trân trọng,
-Đội ngũ Hanoi Travel
+Đội ngũ Hanoivivu
             """
         }
 

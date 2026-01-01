@@ -19,7 +19,7 @@ import os
 logger = logging.getLogger(__name__)
 
 # Cấu hình JWT - Lấy từ environment variables
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hanoi-travel-default-secret-key-change-in-production")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hanoivivu-default-secret-key-change-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION = 3600  # 1 giờ
 REFRESH_TOKEN_EXPIRATION = 7 * 24 * 3600  # 7 ngày
@@ -351,3 +351,4 @@ def extract_user_info(payload: Dict[str, Any]) -> Dict[str, Any]:
         "exp": payload.get("exp"),
         "iat": payload.get("iat")
     }
+

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Application Settings"""
 
     # ==================== APP INFO ====================
-    APP_NAME: str = "Hanoi Travel API"
+    APP_NAME: str = "Hanoivivu API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # ==================== MONGODB ====================
     MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-    MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME", "hanoi_travel_mongo")
+    MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME", "hanoivivu_mongo")
     MONGO_TIMEOUT: int = int(os.getenv("MONGO_TIMEOUT", "5000"))
     MONGO_MAX_POOL_SIZE: int = int(os.getenv("MONGO_MAX_POOL_SIZE", "10"))
     MONGO_MIN_POOL_SIZE: int = int(os.getenv("MONGO_MIN_POOL_SIZE", "1"))
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     REDIS_SOCKET_CONNECT_TIMEOUT: int = int(os.getenv("REDIS_SOCKET_CONNECT_TIMEOUT", "5"))
 
     # ==================== JWT ====================
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "hanoi-travel-super-secret-key-change-in-production-2024")
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "hanoivivu-super-secret-key-change-in-production-2024")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     JWT_EXPIRATION: int = int(os.getenv("JWT_EXPIRATION", "3600"))  # 1 hour
     REFRESH_TOKEN_EXPIRATION: int = int(os.getenv("REFRESH_TOKEN_EXPIRATION", "604800"))  # 7 days
@@ -65,8 +65,8 @@ class Settings(BaseSettings):
 
     # ==================== EMAIL (SENDGRID) ====================
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
-    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "noreply@hanoi-travel.com")
-    FROM_NAME: str = os.getenv("FROM_NAME", "Hanoi Travel")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "noreply@hanoivivu.com")
+    FROM_NAME: str = os.getenv("FROM_NAME", "Hanoivivu")
 
 
     # ==================== FILE UPLOAD ====================
@@ -115,3 +115,4 @@ class Settings(BaseSettings):
 
 # ==================== SETTINGS INSTANCE ====================
 settings = Settings()
+

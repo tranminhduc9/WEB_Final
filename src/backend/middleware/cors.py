@@ -32,9 +32,9 @@ class CORSConfig:
     # Predefined configurations
     PRODUCTION_CONFIG = {
         "allow_origins": [
-            "https://hanoi-travel.com",
-            "https://www.hanoi-travel.com",
-            "https://admin.hanoi-travel.com"
+            "https://hanoivivu.com",
+            "https://www.hanoivivu.com",
+            "https://admin.hanoivivu.com"
         ],
         "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["*"],
@@ -57,8 +57,8 @@ class CORSConfig:
 
     STAGING_CONFIG = {
         "allow_origins": [
-            "https://staging.hanoi-travel.com",
-            "https://dev.hanoi-travel.com"
+            "https://staging.hanoivivu.com",
+            "https://dev.hanoivivu.com"
         ],
         "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["*"],
@@ -484,7 +484,7 @@ def add_security_headers(app: FastAPI) -> None:
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com; "
                 "img-src 'self' data: https:; "
-                "connect-src 'self' https://api.hanoi-travel.com; "
+                "connect-src 'self' https://api.hanoivivu.com; "
                 "frame-ancestors 'none'; "
                 "base-uri 'self'; "
                 "form-action 'self'"
