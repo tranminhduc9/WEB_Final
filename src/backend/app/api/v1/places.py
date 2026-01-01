@@ -206,15 +206,14 @@ async def get_places(
 ):
     """
     Lấy danh sách địa điểm với bộ lọc
-    - Nếu không có filter: trả về places có rating_average >= 4.0 (outstanding)
-    - Nếu có filter: trả về tất cả places match với filter
+    - Trả về tất cả places, sắp xếp theo rating_average giảm dần
+    - Có thể lọc theo district_id hoặc place_type_id
     """
     try:
         # Build dynamic WHERE clause
         conditions = ["p.deleted_at IS NULL"]
         params = {"limit": limit}
         
-        # Nếu có filter, không giới hạn rating
         if district_id:
             conditions.append("p.district_id = :district_id")
             params["district_id"] = district_id
@@ -223,9 +222,8 @@ async def get_places(
             conditions.append("p.place_type_id = :place_type_id")
             params["place_type_id"] = place_type_id
         
-        # Nếu không có filter nào, chỉ lấy outstanding places
-        if not district_id and not place_type_id:
-            conditions.append("p.rating_average >= 4.0")
+        # NOTE: Removed rating_average >= 4.0 filter - show ALL places
+        # Places are still sorted by rating_average DESC so best ones appear first
         
         where_clause = " AND ".join(conditions)
         
