@@ -279,6 +279,59 @@ export const adminService = {
     const queryString = query.toString();
     return axiosClient.get(queryString ? `/logs/audit?${queryString}` : '/logs/audit');
   },
+
+  // ===== ANALYTICS =====
+  /**
+   * Lấy thống kê truy cập cho admin dashboard
+   * GET /api/v1/logs/analytics
+   */
+  getVisitAnalytics: async (days: number = 30): Promise<{
+    success: boolean;
+    message?: string;
+    data?: {
+      visits: {
+        success: boolean;
+        period_days: number;
+        summary: {
+          total_visits: number;
+          unique_visitors: number;
+          logged_in_visitors: number;
+        };
+        top_places: Array<{
+          place_id: number;
+          place_name: string;
+          visit_count: number;
+        }>;
+        top_posts: Array<{
+          post_id: string;
+          visit_count: number;
+        }>;
+        visits_trend: Array<{
+          date: string;
+          count: number;
+        }>;
+      };
+      activities: {
+        success: boolean;
+        period_days: number;
+        summary: {
+          logins_today: number;
+          new_registrations: number;
+        };
+        activities_breakdown: Array<{
+          action: string;
+          count: number;
+        }>;
+        most_active_users: Array<{
+          user_id: number;
+          full_name: string;
+          activity_count: number;
+        }>;
+      };
+    };
+  }> => {
+    return axiosClient.get(`/logs/analytics?days=${days}`);
+  },
 };
 
 export default adminService;

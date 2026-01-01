@@ -99,15 +99,17 @@
     padding: 24px;
     min-height: 339px;
     position: relative;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .admin-chart-placeholder {
     width: 100%;
-    height: 300px;
+    min-height: 300px;
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 .admin-chart-line {
@@ -154,6 +156,140 @@
     font-weight: 600;
     font-size: 16px;
     color: #F88622;
+}
+
+/* Visits Summary */
+.admin-visits-summary {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 24px;
+}
+
+.admin-visits-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-visits-stat__label {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #666;
+}
+
+.admin-visits-stat__value {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    color: #F88622;
+}
+
+/* Bar Chart */
+.admin-chart-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 200px;
+    gap: 12px;
+    padding-top: 20px;
+}
+
+.admin-chart-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.admin-chart-bar {
+    width: 100%;
+    max-width: 60px;
+    background: linear-gradient(180deg, #F88622 0%, #FF9F43 100%);
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+    min-height: 20px;
+    transition: all 0.3s ease;
+}
+
+.admin-chart-bar:hover {
+    background: linear-gradient(180deg, #e67718 0%, #f59032 100%);
+    transform: scale(1.02);
+}
+
+.admin-chart-bar__count {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.admin-chart-bar__label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Line Chart */
+.admin-line-chart {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.admin-line-chart__svg {
+    width: 100%;
+    height: 250px;
+}
+
+.admin-line-chart__svg circle {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Tooltip text - hidden by default */
+.admin-chart-tooltip-text {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+/* Show tooltip on hover */
+.admin-chart-point:hover .admin-chart-tooltip-text {
+    opacity: 1;
+}
+
+/* Circle hover effect */
+.admin-chart-point:hover circle:nth-child(2) {
+    r: 8;
+    fill: #F88622;
+}
+
+.admin-line-chart__labels {
+    display: flex;
+    justify-content: space-between;
+    /* SVG viewBox: 700px total, graph starts at x=50 (7.14%) and ends at x=680 (97.14%) */
+    padding: 12px 2.86% 0 7.14%;
+}
+
+.admin-line-chart__label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+/* Empty state */
+.admin-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: #999;
 }
 
 /* Featured Locations */
