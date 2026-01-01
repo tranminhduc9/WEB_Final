@@ -46,6 +46,57 @@ export interface AdminUserListParams {
   page?: number;
 }
 
+export interface AdminUserListResponse {
+  users: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  role_id?: number;
+}
+
+export interface UpdateUserRequest {
+  full_name?: string;
+  email?: string;
+  role_id?: number;
+  is_active?: boolean;
+  ban_reason?: string | null;
+}
+
+export interface DeleteUserResponse {
+  success: boolean;
+  message: string;
+}
+
+// ============================
+// AUDIT LOGS
+// ============================
+
+export interface AuditLog {
+  id: string;
+  user_id: number;
+  user_name?: string;
+  action: string;
+  target_type?: string;
+  target_id?: string;
+  details?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AuditLogListResponse {
+  logs: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
 // ============================
 // COMMENT MANAGEMENT
 // ============================

@@ -11,7 +11,7 @@ interface UseUserReturn {
   profile: UserProfile | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   fetchProfile: () => Promise<void>;
   updateProfile: (data: UpdateProfileRequest) => Promise<void>;
@@ -35,10 +35,11 @@ export const useUser = (): UseUserReturn => {
   const fetchProfile = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const data = await userService.getProfile();
-      setProfile(data);
+      // Cast to UserProfile - role_id from API is number, but RoleId expects 1 | 2 | 3
+      setProfile(data as unknown as UserProfile);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Không thể tải profile';
       setError(message);
@@ -53,10 +54,10 @@ export const useUser = (): UseUserReturn => {
   const updateProfile = useCallback(async (data: UpdateProfileRequest) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const updatedProfile = await userService.updateProfile(data);
-      setProfile(updatedProfile);
+      setProfile(updatedProfile as unknown as UserProfile);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Cập nhật thất bại';
       setError(message);
@@ -72,15 +73,15 @@ export const useUser = (): UseUserReturn => {
   const uploadAvatar = useCallback(async (file: File): Promise<string> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const avatarUrl = await userService.uploadAvatar(file);
-      
+
       // Update profile state
       if (profile) {
         setProfile({ ...profile, avatar: avatarUrl });
       }
-      
+
       return avatarUrl;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Upload thất bại';
@@ -97,10 +98,10 @@ export const useUser = (): UseUserReturn => {
   const deleteAvatar = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await userService.deleteAvatar();
-      
+
       // Update profile state
       if (profile) {
         setProfile({ ...profile, avatar: null });
