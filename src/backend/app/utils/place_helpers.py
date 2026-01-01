@@ -18,12 +18,22 @@ def get_place_compact(place_id: int, db: Session) -> Optional[Dict]:
     - rating_average, price_min, price_max, main_image_url
     
     Args:
-        place_id: ID của địa điểm
+        place_id: ID của địa điểm (có thể là int hoặc string)
         db: Database session
         
     Returns:
         Dict chứa PlaceCompact data hoặc None nếu không tìm thấy
     """
+    # Convert place_id to int if it's a string (MongoDB may store as string)
+    if isinstance(place_id, str):
+        try:
+            place_id = int(place_id)
+        except ValueError:
+            return None
+    
+    if not place_id:
+        return None
+    
     # Import here to avoid circular imports
     from config.database import Place
     from app.utils.image_helpers import get_main_image_url
