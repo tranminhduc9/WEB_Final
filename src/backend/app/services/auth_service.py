@@ -12,6 +12,7 @@ Database Schema v3.1 Compatible
 
 from typing import Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
+from app.utils.timezone_helper import utc_now
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import logging
@@ -147,8 +148,8 @@ class AuthService:
                 role_id=3,  # 3 = user role
                 is_active=True,
                 reputation_score=0,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                created_at=utc_now(),
+                updated_at=utc_now()
             )
 
             # 5. Lưu vào database
@@ -253,7 +254,7 @@ class AuthService:
                 }, None
 
             # 4. Cập nhật last_login_at
-            user.last_login_at = datetime.utcnow()
+            user.last_login_at = utc_now()
             self.db.commit()
 
             # 5. Tạo tokens
@@ -275,7 +276,7 @@ class AuthService:
             token_record = TokenRefresh(
                 user_id=user.id,
                 refresh_token=refresh_token,
-                expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRATION_DAYS),
+                expires_at=utc_now() + timedelta(days=REFRESH_TOKEN_EXPIRATION_DAYS),
                 revoked=False
             )
             self.db.add(token_record)
@@ -340,7 +341,7 @@ class AuthService:
                 }
 
             # 2. Kiểm tra token hết hạn
-            if token_record.expires_at < datetime.utcnow():
+            if token_record.expires_at < utc_now():
                 logger.warning(f"Refresh token expired for user_id={token_record.user_id}")
                 # Revoke expired token
                 token_record.revoked = True
@@ -400,7 +401,7 @@ class AuthService:
             new_token_record = TokenRefresh(
                 user_id=user.id,
                 refresh_token=new_refresh_token,
-                expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRATION_DAYS),
+                expires_at=utc_now() + timedelta(days=REFRESH_TOKEN_EXPIRATION_DAYS),
                 revoked=False
             )
             self.db.add(new_token_record)

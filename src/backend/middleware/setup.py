@@ -198,9 +198,9 @@ def setup_app(app: FastAPI) -> FastAPI:
     async def api_info():
         """API information endpoint"""
         return {
-            "name": "Hanoi Travel API",
+            "name": "Hanoivivu API",
             "version": config.API_VERSION,
-            "description": "API for Hanoi Travel Application",
+            "description": "API for Hanoivivu Application",
             "endpoints": {
                 "authentication": "/api/v1/auth/*",
                 "places": "/api/v1/places/*",
@@ -232,8 +232,8 @@ def create_fastapi_app() -> FastAPI:
         FastAPI: Ứng dụng đã được cấu hình
     """
     app = FastAPI(
-        title="Hanoi Travel API",
-        description="API for Hanoi Travel Application",
+        title="Hanoivivu API",
+        description="API for Hanoivivu Application",
         version=config.API_VERSION,
         docs_url="/docs",
         redoc_url="/redoc",

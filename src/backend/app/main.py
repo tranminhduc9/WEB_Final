@@ -1,7 +1,7 @@
 """
 FastAPI Application - Main Entry Point
 
-Ứng dụng FastAPI chính cho Hanoi Travel với các tính năng:
+Ứng dụng FastAPI chính cho Hanoivivu với các tính năng:
 - Authentication với JWT
 - Email validation với Hunter.io
 - PostgreSQL database
@@ -104,7 +104,7 @@ async def lifespan(app: FastAPI):
     """
     # Khởi động
     logger.info("=" * 60)
-    logger.info("KHỞI ĐỘNG MÁY CHỦ HANOI TRAVEL API")
+    logger.info("KHỞI ĐỘNG MÁY CHỦ Hanoivivu API")
     logger.info("=" * 60)
 
     try:
@@ -157,7 +157,7 @@ async def lifespan(app: FastAPI):
 
     # Tắt
     logger.info("=" * 60)
-    logger.info("TẮT MÁY CHỦ HANOI TRAVEL API")
+    logger.info("TẮT MÁY CHỦ Hanoivivu API")
     logger.info("=" * 60)
     logger.info("[OK] Da tat may chu")
 
@@ -165,9 +165,9 @@ async def lifespan(app: FastAPI):
 # ==================== CREATE FASTAPI APP ====================
 
 app = FastAPI(
-    title="Hanoi Travel API",
+    title="Hanoivivu API",
     description="""
-    API cho ứng dụng du lịch Hanoi Travel với các tính năng:
+    API cho ứng dụng du lịch Hanoivivu với các tính năng:
     - Authentication với JWT tokens
     - Email validation sử dụng Hunter.io
     - User management
@@ -205,7 +205,7 @@ async def root():
     """
     return {
         "success": True,
-        "message": "Hanoi Travel API Server",
+        "message": "Hanoivivu API Server",
         "version": "1.0.0",
         "status": "running"
     }
@@ -325,3 +325,4 @@ if __name__ == "__main__":
         reload=reload,
         log_level="info"
     )
+

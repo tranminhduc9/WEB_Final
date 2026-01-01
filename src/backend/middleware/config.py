@@ -22,9 +22,9 @@ class MiddlewareConfig:
     API_VERSION = os.getenv("API_VERSION", "v1")
 
     # Database
-    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/hanoi_travel")
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/hanoivivu")
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "hanoi_travel_mongo")
+    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "hanoivivu_mongo")
     MONGO_TIMEOUT = int(os.getenv("MONGO_TIMEOUT", "5000"))
 
     # Redis
@@ -35,7 +35,7 @@ class MiddlewareConfig:
     REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
     # JWT
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hanoi-travel-super-secret-key-change-in-production-2024")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hanoivivu-super-secret-key-change-in-production-2024")
     JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
     JWT_EXPIRATION = int(os.getenv("JWT_EXPIRATION", "3600"))
     REFRESH_TOKEN_EXPIRATION = int(os.getenv("REFRESH_TOKEN_EXPIRATION", "604800"))
@@ -50,8 +50,8 @@ class MiddlewareConfig:
 
     # Email (SendGrid)
     SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
-    FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@hanoi-travel.com")
-    FROM_NAME = os.getenv("FROM_NAME", "Hanoi Travel")
+    FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@hanoivivu.com")
+    FROM_NAME = os.getenv("FROM_NAME", "Hanoivivu")
 
     # CORS - Include all localhost variants (IPv4, IPv6, localhost alias)
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,http://[::1]:3000,http://[::1]:5173").split(",")
@@ -112,7 +112,7 @@ class MiddlewareConfig:
 
         # Check required configs
         if cls.ENVIRONMENT == "production":
-            if cls.JWT_SECRET_KEY == "hanoi-travel-super-secret-key-change-in-production-2024":
+            if cls.JWT_SECRET_KEY == "hanoivivu-super-secret-key-change-in-production-2024":
                 warnings.append("[WARN] Production: Please change JWT_SECRET_KEY")
 
 

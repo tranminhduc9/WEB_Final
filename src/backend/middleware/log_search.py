@@ -7,6 +7,7 @@ của người dùng vào bảng visit_logs cho phân tích và tối ưu.
 
 import time
 from datetime import datetime, timedelta
+from app.utils.timezone_helper import utc_now
 from typing import Dict, Any, Optional, List
 from fastapi import Request, Query, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -65,7 +66,7 @@ class VisitLogEntry:
         self.user_agent = user_agent
         self.page_url = page_url
         self.action_type = action_type
-        self.visited_at = datetime.utcnow()
+        self.visited_at = utc_now()
 
     def to_dict(self) -> Dict[str, Any]:
         """Chuyển đổi thành dictionary để lưu vào DB"""
@@ -97,7 +98,7 @@ class VisitLogEntry:
             action_type=data.get("action_type", "places_search")
         )
         instance.id = data.get("id")
-        instance.visited_at = data.get("visited_at", datetime.utcnow())
+        instance.visited_at = data.get("visited_at", utc_now())
         return instance
 
 
@@ -117,7 +118,7 @@ class LogSearchService:
         """
         self.db_session = db_session
         self.trending_keywords_cache = {}
-        self.last_cache_update = datetime.utcnow()
+        self.last_cache_update = utc_now()
 
     async def log_search(
         self,
@@ -563,7 +564,7 @@ async def get_user_search_activity(user_id: str, days: int = 7) -> List[Dict[str
     logs = await log_search_service.get_user_search_history(user_id, limit=100)
 
     # Filter by date range
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    cutoff_date = utc_now() - timedelta(days=days)
     recent_logs = [
         log for log in logs
         if log.visited_at >= cutoff_date

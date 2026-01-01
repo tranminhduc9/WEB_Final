@@ -12,6 +12,7 @@ Date: 2024-12-31
 import logging
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
+from app.utils.timezone_helper import utc_now
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, text
 from fastapi import Request
@@ -108,7 +109,7 @@ async def log_activity(
             action=action,
             details=details,
             ip_address=ip_address,
-            created_at=datetime.utcnow()
+            created_at=utc_now()
         )
         
         db.add(activity)
@@ -141,7 +142,7 @@ def log_activity_sync(
             action=action,
             details=details,
             ip_address=ip_address,
-            created_at=datetime.utcnow()
+            created_at=utc_now()
         )
         
         db.add(activity)
@@ -198,7 +199,7 @@ async def log_visit(
             page_url=page_url,
             ip_address=ip_address,
             user_agent=user_agent,
-            visited_at=datetime.utcnow()
+            visited_at=utc_now()
         )
         
         db.add(visit)
@@ -290,7 +291,7 @@ def get_place_visits(
         Dict với visits và metadata
     """
     try:
-        since_date = datetime.utcnow() - timedelta(days=days)
+        since_date = utc_now() - timedelta(days=days)
         
         query = db.query(VisitLog).filter(
             VisitLog.place_id == place_id,
@@ -336,7 +337,7 @@ def get_post_visits(
     Lấy lịch sử truy cập của bài viết
     """
     try:
-        since_date = datetime.utcnow() - timedelta(days=days)
+        since_date = utc_now() - timedelta(days=days)
         
         query = db.query(VisitLog).filter(
             VisitLog.post_id == post_id,
@@ -385,7 +386,7 @@ def get_visit_analytics(db: Session, days: int = 30) -> Dict[str, Any]:
         Dict với các thống kê
     """
     try:
-        since_date = datetime.utcnow() - timedelta(days=days)
+        since_date = utc_now() - timedelta(days=days)
         
         # Tổng visits
         total_visits = db.query(VisitLog).filter(
@@ -480,7 +481,7 @@ def get_activity_analytics(db: Session, days: int = 30) -> Dict[str, Any]:
     Lấy thống kê hoạt động tổng hợp
     """
     try:
-        since_date = datetime.utcnow() - timedelta(days=days)
+        since_date = utc_now() - timedelta(days=days)
         
         # Activities per action type
         activities_by_type = db.query(
@@ -518,7 +519,7 @@ def get_activity_analytics(db: Session, days: int = 30) -> Dict[str, Any]:
             })
         
         # Logins today
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = utc_now().replace(hour=0, minute=0, second=0, microsecond=0)
         logins_today = db.query(ActivityLog).filter(
             ActivityLog.action == "login",
             ActivityLog.created_at >= today_start

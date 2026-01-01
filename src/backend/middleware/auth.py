@@ -8,7 +8,8 @@ Logic giữ ổn định qua các phiên bản.
 
 import jwt
 import bcrypt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from app.utils.timezone_helper import utc_now
 from typing import Optional, Dict, Any, List
 from fastapi import Request, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -18,7 +19,7 @@ import os
 logger = logging.getLogger(__name__)
 
 # Cấu hình JWT - Lấy từ environment variables
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hanoi-travel-default-secret-key-change-in-production")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hanoivivu-default-secret-key-change-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION = 3600  # 1 giờ
 REFRESH_TOKEN_EXPIRATION = 7 * 24 * 3600  # 7 ngày
@@ -85,7 +86,7 @@ class JWTAuthMiddleware:
         Returns:
             str: JWT access token
         """
-        now = datetime.utcnow()
+        now = utc_now()
         exp = expires_delta or JWT_EXPIRATION
 
         payload = {
@@ -109,7 +110,7 @@ class JWTAuthMiddleware:
         Returns:
             str: JWT refresh token
         """
-        now = datetime.utcnow()
+        now = utc_now()
         payload = {
             "sub": str(user_data.get("id")),
             "email": user_data.get("email"),
@@ -151,7 +152,7 @@ class JWTAuthMiddleware:
                 )
 
             # Kiểm tra token có hết hạn không
-            if datetime.utcnow() > datetime.fromtimestamp(payload.get("exp", 0)):
+            if utc_now() > datetime.fromtimestamp(payload.get("exp", 0), tz=timezone.utc):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token đã hết hạn"
@@ -322,11 +323,15 @@ def is_token_expired(payload: Dict[str, Any]) -> bool:
 
     # Handle both timestamp (int) and datetime objects
     if isinstance(exp_timestamp, (int, float)):
-        exp_datetime = datetime.fromtimestamp(exp_timestamp)
+        exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
     else:
-        exp_datetime = exp_timestamp
+        # Ensure datetime is timezone-aware
+        if exp_timestamp.tzinfo is None:
+            exp_datetime = exp_timestamp.replace(tzinfo=timezone.utc)
+        else:
+            exp_datetime = exp_timestamp
 
-    return datetime.utcnow() > exp_datetime
+    return utc_now() > exp_datetime
 
 
 def extract_user_info(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -346,3 +351,4 @@ def extract_user_info(payload: Dict[str, Any]) -> Dict[str, Any]:
         "exp": payload.get("exp"),
         "iat": payload.get("iat")
     }
+

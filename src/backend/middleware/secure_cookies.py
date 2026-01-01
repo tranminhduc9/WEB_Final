@@ -14,6 +14,7 @@ Security Features:
 
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
+from app.utils.timezone_helper import utc_now
 from fastapi import Response, Request
 from starlette.responses import JSONResponse
 import secrets
@@ -147,7 +148,7 @@ def generate_session_id() -> str:
     """
     # Kết hợp random bytes với timestamp để đảm bảo tính duy nhất
     random_bytes = secrets.token_bytes(24)
-    timestamp = datetime.utcnow().timestamp()
+    timestamp = utc_now().timestamp()
     
     # Hash để tạo session ID
     data = f"{random_bytes.hex()}{timestamp}".encode()

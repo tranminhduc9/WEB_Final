@@ -47,7 +47,7 @@ def main():
 
     # Print startup info
     logger.info("=" * 70)
-    logger.info("STARTING HANOI TRAVEL BACKEND SERVER")
+    logger.info("STARTING HANOIVIVU BACKEND SERVER")
     logger.info("=" * 70)
     logger.info(f"Working directory: {os.getcwd()}")
     logger.info(f"Python path: {sys.path[0]}")
@@ -83,3 +83,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

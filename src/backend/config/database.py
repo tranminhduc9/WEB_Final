@@ -19,6 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from datetime import datetime
+from app.utils.timezone_helper import utc_now
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import logging
 import os
@@ -96,7 +97,7 @@ def get_connect_args() -> dict:
     """
     connect_args = {
         # Application name for connection identification
-        "application_name": f"hanoi_travel_{ENVIRONMENT}",
+        "application_name": f"hanoivivu_{ENVIRONMENT}",
         
         # Connection timeout (seconds)
         "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "10")),
@@ -233,8 +234,8 @@ class User(Base):
 
     # Timestamps
     last_login_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     role = relationship("Role", back_populates="users")
@@ -293,7 +294,7 @@ class TokenRefresh(Base):
     refresh_token = Column(String(500), unique=True, nullable=False)
     expires_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     # Relationships
     user = relationship("User", back_populates="refresh_tokens")
@@ -365,8 +366,8 @@ class Place(Base):
     price_max = Column(Numeric(10, 2), default=0)
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
     deleted_at = Column(DateTime, nullable=True)
 
     # Relationships
@@ -418,7 +419,7 @@ class PlaceImage(Base):
     place_id = Column(Integer, ForeignKey("places.id"), nullable=False)
     image_url = Column(String(500), nullable=False)
     is_main = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     # Relationships
     place = relationship("Place", back_populates="images")
@@ -433,7 +434,7 @@ class UserPlaceFavorite(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     place_id = Column(Integer, ForeignKey("places.id"), primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     # Relationships
     user = relationship("User", back_populates="place_favorites")
@@ -455,7 +456,7 @@ class ActivityLog(Base):
     action = Column(String(100), nullable=False)
     details = Column(Text, nullable=True)
     ip_address = Column(String(50), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     # Relationships
     user = relationship("User", back_populates="activity_logs")
@@ -517,7 +518,7 @@ class UserPostFavorite(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     post_id = Column(String(100), primary_key=True)  # MongoDB ID is string
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     __table_args__ = (
         UniqueConstraint('user_id', 'post_id', name='uq_user_post_favorite'),
@@ -542,7 +543,7 @@ class VisitLog(Base):
     page_url = Column(String(500), nullable=True)
     ip_address = Column(String(50), nullable=True)
     user_agent = Column(Text, nullable=True)
-    visited_at = Column(DateTime, default=datetime.utcnow)
+    visited_at = Column(DateTime, default=utc_now)
 
     # Relationships
     user = relationship("User", back_populates="visit_logs")
@@ -760,3 +761,4 @@ def create_admin_user(email: str, password: str, full_name: str = "Admin"):
         raise
     finally:
         db.close()
+

@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from datetime import datetime
+from app.utils.timezone_helper import utc_now
 import logging
 import os
 
@@ -471,7 +472,7 @@ async def add_comment(
             message="Thêm comment thành công",
             data={
                 "comment_id": comment_id,
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": utc_now().isoformat()
             }
         )
         
@@ -543,7 +544,7 @@ async def reply_to_comment(
             message="Reply thành công",
             data={
                 "comment_id": reply_id,
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": utc_now().isoformat()
             }
         )
         
