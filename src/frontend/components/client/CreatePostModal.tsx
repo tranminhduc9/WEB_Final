@@ -79,8 +79,13 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       return;
     }
 
-    if (rating === '' || typeof rating !== 'number' || rating < 1 || rating > 5) {
-      alert('Vui lòng nhập đánh giá từ 1-5 sao');
+    if (!location.trim()) {
+      alert('Vui lòng chọn địa điểm');
+      return;
+    }
+
+    if (rating === '' || typeof rating !== 'number' || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+      alert('Vui lòng nhập đánh giá từ 1-5 sao (số nguyên)');
       return;
     }
 
@@ -150,7 +155,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             onClick={() => setShowLocationPicker(!showLocationPicker)}
           >
             <Icons.Location className="create-post__option-icon" />
-            <span>{location || 'Chọn địa điểm'}</span>
+            <span>{location || 'Chọn địa điểm'} <span style={{ color: 'red' }}>*</span></span>
             {location && (
               <button
                 className="create-post__clear-btn"
@@ -172,9 +177,15 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
               type="number"
               min="1"
               max="5"
-              step="0.1"
+              step="1"
               value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
+              onChange={(e) => {
+                const val = e.target.value;
+                // Allow empty or valid integers between 1-5
+                if (val === '' || (Number.isInteger(Number(val)) && Number(val) >= 1 && Number(val) <= 5)) {
+                  setRating(val === '' ? '' : Number(val));
+                }
+              }}
               className="create-post__rating-input"
               placeholder="1-5"
               required
