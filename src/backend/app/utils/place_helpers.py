@@ -75,10 +75,11 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
     if user:
         # Check if user is deleted first (higher priority)
         if user.deleted_at is not None:
+            from app.utils.image_helpers import get_deleted_user_avatar
             return {
                 "id": user.id,
                 "full_name": "Tài khoản bị xóa",
-                "avatar_url": None,
+                "avatar_url": get_deleted_user_avatar(),  # X mark with gray background
                 "role_id": user.role_id,
                 "is_banned": True,
                 "status": "deleted"
@@ -86,10 +87,11 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
         
         # Check if user is banned
         if not user.is_active:
+            from app.utils.image_helpers import get_banned_user_avatar
             return {
                 "id": user.id,
                 "full_name": "Tài khoản bị ban",
-                "avatar_url": None,
+                "avatar_url": get_banned_user_avatar(),  # ! mark with red background
                 "role_id": user.role_id,
                 "is_banned": True,
                 "status": "banned"
@@ -98,7 +100,7 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
         return {
             "id": user.id,
             "full_name": user.full_name,
-            "avatar_url": get_avatar_url(user.avatar_url),
+            "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
             "role_id": user.role_id,
             "is_banned": False,
             "status": "active"

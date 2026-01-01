@@ -164,7 +164,7 @@ async def get_user_profile(
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "avatar_url": get_avatar_url(user.avatar_url),  # Normalized to full URL
+                    "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),  # Normalized to full URL
                     "bio": user.bio,
                     "reputation_score": user.reputation_score,
                     "role_id": user.role_id,  # Required for admin check
@@ -238,7 +238,7 @@ async def update_user_profile(
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "avatar_url": get_avatar_url(user.avatar_url),
+                    "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                     "bio": user.bio,
                     "reputation_score": user.reputation_score,
                     "role_id": user.role_id,  # Required for admin check
@@ -446,17 +446,29 @@ async def get_profile_alias(
                 limit=5
             )
             for post in user_posts:
+                # Normalize images with fallback to place images (đảm bảo ít nhất 2 ảnh)
+                images = normalize_image_list(post.get("images", []))
+                if post.get("related_place_id") and len(images) < 2:
+                    from app.utils.image_helpers import get_all_place_images
+                    place_images = get_all_place_images(post.get("related_place_id"), db)
+                    for place_img in place_images:
+                        if place_img not in images:
+                            images.append(place_img)
+                        if len(images) >= 2:
+                            break
+                
                 recent_posts.append({
                     "_id": str(post.get("_id")),
                     "author": {
                         "id": user.id,
                         "full_name": user.full_name,
-                        "avatar_url": get_avatar_url(user.avatar_url),
+                        "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                         "role_id": user.role_id
                     },
                     "title": post.get("title"),
                     "content": post.get("content", ""),
-                    "images": post.get("images", []),
+                    "images": images,
+                    "related_place_id": post.get("related_place_id"),
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
                     "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
@@ -471,7 +483,7 @@ async def get_profile_alias(
                 "id": user.id,
                 "full_name": user.full_name,
                 "email": user.email,
-                "avatar_url": get_avatar_url(user.avatar_url),
+                "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                 "bio": user.bio,
                 "role_id": user.role_id,
                 "role": user.role_name,  # Frontend checks this field first
@@ -530,7 +542,7 @@ async def update_profile_alias(
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "avatar_url": get_avatar_url(user.avatar_url),
+                    "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                     "bio": user.bio,
                     "reputation_score": user.reputation_score,
                     "role_id": user.role_id,  # Required for admin check
@@ -568,6 +580,13 @@ async def get_user_by_id(
                 error_code="USER_NOT_FOUND",
                 status_code=404
             )
+        
+        # Check if user is banned
+        from app.utils.image_helpers import get_banned_user_avatar
+        is_banned = not user.is_active
+        user_status = "banned" if is_banned else "active"
+        display_name = "Tài khoản bị ban" if is_banned else user.full_name
+        display_avatar = get_banned_user_avatar() if is_banned else get_avatar_url(user.avatar_url, user.id, user.full_name)
         
         # Get user's recent favorites
         favorites = db.query(UserPlaceFavorite).filter(
@@ -623,17 +642,31 @@ async def get_user_by_id(
             )
             
             for post in user_posts:
+                # Normalize images with fallback to place images (đảm bảo ít nhất 2 ảnh)
+                images = normalize_image_list(post.get("images", []))
+                if post.get("related_place_id") and len(images) < 2:
+                    from app.utils.image_helpers import get_all_place_images
+                    place_images = get_all_place_images(post.get("related_place_id"), db)
+                    for place_img in place_images:
+                        if place_img not in images:
+                            images.append(place_img)
+                        if len(images) >= 2:
+                            break
+                
                 recent_posts.append({
                     "_id": str(post.get("_id")),
                     "author": {
                         "id": user.id,
-                        "full_name": user.full_name,
-                        "avatar_url": get_avatar_url(user.avatar_url),
-                        "role_id": user.role_id
+                        "full_name": display_name,
+                        "avatar_url": display_avatar,
+                        "role_id": user.role_id,
+                        "is_banned": is_banned,
+                        "status": user_status
                     },
                     "title": post.get("title"),
                     "content": post.get("content", ""),
-                    "images": normalize_image_list(post.get("images", [])),
+                    "images": images,
+                    "related_place_id": post.get("related_place_id"),
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
                     "created_at": post.get("created_at").isoformat() if post.get("created_at") else None
@@ -645,12 +678,14 @@ async def get_user_by_id(
             message="Lấy thông tin user thành công",
             data={
                 "id": user.id,
-                "full_name": user.full_name,
-                "avatar_url": get_avatar_url(user.avatar_url),
-                "bio": user.bio,
+                "full_name": display_name,
+                "avatar_url": display_avatar,
+                "bio": user.bio if not is_banned else None,
                 "role_id": user.role_id,
-                "reputation_score": user.reputation_score,
-                "recent_favorites": recent_favorites,
+                "reputation_score": user.reputation_score if not is_banned else 0,
+                "is_banned": is_banned,
+                "status": user_status,
+                "recent_favorites": recent_favorites if not is_banned else [],
                 "recent_posts": recent_posts
             }
         )

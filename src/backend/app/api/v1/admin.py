@@ -212,7 +212,7 @@ async def get_users(
                 "id": user.id,
                 "full_name": user.full_name,
                 "email": user.email,
-                "avatar_url": get_avatar_url(user.avatar_url),
+                "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                 "role_id": user.role_id,
                 "is_active": user.is_active,
                 "ban_reason": user.ban_reason,
@@ -390,12 +390,23 @@ async def get_admin_posts(
             # Get avatar URL using helper
             avatar_url = None
             if user:
-                avatar_url = get_avatar_url(user.avatar_url, user.id)
+                avatar_url = get_avatar_url(user.avatar_url, user.id, user.full_name)
             
-            # Normalize images
+            # Normalize images with fallback to place images (đảm bảo ít nhất 2 ảnh)
+            from app.utils.image_helpers import get_main_image_url, get_all_place_images
             images = normalize_image_list(post.get("images", []))
             
+            # Fallback: Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
+            if post.get("related_place_id") and len(images) < 2:
+                place_images = get_all_place_images(post.get("related_place_id"), db)
+                for place_img in place_images:
+                    if place_img not in images:
+                        images.append(place_img)
+                    if len(images) >= 2:
+                        break
+            
             # Check user status for display
+            from app.utils.image_helpers import get_banned_user_avatar, get_deleted_user_avatar
             user_status = "active"
             user_display_name = user.full_name if user else "Unknown"
             user_avatar = avatar_url
@@ -403,11 +414,11 @@ async def get_admin_posts(
                 if user.deleted_at is not None:
                     user_status = "deleted"
                     user_display_name = "Tài khoản bị xóa"
-                    user_avatar = None
+                    user_avatar = get_deleted_user_avatar()  # X mark with gray background
                 elif not user.is_active:
                     user_status = "banned"
                     user_display_name = "Tài khoản bị ban"
-                    user_avatar = None
+                    user_avatar = get_banned_user_avatar()  # ! mark with red background
             
             formatted_posts.append({
                 "_id": str(post.get("_id")),
@@ -543,10 +554,16 @@ async def update_post(
         )
 
 
+class DeletePostRequest(BaseModel):
+    """Schema xóa bài viết"""
+    reason: Optional[str] = Field(None, max_length=500)
+
+
 @router.delete("/posts/{post_id}", summary="Delete Post")
 async def delete_post(
     request: Request,
     post_id: str = Path(...),
+    delete_data: Optional[DeletePostRequest] = None,
     current_user: Dict[str, Any] = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
@@ -554,17 +571,40 @@ async def delete_post(
     try:
         await get_mongodb()
         from bson import ObjectId
+        from bson.errors import InvalidId
         
         # Lấy post trước khi xóa để có thông tin related_place_id và rating
-        post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
+        # Handle both ObjectId and string _id
+        post = None
+        post_query = None
+        try:
+            post_query = {"_id": ObjectId(post_id)}
+            post = await mongo_client.find_one("posts", post_query)
+        except InvalidId:
+            pass
+        
         if not post:
-            return error_response(
-                message="Post không tồn tại",
-                error_code="NOT_FOUND",
-                status_code=404
+            post_query = {"_id": post_id}
+            post = await mongo_client.find_one("posts", post_query)
+        
+        if not post:
+            # Post không tồn tại, có thể đã bị xóa trước đó
+            # Vẫn xóa reports liên quan để cleanup
+            logger.warning(f"Post {post_id} not found, cleaning up related reports")
+            try:
+                deleted_reports = await mongo_client.db["reports_mongo"].delete_many({
+                    "target_type": "post",
+                    "target_id": post_id
+                })
+                logger.info(f"Deleted {deleted_reports.deleted_count} orphan reports for post {post_id}")
+            except Exception as e:
+                logger.warning(f"Error cleaning up orphan reports: {e}")
+            
+            return success_response(
+                message="Bài viết đã được xóa trước đó. Đã dọn dẹp báo cáo liên quan."
             )
         
-        success = await mongo_client.delete_one("posts", {"_id": ObjectId(post_id)})
+        success = await mongo_client.delete_one("posts", post_query)
         
         if not success:
             return error_response(
@@ -573,12 +613,28 @@ async def delete_post(
                 status_code=500
             )
         
+        # Also delete related likes, comments, and reports
+        try:
+            await mongo_client.db["post_likes_mongo"].delete_many({"post_id": post_id})
+            await mongo_client.db["post_comments_mongo"].delete_many({"post_id": post_id})
+            # Delete reports targeting this post
+            await mongo_client.db["reports_mongo"].delete_many({
+                "target_type": "post",
+                "target_id": post_id
+            })
+        except Exception as e:
+            logger.warning(f"Error deleting related data: {e}")
+        
         # Recalculate rating nếu post có related_place_id và rating (bao gồm cả rating = 0)
         rating_synced = False
         if post.get("related_place_id") and post.get("rating") is not None and post.get("status") == "approved":
             rating_synced = await on_post_rejected_or_deleted(post, db, mongo_client)
         
+        # Log với reason nếu có
+        reason = delete_data.reason if delete_data else None
         message = "Đã xóa post"
+        if reason:
+            message += f" (Lý do: {reason})"
         if rating_synced:
             message += " và đã cập nhật lại rating của địa điểm"
         
@@ -686,15 +742,21 @@ async def get_admin_comments(
         for comment in comments:
             user = db.query(User).filter(User.id == comment.get("user_id")).first()
             # Check user status for display
+            from app.utils.image_helpers import get_avatar_url, get_banned_user_avatar, get_deleted_user_avatar
             user_status = "active"
             user_display_name = user.full_name if user else "Unknown"
+            user_avatar = None
             if user:
                 if user.deleted_at is not None:
                     user_status = "deleted"
                     user_display_name = "Tài khoản bị xóa"
+                    user_avatar = get_deleted_user_avatar()
                 elif not user.is_active:
                     user_status = "banned"
                     user_display_name = "Tài khoản bị ban"
+                    user_avatar = get_banned_user_avatar()
+                else:
+                    user_avatar = get_avatar_url(user.avatar_url, user.id, user.full_name)
             
             formatted_comments.append({
                 "_id": str(comment.get("_id")),
@@ -702,6 +764,7 @@ async def get_admin_comments(
                 "user": {
                     "id": user.id if user else None,
                     "full_name": user_display_name,
+                    "avatar_url": user_avatar,
                     "is_banned": user_status != "active",
                     "status": user_status
                 },
@@ -741,15 +804,41 @@ async def delete_comment(
     try:
         await get_mongodb()
         from bson import ObjectId
+        from bson.errors import InvalidId
         
-        success = await mongo_client.delete_one("post_comments", {"_id": ObjectId(comment_id)})
+        # Handle both ObjectId and string _id
+        comment_query = None
+        try:
+            comment_query = {"_id": ObjectId(comment_id)}
+        except InvalidId:
+            comment_query = {"_id": comment_id}
+        
+        success = await mongo_client.delete_one("post_comments", comment_query)
         
         if not success:
-            return error_response(
-                message="Comment không tồn tại",
-                error_code="NOT_FOUND",
-                status_code=404
+            # Comment không tồn tại, có thể đã bị xóa trước đó
+            # Vẫn xóa reports liên quan để cleanup
+            logger.warning(f"Comment {comment_id} not found, cleaning up related reports")
+            try:
+                await mongo_client.db["reports_mongo"].delete_many({
+                    "target_type": "comment",
+                    "target_id": comment_id
+                })
+            except Exception as e:
+                logger.warning(f"Error cleaning up orphan reports: {e}")
+            
+            return success_response(
+                message="Comment đã được xóa trước đó. Đã dọn dẹp báo cáo liên quan."
             )
+        
+        # Delete reports targeting this comment
+        try:
+            await mongo_client.db["reports_mongo"].delete_many({
+                "target_type": "comment",
+                "target_id": comment_id
+            })
+        except Exception as e:
+            logger.warning(f"Error deleting related reports: {e}")
         
         return success_response(message="Đã xóa comment")
         

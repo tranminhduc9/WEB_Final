@@ -293,7 +293,7 @@ class AuthService:
                     "id": user.id,  # Swagger spec: integer, không phải string
                     "full_name": user.full_name,
                     "email": user.email,  # Required for frontend User type
-                    "avatar_url": get_avatar_url(user.avatar_url),
+                    "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                     "role_id": user.role_id,
                     "role": user.role_name  # Frontend checks this field first
                 }
@@ -416,7 +416,7 @@ class AuthService:
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,  # Required for frontend User type
-                    "avatar_url": get_avatar_url(user.avatar_url),
+                    "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                     "role_id": user.role_id,
                     "role": user.role_name  # Frontend checks this field first
                 }
@@ -508,7 +508,7 @@ class AuthService:
                     "id": user.id,  # Swagger spec: integer
                     "full_name": user.full_name,
                     "email": user.email,  # Required for frontend User type
-                    "avatar_url": get_avatar_url(user.avatar_url),
+                    "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                     "role_id": user.role_id,
                     "role": user.role_name  # Frontend checks this field first
                 }

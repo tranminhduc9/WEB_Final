@@ -626,7 +626,7 @@ async def get_current_user_info(
                 "id": user.id,
                 "full_name": user.full_name,
                 "email": user.email,
-                "avatar_url": get_avatar_url(user.avatar_url),
+                "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
                 "bio": user.bio,
                 "role_id": user.role_id,  # Required for admin check
                 "role": user.role_name,  # Frontend checks this field first
