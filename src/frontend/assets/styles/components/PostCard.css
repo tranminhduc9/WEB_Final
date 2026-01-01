@@ -84,6 +84,11 @@
   /* từ Figma */
 }
 
+.post-card__author-name--banned {
+  font-style: italic;
+  color: #999;
+}
+
 .post-card__time {
   font-family: 'Roboto', sans-serif;
   /* từ Figma */

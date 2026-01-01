@@ -108,6 +108,8 @@ export interface UserCompact {
     full_name: string;
     avatar_url: string;
     role_id: number;
+    is_banned?: boolean;           // true if user is banned or deleted
+    status?: 'active' | 'banned' | 'deleted';  // User status from backend
 }
 
 // User Detail Response (from /users/me) - Synced with database.py

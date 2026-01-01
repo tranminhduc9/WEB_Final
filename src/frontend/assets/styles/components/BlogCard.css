@@ -58,6 +58,11 @@
   color: #000000;
 }
 
+.blog-card__username--banned {
+  font-style: italic;
+  color: #999;
+}
+
 /* Location */
 .blog-card__location {
   display: flex;
