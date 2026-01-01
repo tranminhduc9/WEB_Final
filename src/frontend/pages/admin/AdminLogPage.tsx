@@ -35,6 +35,7 @@ function AdminLogPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [actionFilter, setActionFilter] = useState<string>('');
+    const [userIdFilter, setUserIdFilter] = useState<string>('');
 
     const itemsPerPage = 10;
 
@@ -59,6 +60,7 @@ function AdminLogPage() {
                 const response = await adminService.getAuditLogs({
                     limit: itemsPerPage,
                     offset,
+                    user_id: userIdFilter ? parseInt(userIdFilter) : undefined,
                     action_type: actionFilter || undefined
                 });
 
@@ -78,7 +80,7 @@ function AdminLogPage() {
         };
 
         fetchLogs();
-    }, [currentPage, actionFilter]);
+    }, [currentPage, actionFilter, userIdFilter]);
 
     // Pagination
     const totalPages = Math.ceil(pagination.total / itemsPerPage) || 1;
@@ -135,6 +137,16 @@ function AdminLogPage() {
 
                 {/* Filter */}
                 <div className="admin-log-filters">
+                    <input
+                        type="number"
+                        className="admin-log-filter-input"
+                        placeholder="Lọc theo User ID"
+                        value={userIdFilter}
+                        onChange={(e) => {
+                            setUserIdFilter(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                    />
                     <select
                         className="admin-log-filter-select"
                         value={actionFilter}

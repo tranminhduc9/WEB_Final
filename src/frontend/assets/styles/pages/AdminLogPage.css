@@ -48,7 +48,8 @@
     margin-bottom: 24px;
 }
 
-.admin-log-filter-select {
+.admin-log-filter-select,
+.admin-log-filter-input {
     padding: 10px 16px;
     font-family: 'Inter', sans-serif;
     font-size: 14px;
@@ -59,7 +60,16 @@
     min-width: 160px;
 }
 
-.admin-log-filter-select:focus {
+.admin-log-filter-input {
+    cursor: text;
+}
+
+.admin-log-filter-input::placeholder {
+    color: #999;
+}
+
+.admin-log-filter-select:focus,
+.admin-log-filter-input:focus {
     outline: none;
     border-color: #F88622;
 }
