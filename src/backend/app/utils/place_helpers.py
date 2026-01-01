@@ -56,7 +56,11 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
     Lấy thông tin user compact theo Swagger UserCompact schema.
     
     UserCompact fields:
-    - id, full_name, avatar_url, role_id
+    - id, full_name, avatar_url, role_id, is_banned
+    
+    Nếu user bị ban hoặc bị xóa:
+    - full_name sẽ hiển thị "Tài khoản bị khóa"
+    - is_banned = True
     
     Args:
         user_id: ID của user
@@ -70,11 +74,24 @@ def get_user_compact(user_id: int, db: Session) -> Optional[Dict]:
     
     user = db.query(User).filter(User.id == user_id).first()
     if user:
+        # Check if user is banned or deleted
+        is_banned = (not user.is_active) or (user.deleted_at is not None)
+        
+        if is_banned:
+            return {
+                "id": user.id,
+                "full_name": "Tài khoản bị khóa",
+                "avatar_url": None,  # Hide avatar for banned users
+                "role_id": user.role_id,
+                "is_banned": True
+            }
+        
         return {
             "id": user.id,
             "full_name": user.full_name,
             "avatar_url": get_avatar_url(user.avatar_url),  # Normalized to full URL
-            "role_id": user.role_id
+            "role_id": user.role_id,
+            "is_banned": False
         }
     return None
 
