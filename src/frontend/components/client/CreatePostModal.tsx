@@ -73,15 +73,27 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   if (!isOpen) return null;
 
   const handleSubmit = () => {
-    if (onSubmit && content.trim()) {
+    // Validate required fields
+    if (!content.trim()) {
+      alert('Vui lòng nhập nội dung bài viết');
+      return;
+    }
+
+    if (rating === '' || typeof rating !== 'number' || rating < 0 || rating > 5) {
+      alert('Vui lòng nhập đánh giá từ 0-5 sao');
+      return;
+    }
+
+    if (onSubmit) {
       onSubmit({
         location,
         related_place_id: selectedPlaceId,
-        rating: Number(rating) || 0,
+        rating: Number(rating),
         content,
         images,
       });
     }
+
     // Reset form
     setLocation('');
     setSelectedPlaceId(undefined);
@@ -155,15 +167,17 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
           <div className="create-post__option">
             <span className="create-post__star">⭐</span>
-            <span>Đánh giá:</span>
+            <span>Đánh giá: <span style={{ color: 'red' }}>*</span></span>
             <input
               type="number"
-              min="1"
+              min="0"
               max="5"
+              step="0.1"
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
               className="create-post__rating-input"
-              placeholder=""
+              placeholder="0-5"
+              required
             />
             <span>/5</span>
           </div>
