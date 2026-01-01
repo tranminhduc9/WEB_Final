@@ -696,19 +696,10 @@ async def forgot_password(
             
             # Send email with reset link
             try:
-                await email_service.send_custom_email(
-                    to_email=email,
-                    subject="Đặt lại mật khẩu - Hanoi Travel",
-                    message=f"""
-                    <h2>Yêu cầu đặt lại mật khẩu</h2>
-                    <p>Xin chào {user.full_name},</p>
-                    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
-                    <p><a href="{reset_url}" style="background:#3498db;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;">Đặt lại mật khẩu</a></p>
-                    <p>Hoặc copy link: {reset_url}</p>
-                    <p><strong>Lưu ý:</strong> Link có hiệu lực trong 1 giờ.</p>
-                    <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
-                    """,
-                    is_html=True
+                await email_service.send_password_reset_email(
+                    email=email,
+                    full_name=user.full_name,
+                    reset_url=reset_url
                 )
                 logger.info(f"Password reset email sent to {email}")
             except Exception as e:

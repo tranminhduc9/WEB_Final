@@ -1,7 +1,10 @@
 """
 Email Service Middleware
 
-Module này xử lý gửi email cho chức năng forgot password (reset link).
+Module này xử lý gửi email cho các chức năng:
+- Welcome email khi đăng ký
+- Password reset email (forgot password)  
+- Password changed notification
 Sử dụng SendGrid API (HTTP) để gửi email.
 """
 
@@ -37,171 +40,417 @@ class EmailConfig:
 
 
 class EmailTemplate:
-    """Templates cho email"""
+    """Templates cho email - Modern Design với tiếng Việt"""
+
+    # Base CSS styles dùng chung cho tất cả emails
+    BASE_STYLES = """
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.8; 
+            color: #2d3748; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+        }
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .content {
+            padding: 40px 35px;
+        }
+        .content h2 {
+            color: #1a202c;
+            font-size: 22px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .content p {
+            color: #4a5568;
+            font-size: 16px;
+            margin-bottom: 18px;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-left: 4px solid #667eea;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 25px 0;
+        }
+        .feature-list li {
+            padding: 12px 0;
+            padding-left: 35px;
+            position: relative;
+            color: #4a5568;
+            font-size: 15px;
+        }
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #48bb78;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.35);
+        }
+        .btn-container {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .alert-box {
+            background: linear-gradient(135deg, #fef3cd 0%, #ffeeba 100%);
+            border: 1px solid #f0d78e;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+        .alert-box.warning {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            border-color: #fc8181;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            margin: 30px 0;
+        }
+        .footer {
+            background: #f7fafc;
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            color: #718096;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .small-text {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+    """
 
     @staticmethod
     def welcome_email(full_name: str, email: str) -> Dict[str, str]:
-        """Template cho welcome email"""
+        """Template cho welcome email - Modern Vietnamese Design"""
+        escaped_name = html.escape(full_name)
+        escaped_email = html.escape(email)
+        frontend_url = EmailConfig.FRONTEND_URL
+        
         return {
-            "subject": "Chào mừng đến với Hanoi Travel!",
+            "subject": "🎉 Chào mừng bạn đến với Hanoi Travel!",
             "html": f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Chào mừng - Hanoi Travel</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: #27ae60; color: white; padding: 20px; text-align: center; }}
-                    .content {{ padding: 30px; background: #f9f9f9; }}
-                    .footer {{ text-align: center; padding: 20px; color: #666; font-size: 14px; }}
-                    .btn {{ display: inline-block; padding: 12px 24px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Chao mung ban!</h1>
-                        <p>Tham gia cộng đồng Hanoi Travel</p>
-                    </div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng - Hanoi Travel</title>
+    <style>{EmailTemplate.BASE_STYLES}</style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="header">
+            <div class="icon">🏛️</div>
+            <h1>Chào mừng đến với Hanoi Travel!</h1>
+            <p>Khám phá vẻ đẹp ngàn năm của Thủ đô</p>
+        </div>
 
-                    <div class="content">
-                        <h2>Chào mừng {html.escape(full_name)},</h2>
-                        <p>Cảm ơn bạn đã đăng ký tài khoản tại Hanoi Travel!</p>
+        <div class="content">
+            <h2>Xin chào {escaped_name}! 👋</h2>
+            
+            <p>Cảm ơn bạn đã tạo tài khoản tại <strong>Hanoi Travel</strong> - nền tảng khám phá du lịch Hà Nội hàng đầu!</p>
+            
+            <div class="highlight-box">
+                <strong>🎁 Tài khoản của bạn đã được kích hoạt thành công!</strong><br>
+                <span class="small-text">Email: {escaped_email}</span>
+            </div>
 
-                        <p>Tại Hanoi Travel, bạn có thể:</p>
-                        <ul>
-                            <li>Kham pha nhung dia diem tuyet dep cua Ha Noi</li>
-                            <li>Chia se trai nghiem du lich cua ban</li>
-                            <li>Ket noi voi cong dong du lich</li>
-                            <li>Nhan goi y tu AI Chatbot thong minh</li>
-                        </ul>
+            <p>Với Hanoi Travel, bạn có thể:</p>
+            
+            <ul class="feature-list">
+                <li>Khám phá hơn 1000+ địa điểm du lịch tuyệt đẹp tại Hà Nội</li>
+                <li>Chia sẻ trải nghiệm và đánh giá các điểm đến yêu thích</li>
+                <li>Kết nối với cộng đồng du lịch sôi động</li>
+                <li>Nhận gợi ý thông minh từ AI Chatbot về lịch trình du lịch</li>
+                <li>Lưu lại những địa điểm yêu thích để khám phá sau</li>
+            </ul>
 
-                        <p>Bắt đầu khám phá ngay!</p>
-                        <center>
-                            <a href="{EmailConfig.FRONTEND_URL}" class="btn">Khám phá ngay</a>
-                        </center>
-                    </div>
+            <div class="btn-container">
+                <a href="{frontend_url}" class="btn-primary">
+                    🚀 Bắt đầu khám phá ngay
+                </a>
+            </div>
 
-                    <div class="footer">
-                        <p>&copy; 2024 Hanoi Travel. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
+            <div class="divider"></div>
+
+            <p class="small-text" style="text-align: center;">
+                Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi nhé!
+            </p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Hanoi Travel</strong> - Khám phá Hà Nội theo cách của bạn</p>
+            <p>© 2024 Hanoi Travel. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
             """,
             "text": f"""
-            Chào mừng đến với Hanoi Travel!
+Chào mừng đến với Hanoi Travel!
 
-            Chào mừng {full_name},
+Xin chào {full_name}!
 
-            Cảm ơn bạn đã đăng ký tài khoản tại Hanoi Travel!
+Cảm ơn bạn đã tạo tài khoản tại Hanoi Travel - nền tảng khám phá du lịch Hà Nội hàng đầu!
 
-            Tại Hanoi Travel, bạn có thể:
-            - Khám phá những địa điểm tuyệt đẹp của Hà Nội
-            - Chia sẻ trải nghiệm du lịch của bạn
-            - Kết nối với cộng đồng du lịch
-            - Nhận gợi ý từ AI Chatbot thông minh
+Tài khoản của bạn đã được kích hoạt thành công!
+Email: {email}
 
-            Truy cập {EmailConfig.FRONTEND_URL} để bắt đầu khám phá!
+Với Hanoi Travel, bạn có thể:
+• Khám phá hơn 1000+ địa điểm du lịch tuyệt đẹp tại Hà Nội
+• Chia sẻ trải nghiệm và đánh giá các điểm đến yêu thích
+• Kết nối với cộng đồng du lịch sôi động
+• Nhận gợi ý thông minh từ AI Chatbot về lịch trình du lịch
+• Lưu lại những địa điểm yêu thích để khám phá sau
 
-            Trân trọng,
-            Đội ngũ Hanoi Travel
+Truy cập {frontend_url} để bắt đầu khám phá!
+
+Trân trọng,
+Đội ngũ Hanoi Travel
+            """
+        }
+
+    @staticmethod
+    def password_reset_email(full_name: str, email: str, reset_url: str) -> Dict[str, str]:
+        """Template cho password reset email - Modern Vietnamese Design"""
+        escaped_name = html.escape(full_name)
+        escaped_email = html.escape(email)
+        
+        return {
+            "subject": "🔐 Đặt lại mật khẩu - Hanoi Travel",
+            "html": f"""
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt lại mật khẩu - Hanoi Travel</title>
+    <style>{EmailTemplate.BASE_STYLES}</style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="header" style="background: linear-gradient(135deg, #e53e3e 0%, #dd6b20 100%);">
+            <div class="icon">🔐</div>
+            <h1>Yêu cầu đặt lại mật khẩu</h1>
+            <p>Bảo mật tài khoản của bạn</p>
+        </div>
+
+        <div class="content">
+            <h2>Xin chào {escaped_name}!</h2>
+            
+            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Hanoi Travel của bạn.</p>
+
+            <div class="highlight-box">
+                <strong>📧 Tài khoản:</strong> {escaped_email}<br>
+                <strong>⏰ Thời hạn:</strong> Link có hiệu lực trong <strong>1 giờ</strong>
+            </div>
+
+            <p>Nhấn vào nút bên dưới để đặt lại mật khẩu:</p>
+
+            <div class="btn-container">
+                <a href="{reset_url}" class="btn-primary" style="background: linear-gradient(135deg, #e53e3e 0%, #dd6b20 100%);">
+                    🔑 Đặt lại mật khẩu ngay
+                </a>
+            </div>
+
+            <p class="small-text" style="text-align: center; word-break: break-all;">
+                Hoặc copy đường dẫn này vào trình duyệt:<br>
+                <a href="{reset_url}" style="color: #667eea;">{reset_url}</a>
+            </p>
+
+            <div class="divider"></div>
+
+            <div class="alert-box warning">
+                <strong>⚠️ Lưu ý bảo mật:</strong><br>
+                • Nếu bạn <strong>không yêu cầu</strong> đặt lại mật khẩu, vui lòng bỏ qua email này<br>
+                • Không chia sẻ đường dẫn này với bất kỳ ai<br>
+                • Đường dẫn sẽ hết hạn sau 1 giờ
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Hanoi Travel</strong> - Khám phá Hà Nội theo cách của bạn</p>
+            <p>© 2024 Hanoi Travel. All rights reserved.</p>
+            <p class="small-text">Đây là email tự động, vui lòng không trả lời email này.</p>
+        </div>
+    </div>
+</body>
+</html>
+            """,
+            "text": f"""
+Yêu cầu đặt lại mật khẩu - Hanoi Travel
+
+Xin chào {full_name}!
+
+Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Hanoi Travel của bạn.
+
+Tài khoản: {email}
+Thời hạn: Link có hiệu lực trong 1 giờ
+
+Để đặt lại mật khẩu, vui lòng truy cập đường dẫn sau:
+{reset_url}
+
+LƯU Ý BẢO MẬT:
+• Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này
+• Không chia sẻ đường dẫn này với bất kỳ ai
+• Đường dẫn sẽ hết hạn sau 1 giờ
+
+Trân trọng,
+Đội ngũ Hanoi Travel
             """
         }
 
     @staticmethod
     def password_changed_notification(email: str) -> Dict[str, str]:
-        """Template cho thông báo đổi mật khẩu"""
+        """Template cho thông báo đổi mật khẩu - Modern Vietnamese Design"""
+        current_time = datetime.now().strftime('%H:%M:%S ngày %d/%m/%Y')
+        escaped_email = html.escape(email)
+        
         return {
-            "subject": "Thông báo: Mật khẩu của bạn đã được thay đổi",
+            "subject": "✅ Mật khẩu đã được thay đổi - Hanoi Travel",
             "html": f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>Thông báo đổi mật khẩu - Hanoi Travel</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: #e67e22; color: white; padding: 20px; text-align: center; }}
-                    .content {{ padding: 30px; background: #f9f9f9; }}
-                    .alert {{ background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }}
-                    .footer {{ text-align: center; padding: 20px; color: #666; font-size: 14px; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🔒 Thông báo bảo mật</h1>
-                    </div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo đổi mật khẩu - Hanoi Travel</title>
+    <style>{EmailTemplate.BASE_STYLES}</style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="header" style="background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);">
+            <div class="icon">✅</div>
+            <h1>Mật khẩu đã được thay đổi</h1>
+            <p>Thông báo bảo mật tài khoản</p>
+        </div>
 
-                    <div class="content">
-                        <h2>Mật khẩu của bạn đã được thay đổi</h2>
+        <div class="content">
+            <h2>Xin chào!</h2>
+            
+            <div class="highlight-box" style="border-left-color: #38a169;">
+                <strong>🔒 Thông báo:</strong><br>
+                Mật khẩu cho tài khoản <strong>{escaped_email}</strong> đã được thay đổi thành công.<br>
+                <span class="small-text">Thời gian: {current_time}</span>
+            </div>
 
-                        <div class="alert">
-                            <strong>Thông báo:</strong> Mật khẩu cho tài khoản {email} đã được thay đổi thành công vào lúc {datetime.now().strftime('%H:%M:%S ngày %d/%m/%Y')}.
-                        </div>
+            <h3 style="color: #38a169;">✓ Nếu bạn thực hiện thay đổi này:</h3>
+            <ul class="feature-list">
+                <li>Không cần thực hiện thêm bất kỳ hành động nào</li>
+                <li>Bạn có thể đăng nhập bằng mật khẩu mới</li>
+            </ul>
 
-                        <p><strong>Nếu bạn thực hiện thay đổi này:</strong></p>
-                        <ul>
-                            <li>Không cần làm gì thêm</li>
-                            <li>Bạn có thể đăng nhập bằng mật khẩu mới</li>
-                        </ul>
+            <div class="alert-box warning">
+                <strong>⚠️ Nếu bạn KHÔNG thực hiện thay đổi này:</strong><br><br>
+                Vui lòng thực hiện ngay các bước sau:<br>
+                • Liên hệ với chúng tôi ngay lập tức<br>
+                • Đăng nhập và kiểm tra tài khoản của bạn<br>
+                • Kiểm tra các hoạt động đáng ngờ khác
+            </div>
 
-                        <p><strong>Nếu bạn KHÔNG thực hiện thay đổi này:</strong></p>
-                        <ul>
-                            <li>Vui lòng liên hệ ngay với chúng tôi</li>
-                            <li>Đăng nhập và kiểm tra tài khoản của bạn</li>
-                            <li>Kiểm tra các hoạt động đáng ngờ khác</li>
-                        </ul>
+            <div class="divider"></div>
 
-                        <p><strong>Để bảo vệ tài khoản:</strong></p>
-                        <ul>
-                            <li>Không chia sẻ mật khẩu với người khác</li>
-                            <li>Sử dụng mật khẩu mạnh</li>
-                            <li>Bật xác thực hai yếu tố nếu có</li>
-                        </ul>
-                    </div>
+            <h3>🛡️ Mẹo bảo mật tài khoản:</h3>
+            <ul class="feature-list">
+                <li>Không chia sẻ mật khẩu với bất kỳ ai</li>
+                <li>Sử dụng mật khẩu mạnh với số và ký tự đặc biệt</li>
+                <li>Đổi mật khẩu định kỳ</li>
+                <li>Không sử dụng lại mật khẩu ở nhiều trang web</li>
+            </ul>
+        </div>
 
-                    <div class="footer">
-                        <p>&copy; 2024 Hanoi Travel. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
+        <div class="footer">
+            <p><strong>Hanoi Travel</strong> - Khám phá Hà Nội theo cách của bạn</p>
+            <p>© 2024 Hanoi Travel. All rights reserved.</p>
+            <p class="small-text">Đây là email tự động từ hệ thống bảo mật.</p>
+        </div>
+    </div>
+</body>
+</html>
             """,
             "text": f"""
-            Thông báo đổi mật khẩu - Hanoi Travel
+Thông báo: Mật khẩu đã được thay đổi - Hanoi Travel
 
-            Mật khẩu của bạn đã được thay đổi
+Xin chào!
 
-            Thông báo: Mật khẩu cho tài khoản {email} đã được thay đổi thành công vào lúc {datetime.now().strftime('%H:%M:%S ngày %d/%m/%Y')}.
+THÔNG BÁO: Mật khẩu cho tài khoản {email} đã được thay đổi thành công.
+Thời gian: {current_time}
 
-            Nếu bạn thực hiện thay đổi này:
-            - Không cần làm gì thêm
-            - Bạn có thể đăng nhập bằng mật khẩu mới
+NẾU BẠN THỰC HIỆN THAY ĐỔI NÀY:
+• Không cần thực hiện thêm bất kỳ hành động nào
+• Bạn có thể đăng nhập bằng mật khẩu mới
 
-            Nếu bạn KHÔNG thực hiện thay đổi này:
-            - Vui lòng liên hệ ngay với chúng tôi
-            - Đăng nhập và kiểm tra tài khoản của bạn
-            - Kiểm tra các hoạt động đáng ngờ khác
+NẾU BẠN KHÔNG THỰC HIỆN THAY ĐỔI NÀY:
+Vui lòng thực hiện ngay các bước sau:
+• Liên hệ với chúng tôi ngay lập tức
+• Đăng nhập và kiểm tra tài khoản của bạn
+• Kiểm tra các hoạt động đáng ngờ khác
 
-            Để bảo vệ tài khoản:
-            - Không chia sẻ mật khẩu với người khác
-            - Sử dụng mật khẩu mạnh
-            - Bật xác thực hai yếu tố nếu có
+MẸO BẢO MẬT TÀI KHOẢN:
+• Không chia sẻ mật khẩu với bất kỳ ai
+• Sử dụng mật khẩu mạnh với số và ký tự đặc biệt
+• Đổi mật khẩu định kỳ
+• Không sử dụng lại mật khẩu ở nhiều trang web
 
-            Trân trọng,
-            Đội ngũ Hanoi Travel
+Trân trọng,
+Đội ngũ Hanoi Travel
             """
         }
 
 
-
 class EmailService:
-
     """
     Service gửi email
 
@@ -273,9 +522,6 @@ class EmailService:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             return False
 
-
-
-
     async def send_welcome_email(self, email: str, full_name: str) -> bool:
         """
         Gửi email chào mừng
@@ -288,6 +534,26 @@ class EmailService:
             bool: True nếu gửi thành công
         """
         template = EmailTemplate.welcome_email(full_name, email)
+        return await self.send_email(
+            to_email=email,
+            subject=template["subject"],
+            html_content=template["html"],
+            text_content=template["text"]
+        )
+
+    async def send_password_reset_email(self, email: str, full_name: str, reset_url: str) -> bool:
+        """
+        Gửi email đặt lại mật khẩu
+
+        Args:
+            email: Email người nhận
+            full_name: Tên đầy đủ
+            reset_url: URL đặt lại mật khẩu
+
+        Returns:
+            bool: True nếu gửi thành công
+        """
+        template = EmailTemplate.password_reset_email(full_name, email, reset_url)
         return await self.send_email(
             to_email=email,
             subject=template["subject"],
@@ -312,8 +578,6 @@ class EmailService:
             html_content=template["html"],
             text_content=template["text"]
         )
-
-
 
     async def send_custom_email(
         self,
