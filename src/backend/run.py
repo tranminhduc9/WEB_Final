@@ -1,12 +1,20 @@
 """
 Backend Server Runner
 
-Script này khởi động FastAPI backend server với đúng cấu trúc project.
+Script này khởi động FastAPI backend server.
 Sử dụng script này thay vì chạy uvicorn trực tiếp.
+
+Usage:
+    python run.py                    # Dev mode (127.0.0.1:8080)
+    python run.py --prod             # Production mode (0.0.0.0:8080)
+    python run.py --port 8000        # Custom port
+    python run.py --reload           # Enable hot reload
+    python run.py --help             # Show help
 """
 
 import sys
 import os
+import argparse
 from pathlib import Path
 
 # Add src/backend to Python path
@@ -37,23 +45,84 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="Hanoivivu Backend Server",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python run.py                 # Dev mode (127.0.0.1:8080)
+  python run.py --prod          # Production mode (0.0.0.0:8080)
+  python run.py --port 8000     # Custom port
+  python run.py --reload        # Enable hot reload for development
+        """
+    )
+    
+    parser.add_argument(
+        "--host",
+        type=str,
+        default=None,
+        help="Host to bind (default: 127.0.0.1, or 0.0.0.0 with --prod)"
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help="Port to bind (default: 8080 or BACKEND_PORT env var)"
+    )
+    parser.add_argument(
+        "--prod",
+        action="store_true",
+        help="Production mode: bind to 0.0.0.0 and disable reload"
+    )
+    parser.add_argument(
+        "--reload",
+        action="store_true",
+        help="Enable auto-reload for development"
+    )
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["debug", "info", "warning", "error"],
+        default="info",
+        help="Log level (default: info)"
+    )
+    
+    return parser.parse_args()
+
+
 def main():
     """Main function to start the server"""
-
-    # Get config from environment
-    host = os.getenv("BACKEND_HOST", "127.0.0.1")
-    port = int(os.getenv("BACKEND_PORT", "8080"))  # Default 8080
-    reload = os.getenv("DEBUG", "false").lower() == "true"
-
+    args = parse_args()
+    
+    # Determine host
+    if args.host:
+        host = args.host
+    elif args.prod:
+        host = "0.0.0.0"
+    else:
+        host = os.getenv("BACKEND_HOST", "127.0.0.1")
+    
+    # Determine port
+    if args.port:
+        port = args.port
+    else:
+        port = int(os.getenv("BACKEND_PORT", "8080"))
+    
+    # Determine reload
+    reload = args.reload and not args.prod
+    
     # Print startup info
+    mode = "PRODUCTION" if args.prod else "DEVELOPMENT"
     logger.info("=" * 70)
-    logger.info("STARTING HANOIVIVU BACKEND SERVER")
+    logger.info(f"STARTING HANOIVIVU BACKEND SERVER ({mode})")
     logger.info("=" * 70)
     logger.info(f"Working directory: {os.getcwd()}")
-    logger.info(f"Python path: {sys.path[0]}")
     logger.info(f"Host: {host}")
     logger.info(f"Port: {port}")
     logger.info(f"Reload: {reload}")
+    logger.info(f"Log level: {args.log_level}")
     logger.info("=" * 70)
     logger.info(f"Server URL: http://{host}:{port}")
     logger.info(f"Swagger UI: http://{host}:{port}/docs")
@@ -63,13 +132,12 @@ def main():
     logger.info("")
 
     try:
-        # Start server với full logging
         uvicorn.run(
-            "app.main:app",  # Module path from src/backend directory
+            "app.main:app",
             host=host,
             port=port,
             reload=reload,
-            log_level="debug",
+            log_level=args.log_level,
             access_log=True
         )
     except KeyboardInterrupt:
@@ -83,4 +151,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

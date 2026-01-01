@@ -51,30 +51,11 @@ from app.api.v1.admin import router as admin_router
 from middleware.setup import setup_middleware, setup_app
 from middleware.config import config
 
-# Configure logging
-# Tạo logs directory nếu chưa tồn tại
-log_dir = Path(__file__).parent.parent / "logs"
-log_dir.mkdir(exist_ok=True)
-
-# Custom UTF-8 handlers
-class UTF8FileHandler(logging.FileHandler):
-    """FileHandler with UTF-8 encoding"""
-    def __init__(self, filename, *args, **kwargs):
-        super().__init__(filename, encoding='utf-8', *args, **kwargs)
-
-class UTF8StreamHandler(logging.StreamHandler):
-    """StreamHandler with UTF-8 encoding - handles uvicorn reload safely"""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-# Cấu hình logging - INFO level for cleaner output
+# Configure logging - only console output (logs are stored in database via audit_log middleware)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        UTF8FileHandler(log_dir / "app.log"),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.StreamHandler()]
 )
 
 # Giảm noise từ các thư viện khác
@@ -302,27 +283,4 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-
-# ==================== STARTUP INSTRUCTIONS ====================
-
-if __name__ == "__main__":
-    import uvicorn
-
-    # Lấy config từ environment
-    host = os.getenv("BACKEND_HOST", "127.0.0.1")
-    port = int(os.getenv("BACKEND_PORT", "8080"))  # Default 8080 to match run.py
-    reload = os.getenv("DEBUG", "false").lower() == "true"
-
-    logger.info(f"Starting server at http://{host}:{port}")
-    logger.info(f"Swagger UI: http://{host}:{port}/docs")
-    logger.info(f"ReDoc: http://{host}:{port}/redoc")
-
-    # Chạy server
-    uvicorn.run(
-        "app.main:app",  # Đường dẫn module từ src/backend
-        host=host,
-        port=port,
-        reload=reload,
-        log_level="info"
-    )
 
