@@ -79,8 +79,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       return;
     }
 
-    if (rating === '' || typeof rating !== 'number' || rating < 0 || rating > 5) {
-      alert('Vui lòng nhập đánh giá từ 0-5 sao');
+    if (rating === '' || typeof rating !== 'number' || rating < 1 || rating > 5) {
+      alert('Vui lòng nhập đánh giá từ 1-5 sao');
       return;
     }
 
@@ -170,13 +170,13 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             <span>Đánh giá: <span style={{ color: 'red' }}>*</span></span>
             <input
               type="number"
-              min="0"
+              min="1"
               max="5"
               step="0.1"
               value={rating}
               onChange={(e) => setRating(Number(e.target.value))}
               className="create-post__rating-input"
-              placeholder="0-5"
+              placeholder="1-5"
               required
             />
             <span>/5</span>
