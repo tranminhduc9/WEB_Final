@@ -187,7 +187,8 @@ async def get_users(
 ):
     """Lấy danh sách users"""
     try:
-        query = db.query(User)
+        # Filter out soft-deleted users
+        query = db.query(User).filter(User.deleted_at == None)
         
         # Filter
         if status_filter == "active":
