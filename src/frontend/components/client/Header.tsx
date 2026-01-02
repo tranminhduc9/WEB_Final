@@ -8,6 +8,7 @@ import '../../assets/styles/components/Header.css';
 function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Sử dụng AuthContext thay vì localStorage trực tiếp
   const { user, isAuthenticated, logout, isLoading } = useAuthContext();
@@ -20,16 +21,19 @@ function Header() {
       if (showUserMenu && !target.closest('.user-menu-container')) {
         setShowUserMenu(false);
       }
+      if (showMobileMenu && !target.closest('.site-header')) {
+        setShowMobileMenu(false);
+      }
     };
 
-    if (showUserMenu) {
+    if (showUserMenu || showMobileMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showUserMenu]);
+  }, [showUserMenu, showMobileMenu]);
 
   // Xử lý đăng xuất
   const handleLogout = async () => {
@@ -52,7 +56,7 @@ function Header() {
     <header className="site-header">
       {/* 1. Logo */}
       <div className="header-logo">
-        <Link to="/">
+        <Link to="/" onClick={() => setShowMobileMenu(false)}>
           <img src={logo} alt="Logo" />
         </Link>
       </div>
@@ -73,11 +77,26 @@ function Header() {
         </form>
       </div>
 
+      {/* Mobile Menu Toggle */}
+      <button 
+        className="mobile-menu-toggle"
+        onClick={() => setShowMobileMenu(!showMobileMenu)}
+        aria-label="Toggle menu"
+      >
+        {showMobileMenu ? <Icons.Close /> : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        )}
+      </button>
+
       {/* 3. Navigation */}
-      <nav className="header-nav">
-        <Link to="/blogs" className="nav-link">Blog trải nghiệm</Link>
-        <Link to="/places" className="nav-link">Khám phá địa điểm</Link>
-        <Link to="/trend-places" className="nav-link">Điểm đến phổ biến</Link>
+      <nav className={`header-nav ${showMobileMenu ? 'header-nav--open' : ''}`}>
+        <Link to="/blogs" className="nav-link" onClick={() => setShowMobileMenu(false)}>Blog trải nghiệm</Link>
+        <Link to="/places" className="nav-link" onClick={() => setShowMobileMenu(false)}>Khám phá địa điểm</Link>
+        <Link to="/trend-places" className="nav-link" onClick={() => setShowMobileMenu(false)}>Điểm đến phổ biến</Link>
 
         {isLoading ? (
           // Loading state
@@ -123,7 +142,10 @@ function Header() {
                 <Link
                   to="/profile"
                   className="user-menu-item"
-                  onClick={() => setShowUserMenu(false)}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    setShowMobileMenu(false);
+                  }}
                 >
                   Hồ sơ
                 </Link>
@@ -133,7 +155,10 @@ function Header() {
                     <Link
                       to="/admin"
                       className="user-menu-item"
-                      onClick={() => setShowUserMenu(false)}
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setShowMobileMenu(false);
+                      }}
                     >
                       Quản trị
                     </Link>
@@ -142,7 +167,10 @@ function Header() {
                 <div className="user-menu-divider"></div>
                 <button
                   className="user-menu-item logout-btn"
-                  onClick={handleLogout}
+                  onClick={() => {
+                    handleLogout();
+                    setShowMobileMenu(false);
+                  }}
                 >
                   Đăng xuất
                 </button>
@@ -152,8 +180,8 @@ function Header() {
         ) : (
           // Đăng ký/Đăng nhập khi chưa đăng nhập
           <>
-            <Link to="/register" className="nav-link">Đăng ký</Link>
-            <Link to="/login" className="btn-login">Đăng nhập</Link>
+            <Link to="/register" className="nav-link" onClick={() => setShowMobileMenu(false)}>Đăng ký</Link>
+            <Link to="/login" className="btn-login" onClick={() => setShowMobileMenu(false)}>Đăng nhập</Link>
           </>
         )}
       </nav>
