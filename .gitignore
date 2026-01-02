@@ -5,3 +5,5 @@ node_modules/
 __pycache__
 .pytest_cache
 uploads
+.env
+.idea
