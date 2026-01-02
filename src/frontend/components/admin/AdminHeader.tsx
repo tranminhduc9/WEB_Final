@@ -37,10 +37,6 @@ function AdminHeader() {
 
     // Check active link
     const isActiveLink = (path: string) => {
-        // /admin và /admin/statistics đều hiển thị AdminHomePage
-        if (path === '/admin/statistics' && (location.pathname === '/admin' || location.pathname === '/admin/')) {
-            return true;
-        }
         return location.pathname === path || location.pathname.startsWith(path + '/');
     };
 
@@ -68,8 +64,8 @@ function AdminHeader() {
                     Kiểm tra log
                 </Link>
                 <Link
-                    to="/admin/statistics"
-                    className={`admin-nav-link ${isActiveLink('/admin/statistics') ? 'active' : ''}`}
+                    to="/admin"
+                    className={`admin-nav-link ${isActiveLink('/admin') ? 'active' : ''}`}
                 >
                     Thống kê Tổng quan
                 </Link>

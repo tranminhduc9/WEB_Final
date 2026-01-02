@@ -34,13 +34,20 @@ import AdminLogPage from './pages/admin/AdminLogPage'
 // Components
 import Chatbot from './components/client/Chatbot'
 
+// Pages
+import ErrorPage from './pages/ErrorPage'
+
 // Styles
 import './index.css'
 import App from './App'
 
 const router = createBrowserRouter([
   // Public routes
-  { path: '/', element: <App /> },
+  { 
+    path: '/', 
+    element: <App />,
+    errorElement: <ErrorPage />
+  },
   { path: '/search', element: <SearchResultsPage /> },
   { path: '/trend-places', element: <TrendPlacesPage /> },
   { path: '/places', element: <PlacesPage /> },
@@ -121,15 +128,8 @@ const router = createBrowserRouter([
       <AdminRoute>
         <AdminHomePage />
       </AdminRoute>
-    )
-  },
-  {
-    path: '/admin/statistics',
-    element: (
-      <AdminRoute>
-        <AdminHomePage />
-      </AdminRoute>
-    )
+    ),
+    errorElement: <ErrorPage />
   },
   {
     path: '/admin/users',

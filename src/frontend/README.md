@@ -34,11 +34,12 @@ src/frontend/
 │   │   └── AdminHeader.tsx
 │   ├── client/            # Client components
 │   │   ├── Header.tsx     # Header với responsive
-│   │   ├── Footer.tsx
+│   │   ├── Footer.tsx     # Footer component
 │   │   ├── Chatbot.tsx    # AI Chatbot
 │   │   ├── HeroCarousel.tsx
 │   │   ├── PostCard.tsx
-│   │   └── LocationCardHorizontal.tsx
+│   │   ├── LocationCardHorizontal.tsx # Horizontal location card
+│   │   └── CreatePostModal.tsx # Modal để tạo post mới
 │   └── common/            # Shared components
 │       ├── LocationCard.tsx
 │       └── BlogCard.tsx
@@ -104,7 +105,7 @@ src/frontend/
 └── vite.config.ts          # Vite configuration
 ```
 
-## 🏃 Cách chạy
+##  Cách chạy
 
 ### Cài đặt dependencies
 
@@ -148,67 +149,81 @@ npm run test:run
 npm run lint
 ```
 
-## 🎯 Tính năng chính
+##  Tính năng chính
 
 ### Authentication & Authorization
-- Đăng ký / Đăng nhập
-- Quên mật khẩu / Đặt lại mật khẩu
-- Protected routes (yêu cầu đăng nhập)
-- Admin routes (yêu cầu quyền admin)
-- JWT token management
+- **Đăng ký / Đăng nhập** - Form validation, error handling
+- **Quên mật khẩu / Đặt lại mật khẩu** - Email link-based password reset flow (gửi link reset qua email)
+- **Protected routes** - Yêu cầu đăng nhập, tự động redirect về `/login`
+- **Admin routes** - Yêu cầu quyền admin, redirect nếu không đủ quyền
+- **JWT token management** - Tự động refresh token, lưu trong localStorage
+- **Auto-logout** - Tự động đăng xuất khi token hết hạn
 
 ### Pages
 
 #### Client Pages
-- **Homepage** (`/`) - Trang chủ với hero carousel
-- **Search** (`/search`) - Tìm kiếm địa điểm
-- **Places** (`/places`) - Danh sách địa điểm
+- **Homepage** (`/`) - Trang chủ với hero carousel và search bar
+- **Search** (`/search`) - Tìm kiếm địa điểm với filters, auto-scroll to top
+- **Places** (`/places`) - Danh sách địa điểm với pagination
 - **Trend Places** (`/trend-places`) - Địa điểm phổ biến
 - **Blogs** (`/blogs`) - Danh sách bài viết
 - **Blog Detail** (`/blog/:id`) - Chi tiết bài viết
-- **Location Info** (`/location/:id`) - Chi tiết địa điểm
-- **User Profile** (`/profile`) - Hồ sơ người dùng
-- **Favorite Places** (`/places/favourite`) - Địa điểm yêu thích
-- **User Posts** (`/posts/user`) - Bài viết của user
+- **Location Info** (`/location/:id`) - Chi tiết địa điểm với nearby places và suggestions
+- **User Profile** (`/profile`) - Hồ sơ người dùng (protected), có thể xem profile người khác (`/user/:id`)
+- **Favorite Places** (`/places/favourite`) - Địa điểm yêu thích (protected), có thể xem của người khác (`/places/favourite/:userId`)
+- **User Posts** (`/posts/user`) - Bài viết của user (protected), có thể xem của người khác (`/posts/user/:userId`)
 
 #### Admin Pages
-- **Admin Dashboard** (`/admin`) - Trang quản trị
-- **Users Management** (`/admin/users`) - Quản lý người dùng
+- **Admin Dashboard** (`/admin`) - Trang quản trị với thống kê
+- **Users Management** (`/admin/users`) - Quản lý người dùng (CRUD)
 - **Locations Management** (`/admin/locations`) - Quản lý địa điểm
+  - **Add Location** (`/admin/locations/add`) - Thêm địa điểm mới
+  - **Edit Location** (`/admin/locations/edit/:id`) - Chỉnh sửa địa điểm
 - **Posts Management** (`/admin/posts`) - Quản lý bài viết
 - **Reports** (`/admin/reports`) - Quản lý báo cáo
-- **Logs** (`/admin/log`) - Xem logs hệ thống
+- **Logs** (`/admin/log`) - Xem logs hệ thống (audit logs, application logs, visit logs)
 
 ### Components
 
 #### Header
-- Responsive design với mobile menu
-- Search bar với auto-scroll to top
-- User menu dropdown
-- Navigation links
+- Responsive design với mobile menu (hamburger icon)
+- Search bar với auto-scroll to top khi submit
+- User menu dropdown với avatar
+- Navigation links (ẩn trên mobile, hiện trong mobile menu)
+- Click outside để đóng menu
 
 #### Chatbot
-- AI chatbot với Gemini integration
-- Conversation history
-- Reset chat functionality
-- Suggested places
+- AI chatbot tích hợp Google Gemini
+- Conversation history lưu trong localStorage (15 phút expiry)
+- Reset chat functionality (xóa toàn bộ lịch sử)
+- Suggested places từ AI response
+- Markdown rendering cho bot messages
+- User avatar hiển thị trong chat
+- Loading indicator khi đang xử lý
+- Auto-scroll to bottom khi có tin nhắn mới
 
 #### Common Components
-- **LocationCard** - Card hiển thị địa điểm
+- **LocationCard** - Card hiển thị địa điểm (vertical layout, dùng trong danh sách)
 - **BlogCard** - Card hiển thị bài viết
-- **PostCard** - Card hiển thị post
+
+#### Client Components
+- **LocationCardHorizontal** - Card hiển thị địa điểm (horizontal layout, dùng trong sidebar của LocationInfoPage)
+- **CreatePostModal** - Modal component để tạo bài viết mới với image upload
+- **Footer** - Footer component cho các pages
+- **HeroCarousel** - Carousel component cho homepage với search bar tích hợp
+- **PostCard** - Card hiển thị bài viết (có thể khác với BlogCard)
 
 ### Services
 
-- **authService** - Xử lý authentication
-- **userService** - Quản lý user profile
-- **placeService** - Tìm kiếm và quản lý địa điểm
-- **postService** - Quản lý bài viết
-- **chatbotService** - Tích hợp AI chatbot
-- **adminService** - Admin operations
-- **uploadService** - Upload files
+- **authService** - Xử lý authentication (login, register, logout, refresh token, forgot/reset password)
+- **userService** - Quản lý user profile (fetch, update, upload avatar, delete avatar)
+- **placeService** - Tìm kiếm và quản lý địa điểm (search, get details, get nearby, get favorites)
+- **postService** - Quản lý bài viết (CRUD operations, get user posts)
+- **chatbotService** - Tích hợp AI chatbot (send message, get conversation history)
+- **adminService** - Admin operations (users, locations, posts, reports, logs management)
+- **uploadService** - Upload files (images, avatars) lên server với folder organization
 
-## 🔐 Route Protection
+##  Route Protection
 
 ### ProtectedRoute
 Yêu cầu user phải đăng nhập, nếu chưa sẽ redirect về `/login`
@@ -237,21 +252,22 @@ Chỉ cho phép truy cập khi chưa đăng nhập, nếu đã đăng nhập s�
 </PublicRoute>
 ```
 
-## 🎨 Styling
+##  Styling
 
-- CSS modules cho từng component/page
+- Global CSS files cho từng component/page
 - CSS variables trong `variables.css`
 - Responsive design với media queries
-- Mobile-first approach
 
 ## 📱 Responsive Design
 
-- **Desktop**: Full layout với sidebar navigation
+- **Desktop**: Full layout với horizontal navigation
 - **Tablet** (≤1024px): Adjusted spacing và font sizes
 - **Mobile** (≤768px): Mobile menu, stacked layout
 - **Small Mobile** (≤480px): Optimized for small screens
 
-## 🧪 Testing
+**Lưu ý**: Một số pages như `LocationInfoPage` có sidebar sections (địa điểm lân cận, gợi ý) nhưng không có global sidebar navigation.
+
+## Testing
 
 Tests được viết với Vitest và React Testing Library:
 
@@ -263,26 +279,89 @@ npm test
 src/frontend/services/__tests__/
 ```
 
-## 📦 Build & Deploy
+## Build & Deploy
 
-### Build output
-Sau khi build, files sẽ được output vào thư mục `dist/`
+### Build Production
+
+```bash
+npm run build
+```
+
+Sau khi build, files sẽ được output vào thư mục `dist/`:
+- `dist/index.html` - Entry point
+- `dist/assets/` - JavaScript, CSS, và images đã được optimize
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+Chạy local server để preview production build trước khi deploy.
 
 ### Environment Variables
-Tạo file `.env` trong thư mục `src/frontend/`:
+
+Tạo file `.env` trong thư mục root của frontend project (`src/frontend/`):
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api/v1
+VITE_API_URL=http://127.0.0.1:8080/api/v1
 ```
+
+**Lưu ý**: 
+- Environment variable là `VITE_API_URL` (không phải `VITE_API_BASE_URL`)
+- Default value là `http://127.0.0.1:8080/api/v1` (nếu không set `VITE_API_URL`)
+- File `.env` sẽ được Vite tự động load khi chạy `npm run dev` hoặc `npm run build`
+- Không commit file `.env` vào git (đã có trong `.gitignore`)
+
+### Deploy
+
+#### Static Hosting (Vercel, Netlify, GitHub Pages)
+
+1. **Build project**:
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy folder `dist/`** lên hosting service của bạn
+
+3. **Set environment variables** trên hosting platform:
+   - `VITE_API_URL`: URL của backend API
+
+#### Vercel
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+#### Netlify
+
+```bash
+# Install Netlify CLI
+npm i -g netlify-cli
+
+# Deploy
+netlify deploy --prod --dir=dist
+```
+
+#### Manual Deploy (Nginx, Apache)
+
+1. Build project: `npm run build`
+2. Copy folder `dist/` lên server
+3. Configure web server (Nginx/Apache) để serve static files từ `dist/`
+4. Set environment variables trên server hoặc trong build process
 
 ## 🔗 API Integration
 
 Frontend giao tiếp với backend qua REST API:
 
-- Base URL: `http://localhost:8080/api/v1`
+- Base URL: `http://127.0.0.1:8080/api/v1` (default, có thể config qua `VITE_API_URL`)
 - Authentication: JWT tokens
 - Axios interceptors cho token refresh
-- Error handling với try-catch
+- Error handling: Axios interceptors xử lý HTTP errors, try-catch ở component level
 
 ## 📝 Code Style
 
@@ -292,7 +371,7 @@ Frontend giao tiếp với backend qua REST API:
 - Custom hooks cho reusable logic
 - Type-safe API calls
 
-## 🚀 Performance
+## Performance
 
 ### Tự động (Vite mặc định)
 - ✅ **CSS optimization** - Vite tự động minify và optimize CSS khi build
@@ -301,17 +380,15 @@ Frontend giao tiếp với backend qua REST API:
 
 
 
-### Lưu ý
-- Build warning: Một số chunks lớn hơn 500KB
-- Khuyến nghị: Sử dụng lazy loading cho admin pages để giảm bundle size ban đầu
 
-## 📚 Tài liệu thêm
+
+## Tài liệu thêm
 
 - [React Documentation](https://react.dev)
 - [TypeScript Documentation](https://www.typescriptlang.org)
 - [Vite Documentation](https://vite.dev)
 - [React Router Documentation](https://reactrouter.com)
 
-## 👥 Contributors
+## Contributors
 
 Hanoivivu Development Team
