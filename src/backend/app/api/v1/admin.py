@@ -699,6 +699,13 @@ async def update_post_status(
                 # Post bị reject -> recalculate rating (loại bỏ rating của post này)
                 rating_synced = await on_post_rejected_or_deleted(post, db, mongo_client)
         
+        # Cập nhật reputation_score của author khi post được approve/reject
+        author_id = post.get("author_id")
+        if author_id:
+            from app.services.post_stats_sync import update_user_reputation
+            await update_user_reputation(author_id, mongo_client)
+            logger.info(f"Updated reputation for author {author_id} after post {post_id} status change to {new_status}")
+        
         message = f"Đã cập nhật status thành {new_status}"
         if rating_synced:
             message += " và đã cập nhật rating của địa điểm"
@@ -919,6 +926,58 @@ async def get_reports(
         logger.error(f"Get reports error: {str(e)}")
         return error_response(
             message="Lỗi lấy reports",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
+@router.delete("/reports/{report_id}", summary="Dismiss Report")
+async def dismiss_report(
+    request: Request,
+    report_id: str = Path(...),
+    current_user: Dict[str, Any] = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Bỏ qua (xóa) một báo cáo"""
+    try:
+        await get_mongodb()
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        # Handle both ObjectId and string _id
+        report_query = None
+        try:
+            report_query = {"_id": ObjectId(report_id)}
+        except InvalidId:
+            report_query = {"_id": report_id}
+        
+        # Check if report exists
+        report = await mongo_client.find_one("reports", report_query)
+        if not report:
+            return error_response(
+                message="Báo cáo không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
+        
+        # Delete the report
+        success = await mongo_client.delete_one("reports", report_query)
+        
+        if not success:
+            return error_response(
+                message="Lỗi xóa báo cáo",
+                error_code="DELETE_FAILED",
+                status_code=500
+            )
+        
+        logger.info(f"Admin {current_user.get('user_id')} dismissed report {report_id}")
+        
+        return success_response(message="Đã bỏ qua báo cáo")
+        
+    except Exception as e:
+        logger.error(f"Dismiss report error: {str(e)}")
+        return error_response(
+            message="Lỗi xóa báo cáo",
             error_code="INTERNAL_ERROR",
             status_code=500
         )

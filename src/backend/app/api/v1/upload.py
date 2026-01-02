@@ -109,8 +109,21 @@ async def upload_files(
                 errors.append(f"{file.filename}: Định dạng không hỗ trợ")
                 continue
             
-            # Check file size
-            # Note: save_upload_file uses file.read() which handles size if needed
+            # Check file size before reading
+            try:
+                # Read file content to check size
+                file_content = await file.read()
+                file_size = len(file_content)
+                
+                if file_size > MAX_FILE_SIZE:
+                    errors.append(f"{file.filename}: Kích thước vượt quá 10MB ({file_size // (1024*1024)}MB)")
+                    continue
+                
+                # Reset file position for save_upload_file
+                await file.seek(0)
+            except Exception as e:
+                errors.append(f"{file.filename}: Lỗi đọc file - {str(e)}")
+                continue
             
             try:
                 # Save using refactored helper
