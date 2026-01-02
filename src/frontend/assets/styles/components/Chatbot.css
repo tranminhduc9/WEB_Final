@@ -155,6 +155,13 @@
   font-weight: 500;
 }
 
+.chatbot-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chatbot-header__reset,
 .chatbot-header__close {
   background: transparent;
   border: none;
@@ -167,14 +174,21 @@
   transition: background 0.2s ease;
 }
 
+.chatbot-header__reset:hover,
 .chatbot-header__close:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
+.chatbot-header__reset svg,
 .chatbot-header__close svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   stroke: #000000;
+}
+
+.chatbot-header__reset svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ==================== */
