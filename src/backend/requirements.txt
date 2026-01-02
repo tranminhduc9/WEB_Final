@@ -25,9 +25,8 @@ python-dotenv>=1.0.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
 
-# Testing
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
+# AI Chatbot - Google Gemini
+google-generativeai>=0.3.0
 
 # Utilities
 certifi>=2023.7.22
@@ -36,5 +35,5 @@ aiofiles>=23.2.1
 # Security - Content Sanitization
 bleach>=6.0.0
 
-# Email (optional - if using email service)
+# Email
 aiosmtplib>=3.0.0
