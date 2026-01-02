@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../../components/client/Header';
 import Footer from '../../components/client/Footer';
-import LocationCardHorizontal from '../../components/common/LocationCardHorizontal';
+import LocationCardHorizontal from '../../components/client/LocationCardHorizontal';
 import BlogCard from '../../components/common/BlogCard';
 import { Icons } from '../../config/constants';
 import { placeService } from '../../services';
