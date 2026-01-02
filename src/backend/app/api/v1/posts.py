@@ -142,20 +142,31 @@ async def get_posts(
     request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
+    sort: str = Query("newest", description="Sort order: 'newest' (mới nhất) hoặc 'popular' (nổi bật theo likes+comments)"),
     current_user: Optional[Dict[str, Any]] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
     Lấy danh sách bài viết (feed)
+    
     Chỉ lấy bài viết đã approved
+    
+    Sort options:
+    - newest: Sắp xếp theo thời gian mới nhất (Khám phá bài viết)
+    - popular: Sắp xếp theo likes + comments (Bài viết nổi bật)
     """
     try:
         await get_mongodb()
         
         skip = (page - 1) * limit
         
-        # Query posts from MongoDB - sắp xếp theo thời gian mới nhất
-        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort="newest")
+        # Validate sort parameter
+        valid_sorts = ["newest", "popular"]
+        if sort not in valid_sorts:
+            sort = "newest"
+        
+        # Query posts from MongoDB with specified sort
+        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort=sort)
         
         # Sync stats batch cho tất cả posts
         from app.services.post_stats_sync import sync_posts_stats_batch

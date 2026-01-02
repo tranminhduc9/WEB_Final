@@ -191,13 +191,13 @@ class LocalFileUploader:
         """
         ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'jpg'
         
-        # Delete old avatar if exists
-        old_avatars = list(self.folders[ImageFolder.AVATARS].glob(f"avatar_{user_id}*"))
+        # Delete old avatar if exists (any extension)
+        old_avatars = list(self.folders[ImageFolder.AVATARS].glob(f"avatar_{user_id}.*"))
         for old_avatar in old_avatars:
             old_avatar.unlink()
         
-        # Custom filename with user_id
-        custom_filename = f"avatar_{user_id}_{uuid.uuid4().hex[:8]}.{ext}"
+        # Simple avatar naming: avatar_{user_id}.{ext}
+        custom_filename = f"avatar_{user_id}.{ext}"
         file_path = self.folders[ImageFolder.AVATARS] / custom_filename
         
         with open(file_path, 'wb') as f:
