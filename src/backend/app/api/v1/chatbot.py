@@ -5,24 +5,30 @@ Module này định nghĩa các API endpoints cho AI Chatbot:
 - POST /chatbot/message - Gửi tin nhắn
 - GET /chatbot/history - Lấy lịch sử chat
 
-Swagger v1.0.5 Compatible - MongoDB Integration
+Features:
+- Dynamic place context injection
+- Conversation history for context
+- Suggested places from database
+
+Swagger v1.1.0 Compatible - MongoDB Integration
 """
 
 from fastapi import APIRouter, Depends, Request, Query
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
-from datetime import datetime
 import logging
 import uuid
 
-from config.database import get_db, Place
-from app.utils.image_helpers import get_main_image_url
+from config.database import get_db
 from app.utils.place_helpers import get_place_compact
 from app.utils.timezone_helper import to_iso_string
-from middleware.auth import get_current_user, get_optional_user
+from middleware.auth import get_current_user
 from middleware.response import success_response, error_response
 from middleware.mongodb_client import mongo_client, get_mongodb
+
+# Import chatbot services
+from app.chatbot import get_chat_service, get_place_context_service
 
 logger = logging.getLogger(__name__)
 
@@ -37,53 +43,6 @@ class ChatMessageRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
 
 
-
-async def get_ai_response(message: str, conversation_history: List[Dict] = None) -> Dict:
-    """
-    Gọi AI để lấy response
-    Tích hợp với Google Generative AI hoặc OpenAI
-    """
-    try:
-        import os
-        import google.generativeai as genai
-        
-        api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            return {
-                "response": "Xin lỗi, hệ thống AI đang bảo trì. Vui lòng thử lại sau.",
-                "entities": {},
-                "suggested_place_ids": []
-            }
-        
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
-        
-        # System prompt
-        system_prompt = """Bạn là trợ lý du lịch Hà Nội thông minh. 
-Hãy trả lời các câu hỏi về du lịch, ẩm thực, địa điểm tham quan ở Hà Nội.
-Trả lời ngắn gọn, thân thiện và hữu ích bằng tiếng Việt.
-Nếu được hỏi về địa điểm cụ thể, hãy đề xuất những nơi phổ biến."""
-        
-        # Build prompt
-        full_prompt = f"{system_prompt}\n\nNgười dùng: {message}"
-        
-        response = model.generate_content(full_prompt)
-        
-        return {
-            "response": response.text if response.text else "Xin lỗi, tôi không hiểu câu hỏi của bạn.",
-            "entities": {},
-            "suggested_place_ids": []
-        }
-        
-    except Exception as e:
-        logger.error(f"AI error: {str(e)}")
-        return {
-            "response": "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
-            "entities": {},
-            "suggested_place_ids": []
-        }
-
-
 # ==================== ENDPOINTS ====================
 
 @router.post("/message", summary="Send Message")
@@ -95,6 +54,13 @@ async def send_message(
 ):
     """
     Gửi tin nhắn đến AI chatbot
+    
+    Flow:
+    1. Tìm địa điểm liên quan từ database dựa trên message
+    2. Lấy conversation history từ MongoDB
+    3. Gọi AI với context (places + history)
+    4. Lưu conversation vào MongoDB
+    5. Trả về response + suggested places
     
     Args:
         conversation_id: ID cuộc hội thoại (optional, tạo mới nếu không có)
@@ -109,26 +75,74 @@ async def send_message(
         user_id = current_user.get("user_id")
         conversation_id = chat_data.conversation_id or str(uuid.uuid4())
         
-        # Get AI response
-        ai_result = await get_ai_response(chat_data.message)
+        # 1. Search relevant places from database
+        place_service = get_place_context_service()
+        relevant_places = await place_service.search_relevant_places(
+            message=chat_data.message,
+            db=db,
+            limit=5
+        )
         
-        # Save to MongoDB
+        # 2. Get conversation history for context
+        history = await mongo_client.get_chatbot_history(
+            user_id, 
+            conversation_id=conversation_id,
+            limit=10
+        )
+        
+        # Convert history to list format for AI
+        conversation_history = []
+        for log in reversed(history):  # Oldest first
+            conversation_history.append({
+                "role": "user",
+                "content": log.get("user_message", "")
+            })
+            conversation_history.append({
+                "role": "assistant", 
+                "content": log.get("bot_response", "")
+            })
+        
+        # 3. Get AI response with places context
+        chat_service = get_chat_service()
+        ai_result = await chat_service.chat(
+            message=chat_data.message,
+            conversation_history=conversation_history,
+            places=relevant_places  # Inject places context
+        )
+        
+        # 4. Save to MongoDB (matching chatbot_logs_mongo schema)
         log_doc = {
             "conversation_id": conversation_id,
             "user_id": user_id,
             "user_message": chat_data.message,
             "bot_response": ai_result["response"],
-            "entities": ai_result["entities"]
+            "entities": ai_result.get("entities", {})
+            # created_at is auto-added by insert_one
         }
         
         await mongo_client.save_chatbot_log(log_doc)
+
         
-        # Get suggested places
+        # 5. Format suggested places for response (matching PlaceCompact interface)
+        # place_context now returns: rating_average, main_image_url, district_name
         suggested_places = []
-        for place_id in ai_result.get("suggested_place_ids", []):
-            place = get_place_compact(place_id, db)
-            if place:
-                suggested_places.append(place)
+        for place in relevant_places[:3]:  # Max 3 suggested places
+            rating = place.get("rating_average", 0)
+            if rating is None:
+                rating = 0
+            suggested_places.append({
+                "id": place["id"],
+                "name": place["name"],
+                "district_id": place.get("district_id"),
+                "district_name": place.get("district_name"),
+                "rating_average": float(rating),  # Ensure it's always a number
+                "rating_count": place.get("rating_count", 0) or 0,
+                "main_image_url": place.get("main_image_url"),
+                "address": place.get("address"),
+                "place_type_id": place.get("place_type_id"),
+                "price_min": float(place.get("price_min", 0) or 0),
+                "price_max": float(place.get("price_max", 0) or 0),
+            })
         
         return {
             "success": True,
@@ -167,21 +181,21 @@ async def get_chat_history(
         
         user_id = current_user.get("user_id")
         
-        # Build query
-        query = {"user_id": user_id}
-        if conversation_id:
-            query["conversation_id"] = conversation_id
-        
         # Get history
-        history = await mongo_client.get_chatbot_history(user_id, limit=limit)
+        history = await mongo_client.get_chatbot_history(
+            user_id, 
+            conversation_id=conversation_id,
+            limit=limit
+        )
         
-        # Format response
+        # Format response (matching chatbot_logs_mongo schema)
         formatted_history = []
         for log in history:
             formatted_history.append({
                 "conversation_id": log.get("conversation_id"),
                 "user_message": log.get("user_message"),
                 "bot_response": log.get("bot_response"),
+                "entities": log.get("entities", {}),
                 "created_at": to_iso_string(log.get("created_at"))
             })
         
@@ -197,6 +211,24 @@ async def get_chat_history(
             error_code="INTERNAL_ERROR",
             status_code=500
         )
+
+
+@router.get("/health", summary="Health Check")
+async def chatbot_health():
+    """
+    Kiểm tra trạng thái chatbot service
+    """
+    chat_service = get_chat_service()
+    return {
+        "healthy": chat_service.is_healthy,
+        "service": "chatbot",
+        "version": "1.1.0",
+        "features": [
+            "gemini_ai",
+            "place_context",
+            "conversation_history"
+        ]
+    }
 
 
 # ==================== END OF CHATBOT ROUTES ====================
