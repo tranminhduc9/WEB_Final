@@ -7,6 +7,6 @@ __pycache__
 uploads
 .env
 .idea
-.env.production
+# .env.production
 .env.prod
 travel-web-server.pem

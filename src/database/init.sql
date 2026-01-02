@@ -5,11 +5,12 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-12-29 04:21:35
+-- Started on 2026-01-03 00:07:30
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -20,18 +21,18 @@ SET row_security = off;
 
 --
 -- TOC entry 6 (class 2615 OID 39066)
--- Name: public; Type: SCHEMA; Schema: -; Owner: admin
+-- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
 -- *not* creating schema, since initdb creates it
 
 
-ALTER SCHEMA public OWNER TO admin;
+ALTER SCHEMA public OWNER TO postgres;
 
 --
 -- TOC entry 5100 (class 0 OID 0)
 -- Dependencies: 6
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: admin
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
 --
 
 COMMENT ON SCHEMA public IS '';
@@ -59,8 +60,8 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- TOC entry 223 (class 1259 OID 39134)
--- Name: activity_logs; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 218 (class 1259 OID 39333)
+-- Name: activity_logs; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.activity_logs (
@@ -73,11 +74,11 @@ CREATE TABLE public.activity_logs (
 );
 
 
-ALTER TABLE public.activity_logs OWNER TO admin;
+ALTER TABLE public.activity_logs OWNER TO postgres;
 
 --
--- TOC entry 222 (class 1259 OID 39133)
--- Name: activity_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 219 (class 1259 OID 39339)
+-- Name: activity_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.activity_logs_id_seq
@@ -89,20 +90,20 @@ CREATE SEQUENCE public.activity_logs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.activity_logs_id_seq OWNER TO admin;
+ALTER SEQUENCE public.activity_logs_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5103 (class 0 OID 0)
--- Dependencies: 222
--- Name: activity_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 219
+-- Name: activity_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.activity_logs_id_seq OWNED BY public.activity_logs.id;
 
 
 --
--- TOC entry 227 (class 1259 OID 39169)
--- Name: districts; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 220 (class 1259 OID 39340)
+-- Name: districts; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.districts (
@@ -111,11 +112,11 @@ CREATE TABLE public.districts (
 );
 
 
-ALTER TABLE public.districts OWNER TO admin;
+ALTER TABLE public.districts OWNER TO postgres;
 
 --
--- TOC entry 226 (class 1259 OID 39168)
--- Name: districts_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 221 (class 1259 OID 39343)
+-- Name: districts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.districts_id_seq
@@ -127,20 +128,20 @@ CREATE SEQUENCE public.districts_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.districts_id_seq OWNER TO admin;
+ALTER SEQUENCE public.districts_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5104 (class 0 OID 0)
--- Dependencies: 226
--- Name: districts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 221
+-- Name: districts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.districts_id_seq OWNED BY public.districts.id;
 
 
 --
--- TOC entry 235 (class 1259 OID 39244)
--- Name: hotels; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 222 (class 1259 OID 39344)
+-- Name: hotels; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hotels (
@@ -152,11 +153,11 @@ CREATE TABLE public.hotels (
 );
 
 
-ALTER TABLE public.hotels OWNER TO admin;
+ALTER TABLE public.hotels OWNER TO postgres;
 
 --
--- TOC entry 233 (class 1259 OID 39217)
--- Name: place_images; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 223 (class 1259 OID 39347)
+-- Name: place_images; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.place_images (
@@ -168,11 +169,11 @@ CREATE TABLE public.place_images (
 );
 
 
-ALTER TABLE public.place_images OWNER TO admin;
+ALTER TABLE public.place_images OWNER TO postgres;
 
 --
--- TOC entry 232 (class 1259 OID 39216)
--- Name: place_images_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 224 (class 1259 OID 39354)
+-- Name: place_images_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.place_images_id_seq
@@ -184,20 +185,20 @@ CREATE SEQUENCE public.place_images_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.place_images_id_seq OWNER TO admin;
+ALTER SEQUENCE public.place_images_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5105 (class 0 OID 0)
--- Dependencies: 232
--- Name: place_images_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 224
+-- Name: place_images_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.place_images_id_seq OWNED BY public.place_images.id;
 
 
 --
--- TOC entry 229 (class 1259 OID 39178)
--- Name: place_types; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 225 (class 1259 OID 39355)
+-- Name: place_types; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.place_types (
@@ -206,11 +207,11 @@ CREATE TABLE public.place_types (
 );
 
 
-ALTER TABLE public.place_types OWNER TO admin;
+ALTER TABLE public.place_types OWNER TO postgres;
 
 --
--- TOC entry 228 (class 1259 OID 39177)
--- Name: place_types_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 226 (class 1259 OID 39358)
+-- Name: place_types_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.place_types_id_seq
@@ -222,20 +223,20 @@ CREATE SEQUENCE public.place_types_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.place_types_id_seq OWNER TO admin;
+ALTER SEQUENCE public.place_types_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5106 (class 0 OID 0)
--- Dependencies: 228
--- Name: place_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 226
+-- Name: place_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.place_types_id_seq OWNED BY public.place_types.id;
 
 
 --
--- TOC entry 231 (class 1259 OID 39187)
--- Name: places; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 227 (class 1259 OID 39359)
+-- Name: places; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.places (
@@ -260,11 +261,11 @@ CREATE TABLE public.places (
 );
 
 
-ALTER TABLE public.places OWNER TO admin;
+ALTER TABLE public.places OWNER TO postgres;
 
 --
--- TOC entry 230 (class 1259 OID 39186)
--- Name: places_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 228 (class 1259 OID 39371)
+-- Name: places_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.places_id_seq
@@ -276,20 +277,20 @@ CREATE SEQUENCE public.places_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.places_id_seq OWNER TO admin;
+ALTER SEQUENCE public.places_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5107 (class 0 OID 0)
--- Dependencies: 230
--- Name: places_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 228
+-- Name: places_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.places_id_seq OWNED BY public.places.id;
 
 
 --
--- TOC entry 234 (class 1259 OID 39232)
--- Name: restaurants; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 229 (class 1259 OID 39372)
+-- Name: restaurants; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.restaurants (
@@ -299,11 +300,11 @@ CREATE TABLE public.restaurants (
 );
 
 
-ALTER TABLE public.restaurants OWNER TO admin;
+ALTER TABLE public.restaurants OWNER TO postgres;
 
 --
--- TOC entry 219 (class 1259 OID 39105)
--- Name: roles; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 230 (class 1259 OID 39377)
+-- Name: roles; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.roles (
@@ -312,11 +313,11 @@ CREATE TABLE public.roles (
 );
 
 
-ALTER TABLE public.roles OWNER TO admin;
+ALTER TABLE public.roles OWNER TO postgres;
 
 --
--- TOC entry 218 (class 1259 OID 39104)
--- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 231 (class 1259 OID 39380)
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.roles_id_seq
@@ -328,20 +329,20 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.roles_id_seq OWNER TO admin;
+ALTER SEQUENCE public.roles_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5108 (class 0 OID 0)
--- Dependencies: 218
--- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 231
+-- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 
 
 --
--- TOC entry 225 (class 1259 OID 39150)
--- Name: token_refresh; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 232 (class 1259 OID 39381)
+-- Name: token_refresh; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.token_refresh (
@@ -354,11 +355,11 @@ CREATE TABLE public.token_refresh (
 );
 
 
-ALTER TABLE public.token_refresh OWNER TO admin;
+ALTER TABLE public.token_refresh OWNER TO postgres;
 
 --
--- TOC entry 224 (class 1259 OID 39149)
--- Name: token_refresh_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 233 (class 1259 OID 39388)
+-- Name: token_refresh_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.token_refresh_id_seq
@@ -370,20 +371,20 @@ CREATE SEQUENCE public.token_refresh_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.token_refresh_id_seq OWNER TO admin;
+ALTER SEQUENCE public.token_refresh_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5109 (class 0 OID 0)
--- Dependencies: 224
--- Name: token_refresh_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 233
+-- Name: token_refresh_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.token_refresh_id_seq OWNED BY public.token_refresh.id;
 
 
 --
--- TOC entry 236 (class 1259 OID 39254)
--- Name: tourist_attractions; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 234 (class 1259 OID 39389)
+-- Name: tourist_attractions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.tourist_attractions (
@@ -393,11 +394,11 @@ CREATE TABLE public.tourist_attractions (
 );
 
 
-ALTER TABLE public.tourist_attractions OWNER TO admin;
+ALTER TABLE public.tourist_attractions OWNER TO postgres;
 
 --
--- TOC entry 237 (class 1259 OID 39265)
--- Name: user_place_favorites; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 235 (class 1259 OID 39393)
+-- Name: user_place_favorites; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.user_place_favorites (
@@ -407,11 +408,11 @@ CREATE TABLE public.user_place_favorites (
 );
 
 
-ALTER TABLE public.user_place_favorites OWNER TO admin;
+ALTER TABLE public.user_place_favorites OWNER TO postgres;
 
 --
--- TOC entry 238 (class 1259 OID 39281)
--- Name: user_post_favorites; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 236 (class 1259 OID 39397)
+-- Name: user_post_favorites; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.user_post_favorites (
@@ -421,11 +422,11 @@ CREATE TABLE public.user_post_favorites (
 );
 
 
-ALTER TABLE public.user_post_favorites OWNER TO admin;
+ALTER TABLE public.user_post_favorites OWNER TO postgres;
 
 --
--- TOC entry 221 (class 1259 OID 39114)
--- Name: users; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 237 (class 1259 OID 39403)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users (
@@ -446,11 +447,11 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO admin;
+ALTER TABLE public.users OWNER TO postgres;
 
 --
--- TOC entry 220 (class 1259 OID 39113)
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 238 (class 1259 OID 39412)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.users_id_seq
@@ -462,20 +463,20 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO admin;
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5110 (class 0 OID 0)
--- Dependencies: 220
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 238
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- TOC entry 240 (class 1259 OID 39290)
--- Name: visit_logs; Type: TABLE; Schema: public; Owner: admin
+-- TOC entry 239 (class 1259 OID 39413)
+-- Name: visit_logs; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.visit_logs (
@@ -490,11 +491,11 @@ CREATE TABLE public.visit_logs (
 );
 
 
-ALTER TABLE public.visit_logs OWNER TO admin;
+ALTER TABLE public.visit_logs OWNER TO postgres;
 
 --
--- TOC entry 239 (class 1259 OID 39289)
--- Name: visit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- TOC entry 240 (class 1259 OID 39419)
+-- Name: visit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
 CREATE SEQUENCE public.visit_logs_id_seq
@@ -506,101 +507,101 @@ CREATE SEQUENCE public.visit_logs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.visit_logs_id_seq OWNER TO admin;
+ALTER SEQUENCE public.visit_logs_id_seq OWNER TO postgres;
 
 --
 -- TOC entry 5111 (class 0 OID 0)
--- Dependencies: 239
--- Name: visit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Dependencies: 240
+-- Name: visit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.visit_logs_id_seq OWNED BY public.visit_logs.id;
 
 
 --
--- TOC entry 4845 (class 2604 OID 39137)
--- Name: activity_logs id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4839 (class 2604 OID 39420)
+-- Name: activity_logs id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.activity_logs ALTER COLUMN id SET DEFAULT nextval('public.activity_logs_id_seq'::regclass);
 
 
 --
--- TOC entry 4850 (class 2604 OID 39172)
--- Name: districts id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4841 (class 2604 OID 39421)
+-- Name: districts id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.districts ALTER COLUMN id SET DEFAULT nextval('public.districts_id_seq'::regclass);
 
 
 --
--- TOC entry 4860 (class 2604 OID 39220)
--- Name: place_images id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4842 (class 2604 OID 39422)
+-- Name: place_images id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.place_images ALTER COLUMN id SET DEFAULT nextval('public.place_images_id_seq'::regclass);
 
 
 --
--- TOC entry 4851 (class 2604 OID 39181)
--- Name: place_types id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4845 (class 2604 OID 39423)
+-- Name: place_types id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.place_types ALTER COLUMN id SET DEFAULT nextval('public.place_types_id_seq'::regclass);
 
 
 --
--- TOC entry 4852 (class 2604 OID 39190)
--- Name: places id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4846 (class 2604 OID 39424)
+-- Name: places id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.places ALTER COLUMN id SET DEFAULT nextval('public.places_id_seq'::regclass);
 
 
 --
--- TOC entry 4839 (class 2604 OID 39108)
--- Name: roles id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4854 (class 2604 OID 39425)
+-- Name: roles id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
 
 
 --
--- TOC entry 4847 (class 2604 OID 39153)
--- Name: token_refresh id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4855 (class 2604 OID 39426)
+-- Name: token_refresh id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.token_refresh ALTER COLUMN id SET DEFAULT nextval('public.token_refresh_id_seq'::regclass);
 
 
 --
--- TOC entry 4840 (class 2604 OID 39117)
--- Name: users id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4861 (class 2604 OID 39427)
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
--- TOC entry 4866 (class 2604 OID 39293)
--- Name: visit_logs id; Type: DEFAULT; Schema: public; Owner: admin
+-- TOC entry 4866 (class 2604 OID 39428)
+-- Name: visit_logs id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.visit_logs ALTER COLUMN id SET DEFAULT nextval('public.visit_logs_id_seq'::regclass);
 
 
 --
--- TOC entry 5077 (class 0 OID 39134)
--- Dependencies: 223
--- Data for Name: activity_logs; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5072 (class 0 OID 39333)
+-- Dependencies: 218
+-- Data for Name: activity_logs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
 
 --
--- TOC entry 5081 (class 0 OID 39169)
--- Dependencies: 227
--- Data for Name: districts; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5074 (class 0 OID 39340)
+-- Dependencies: 220
+-- Data for Name: districts; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.districts VALUES (1, 'Hoàn Kiếm');
@@ -622,9 +623,9 @@ INSERT INTO public.districts VALUES (16, 'Sóc Sơn');
 
 
 --
--- TOC entry 5089 (class 0 OID 39244)
--- Dependencies: 235
--- Data for Name: hotels; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5076 (class 0 OID 39344)
+-- Dependencies: 222
+-- Data for Name: hotels; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.hotels VALUES (81, 5, 6000000.00, '14:00:00', '12:00:00');
@@ -680,9 +681,9 @@ INSERT INTO public.hotels VALUES (130, 3, 500000.00, '14:00:00', '12:00:00');
 
 
 --
--- TOC entry 5087 (class 0 OID 39217)
--- Dependencies: 233
--- Data for Name: place_images; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5077 (class 0 OID 39347)
+-- Dependencies: 223
+-- Data for Name: place_images; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.place_images VALUES (1, 1, '/static/uploads/places/place_1_0.jpg', true, '2025-12-29 02:33:21.493544');
@@ -1337,9 +1338,9 @@ INSERT INTO public.place_images VALUES (649, 130, '/static/uploads/places/place_
 
 
 --
--- TOC entry 5083 (class 0 OID 39178)
--- Dependencies: 229
--- Data for Name: place_types; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5079 (class 0 OID 39355)
+-- Dependencies: 225
+-- Data for Name: place_types; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.place_types VALUES (1, 'Du lịch');
@@ -1348,9 +1349,9 @@ INSERT INTO public.place_types VALUES (3, 'Lưu trú');
 
 
 --
--- TOC entry 5085 (class 0 OID 39187)
--- Dependencies: 231
--- Data for Name: places; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5081 (class 0 OID 39359)
+-- Dependencies: 227
+-- Data for Name: places; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.places VALUES (1, 1, 1, 'Hồ Hoàn Kiếm', 'Trái tim thủ đô, biểu tượng văn hóa và lịch sử.', 'Hoàn Kiếm, Hà Nội', 20.976208, 105.801471, 4.60, 1369, 0.00, '08:00:00', '17:00:00', 0.00, 0.00, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358', NULL);
@@ -1486,9 +1487,9 @@ INSERT INTO public.places VALUES (130, 3, 1, 'Babylon Grand Hotel', 'Giá tốt,
 
 
 --
--- TOC entry 5088 (class 0 OID 39232)
--- Dependencies: 234
--- Data for Name: restaurants; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5083 (class 0 OID 39372)
+-- Dependencies: 229
+-- Data for Name: restaurants; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.restaurants VALUES (51, 'Nhà hàng', 50000.00);
@@ -1524,28 +1525,28 @@ INSERT INTO public.restaurants VALUES (80, 'Street food', 50000.00);
 
 
 --
--- TOC entry 5073 (class 0 OID 39105)
--- Dependencies: 219
--- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5084 (class 0 OID 39377)
+-- Dependencies: 230
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.roles VALUES (1, 'admin');
+INSERT INTO public.roles VALUES (1, 'postgres');
 INSERT INTO public.roles VALUES (2, 'moderator');
 INSERT INTO public.roles VALUES (3, 'user');
 
 
 --
--- TOC entry 5079 (class 0 OID 39150)
--- Dependencies: 225
--- Data for Name: token_refresh; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5086 (class 0 OID 39381)
+-- Dependencies: 232
+-- Data for Name: token_refresh; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
 
 --
--- TOC entry 5090 (class 0 OID 39254)
--- Dependencies: 236
--- Data for Name: tourist_attractions; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5088 (class 0 OID 39389)
+-- Dependencies: 234
+-- Data for Name: tourist_attractions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.tourist_attractions VALUES (1, 0.00, false);
@@ -1601,9 +1602,9 @@ INSERT INTO public.tourist_attractions VALUES (50, 150000.00, true);
 
 
 --
--- TOC entry 5091 (class 0 OID 39265)
--- Dependencies: 237
--- Data for Name: user_place_favorites; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5089 (class 0 OID 39393)
+-- Dependencies: 235
+-- Data for Name: user_place_favorites; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.user_place_favorites VALUES (1, 110, '2025-12-25 11:50:50.202358');
@@ -1795,75 +1796,75 @@ INSERT INTO public.user_place_favorites VALUES (50, 93, '2025-12-25 11:50:50.202
 
 
 --
--- TOC entry 5092 (class 0 OID 39281)
--- Dependencies: 238
--- Data for Name: user_post_favorites; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5090 (class 0 OID 39397)
+-- Dependencies: 236
+-- Data for Name: user_post_favorites; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 
 
 --
--- TOC entry 5075 (class 0 OID 39114)
--- Dependencies: 221
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5091 (class 0 OID 39403)
+-- Dependencies: 237
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.users VALUES (24, 'Vũ Văn Vinh', 'user24@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (25, 'Phan Thanh Em', 'user25@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_25.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (26, 'Võ Thị Bình', 'user26@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (27, 'Hoàng Thanh Giang', 'user27@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_2.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (28, 'Phan Thị Sơn', 'user28@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_3.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (29, 'Võ Minh Em', 'user29@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_4.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (30, 'Nguyễn Thị Yến', 'user30@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_5.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (31, 'Phan Đức Lan', 'user31@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (32, 'Huỳnh Thành Hà', 'user32@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (33, 'Lê Thanh Hà', 'user33@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_8.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (34, 'Trần Thanh Giang', 'user34@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (34, 'Trần Thanh Giang', 'user34@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (35, 'Võ Mạnh Phúc', 'user35@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_10.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (36, 'Phạm Văn Oanh', 'user36@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_11.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (37, 'Trần Văn Hiếu', 'user37@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_12.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (38, 'Vũ Thành Lan', 'user38@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_13.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (39, 'Vũ Thị Em', 'user39@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_14.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (40, 'Phạm Minh Bình', 'user40@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (41, 'Đỗ Minh Ngọc', 'user41@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_16.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (42, 'Đỗ Minh Yến', 'user42@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (43, 'Phạm Mạnh Hà', 'user43@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (44, 'Phạm Minh Giang', 'user44@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_19.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (45, 'Phạm Ngọc Minh', 'user45@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_20.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (46, 'Phạm Đức Ngọc', 'user46@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (1, 'Lê Đức Lan', 'user1@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.jpg', NULL, 0, true, NULL, NULL, 1, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (1, 'Lê Đức Lan', 'user1@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.png', NULL, 0, true, NULL, NULL, 1, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (2, 'Nguyễn Thị Giang', 'user2@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_2.png', NULL, 0, true, NULL, NULL, 1, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (3, 'Phan Đức An', 'user3@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_3.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (4, 'Đặng Thanh Chi', 'user4@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_4.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (5, 'Võ Hữu Quang', 'user5@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_5.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (6, 'Vũ Văn Phúc', 'user6@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (7, 'Lê Đức Thảo', 'user7@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (6, 'Vũ Văn Phúc', 'user6@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (7, 'Lê Đức Thảo', 'user7@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (8, 'Huỳnh Mạnh Giang', 'user8@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_8.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (9, 'Bùi Văn Yến', 'user9@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (9, 'Bùi Văn Yến', 'user9@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (10, 'Trần Ngọc Em', 'user10@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_10.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (11, 'Phạm Thanh Thảo', 'user11@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_11.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (12, 'Trần Minh Oanh', 'user12@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_12.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (13, 'Phan Minh Minh', 'user13@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_13.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (14, 'Vũ Minh Lan', 'user14@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_14.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (15, 'Võ Đức Khánh', 'user15@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (15, 'Võ Đức Khánh', 'user15@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (16, 'Bùi Minh Phúc', 'user16@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_16.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (17, 'Bùi Đức Chi', 'user17@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (18, 'Phạm Ngọc Giang', 'user18@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (17, 'Bùi Đức Chi', 'user17@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (18, 'Phạm Ngọc Giang', 'user18@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (19, 'Trần Thành Dũng', 'user19@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_19.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (20, 'Đỗ Hữu Yến', 'user20@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_20.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (21, 'Trần Văn Thảo', 'user21@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (22, 'Huỳnh Thị Sơn', 'user22@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (21, 'Trần Văn Thảo', 'user21@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (22, 'Huỳnh Thị Sơn', 'user22@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (23, 'Huỳnh Hữu Thảo', 'user23@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_23.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (24, 'Vũ Văn Vinh', 'user24@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (25, 'Phan Thanh Em', 'user25@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_25.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (26, 'Võ Thị Bình', 'user26@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (27, 'Hoàng Thanh Giang', 'user27@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_2.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (28, 'Phan Thị Sơn', 'user28@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_3.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (29, 'Võ Minh Em', 'user29@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_4.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (30, 'Nguyễn Thị Yến', 'user30@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_5.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (31, 'Phan Đức Lan', 'user31@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (32, 'Huỳnh Thành Hà', 'user32@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (47, 'Phan Ngọc Giang', 'user47@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (40, 'Phạm Minh Bình', 'user40@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (41, 'Đỗ Minh Ngọc', 'user41@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_16.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (42, 'Đỗ Minh Yến', 'user42@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (43, 'Phạm Mạnh Hà', 'user43@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (44, 'Phạm Minh Giang', 'user44@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_19.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (45, 'Phạm Ngọc Minh', 'user45@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_20.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (46, 'Phạm Đức Ngọc', 'user46@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (47, 'Phan Ngọc Giang', 'user47@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (48, 'Trần Đức Sơn', 'user48@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_23.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (49, 'Đặng Ngọc Hiếu', 'user49@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (49, 'Đặng Ngọc Hiếu', 'user49@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (50, 'Nguyễn Hữu Ngọc', 'user50@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_25.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 
 
 --
--- TOC entry 5094 (class 0 OID 39290)
--- Dependencies: 240
--- Data for Name: visit_logs; Type: TABLE DATA; Schema: public; Owner: admin
+-- TOC entry 5093 (class 0 OID 39413)
+-- Dependencies: 239
+-- Data for Name: visit_logs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 INSERT INTO public.visit_logs VALUES (1, 1, 65, NULL, '/places/detail', '192.168.1.65', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', '2025-12-25 11:50:50.202358');
@@ -2214,8 +2215,8 @@ INSERT INTO public.visit_logs VALUES (344, 50, 52, NULL, '/places/detail', '192.
 
 --
 -- TOC entry 5112 (class 0 OID 0)
--- Dependencies: 222
--- Name: activity_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 219
+-- Name: activity_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.activity_logs_id_seq', 1, false);
@@ -2223,8 +2224,8 @@ SELECT pg_catalog.setval('public.activity_logs_id_seq', 1, false);
 
 --
 -- TOC entry 5113 (class 0 OID 0)
--- Dependencies: 226
--- Name: districts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 221
+-- Name: districts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.districts_id_seq', 16, true);
@@ -2232,8 +2233,8 @@ SELECT pg_catalog.setval('public.districts_id_seq', 16, true);
 
 --
 -- TOC entry 5114 (class 0 OID 0)
--- Dependencies: 232
--- Name: place_images_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 224
+-- Name: place_images_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.place_images_id_seq', 649, true);
@@ -2241,8 +2242,8 @@ SELECT pg_catalog.setval('public.place_images_id_seq', 649, true);
 
 --
 -- TOC entry 5115 (class 0 OID 0)
--- Dependencies: 228
--- Name: place_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 226
+-- Name: place_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.place_types_id_seq', 3, true);
@@ -2250,8 +2251,8 @@ SELECT pg_catalog.setval('public.place_types_id_seq', 3, true);
 
 --
 -- TOC entry 5116 (class 0 OID 0)
--- Dependencies: 230
--- Name: places_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 228
+-- Name: places_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.places_id_seq', 130, true);
@@ -2259,8 +2260,8 @@ SELECT pg_catalog.setval('public.places_id_seq', 130, true);
 
 --
 -- TOC entry 5117 (class 0 OID 0)
--- Dependencies: 218
--- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 231
+-- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.roles_id_seq', 2, true);
@@ -2268,8 +2269,8 @@ SELECT pg_catalog.setval('public.roles_id_seq', 2, true);
 
 --
 -- TOC entry 5118 (class 0 OID 0)
--- Dependencies: 224
--- Name: token_refresh_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 233
+-- Name: token_refresh_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.token_refresh_id_seq', 1, false);
@@ -2277,8 +2278,8 @@ SELECT pg_catalog.setval('public.token_refresh_id_seq', 1, false);
 
 --
 -- TOC entry 5119 (class 0 OID 0)
--- Dependencies: 220
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 238
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 50, true);
@@ -2286,16 +2287,16 @@ SELECT pg_catalog.setval('public.users_id_seq', 50, true);
 
 --
 -- TOC entry 5120 (class 0 OID 0)
--- Dependencies: 239
--- Name: visit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Dependencies: 240
+-- Name: visit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.visit_logs_id_seq', 344, true);
 
 
 --
--- TOC entry 4877 (class 2606 OID 39142)
--- Name: activity_logs activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4869 (class 2606 OID 39430)
+-- Name: activity_logs activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.activity_logs
@@ -2303,8 +2304,8 @@ ALTER TABLE ONLY public.activity_logs
 
 
 --
--- TOC entry 4885 (class 2606 OID 39176)
--- Name: districts districts_name_key; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4872 (class 2606 OID 39432)
+-- Name: districts districts_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.districts
@@ -2312,8 +2313,8 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- TOC entry 4887 (class 2606 OID 39174)
--- Name: districts districts_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4874 (class 2606 OID 39434)
+-- Name: districts districts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.districts
@@ -2321,8 +2322,8 @@ ALTER TABLE ONLY public.districts
 
 
 --
--- TOC entry 4903 (class 2606 OID 39248)
--- Name: hotels hotels_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4876 (class 2606 OID 39436)
+-- Name: hotels hotels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hotels
@@ -2330,8 +2331,8 @@ ALTER TABLE ONLY public.hotels
 
 
 --
--- TOC entry 4899 (class 2606 OID 39226)
--- Name: place_images place_images_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4878 (class 2606 OID 39438)
+-- Name: place_images place_images_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.place_images
@@ -2339,8 +2340,8 @@ ALTER TABLE ONLY public.place_images
 
 
 --
--- TOC entry 4889 (class 2606 OID 39185)
--- Name: place_types place_types_name_key; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4880 (class 2606 OID 39440)
+-- Name: place_types place_types_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.place_types
@@ -2348,8 +2349,8 @@ ALTER TABLE ONLY public.place_types
 
 
 --
--- TOC entry 4891 (class 2606 OID 39183)
--- Name: place_types place_types_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4882 (class 2606 OID 39442)
+-- Name: place_types place_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.place_types
@@ -2357,8 +2358,8 @@ ALTER TABLE ONLY public.place_types
 
 
 --
--- TOC entry 4897 (class 2606 OID 39201)
--- Name: places places_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4888 (class 2606 OID 39444)
+-- Name: places places_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.places
@@ -2366,8 +2367,8 @@ ALTER TABLE ONLY public.places
 
 
 --
--- TOC entry 4901 (class 2606 OID 39238)
--- Name: restaurants restaurants_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4890 (class 2606 OID 39446)
+-- Name: restaurants restaurants_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.restaurants
@@ -2375,8 +2376,8 @@ ALTER TABLE ONLY public.restaurants
 
 
 --
--- TOC entry 4869 (class 2606 OID 39110)
--- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4892 (class 2606 OID 39448)
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.roles
@@ -2384,8 +2385,8 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- TOC entry 4871 (class 2606 OID 39112)
--- Name: roles roles_role_name_key; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4894 (class 2606 OID 39450)
+-- Name: roles roles_role_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.roles
@@ -2393,8 +2394,8 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- TOC entry 4881 (class 2606 OID 39159)
--- Name: token_refresh token_refresh_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4897 (class 2606 OID 39452)
+-- Name: token_refresh token_refresh_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.token_refresh
@@ -2402,8 +2403,8 @@ ALTER TABLE ONLY public.token_refresh
 
 
 --
--- TOC entry 4883 (class 2606 OID 39161)
--- Name: token_refresh token_refresh_refresh_token_key; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4899 (class 2606 OID 39454)
+-- Name: token_refresh token_refresh_refresh_token_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.token_refresh
@@ -2411,8 +2412,8 @@ ALTER TABLE ONLY public.token_refresh
 
 
 --
--- TOC entry 4905 (class 2606 OID 39259)
--- Name: tourist_attractions tourist_attractions_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4901 (class 2606 OID 39456)
+-- Name: tourist_attractions tourist_attractions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.tourist_attractions
@@ -2420,8 +2421,8 @@ ALTER TABLE ONLY public.tourist_attractions
 
 
 --
--- TOC entry 4907 (class 2606 OID 39270)
--- Name: user_place_favorites user_place_favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4903 (class 2606 OID 39458)
+-- Name: user_place_favorites user_place_favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_place_favorites
@@ -2429,8 +2430,8 @@ ALTER TABLE ONLY public.user_place_favorites
 
 
 --
--- TOC entry 4909 (class 2606 OID 39288)
--- Name: user_post_favorites user_post_favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4905 (class 2606 OID 39460)
+-- Name: user_post_favorites user_post_favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_post_favorites
@@ -2438,8 +2439,8 @@ ALTER TABLE ONLY public.user_post_favorites
 
 
 --
--- TOC entry 4873 (class 2606 OID 39127)
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4907 (class 2606 OID 39462)
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -2447,8 +2448,8 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4875 (class 2606 OID 39125)
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4909 (class 2606 OID 39464)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -2456,8 +2457,8 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4913 (class 2606 OID 39298)
--- Name: visit_logs visit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4913 (class 2606 OID 39466)
+-- Name: visit_logs visit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.visit_logs
@@ -2465,72 +2466,72 @@ ALTER TABLE ONLY public.visit_logs
 
 
 --
--- TOC entry 4878 (class 1259 OID 39148)
--- Name: idx_activity_logs_user; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4870 (class 1259 OID 39467)
+-- Name: idx_activity_logs_user; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_activity_logs_user ON public.activity_logs USING btree (user_id);
 
 
 --
--- TOC entry 4892 (class 1259 OID 39212)
--- Name: idx_places_district; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4883 (class 1259 OID 39468)
+-- Name: idx_places_district; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_places_district ON public.places USING btree (district_id);
 
 
 --
--- TOC entry 4893 (class 1259 OID 39215)
--- Name: idx_places_location; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4884 (class 1259 OID 39469)
+-- Name: idx_places_location; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_places_location ON public.places USING btree (latitude, longitude);
 
 
 --
--- TOC entry 4894 (class 1259 OID 39214)
--- Name: idx_places_rating; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4885 (class 1259 OID 39470)
+-- Name: idx_places_rating; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_places_rating ON public.places USING btree (rating_average);
 
 
 --
--- TOC entry 4895 (class 1259 OID 39213)
--- Name: idx_places_type; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4886 (class 1259 OID 39471)
+-- Name: idx_places_type; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_places_type ON public.places USING btree (place_type_id);
 
 
 --
--- TOC entry 4879 (class 1259 OID 39167)
--- Name: idx_token_refresh_expires_at; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4895 (class 1259 OID 39472)
+-- Name: idx_token_refresh_expires_at; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_token_refresh_expires_at ON public.token_refresh USING btree (expires_at);
 
 
 --
--- TOC entry 4910 (class 1259 OID 39310)
--- Name: idx_visit_logs_place; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4910 (class 1259 OID 39473)
+-- Name: idx_visit_logs_place; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_visit_logs_place ON public.visit_logs USING btree (place_id);
 
 
 --
--- TOC entry 4911 (class 1259 OID 39309)
--- Name: idx_visit_logs_user; Type: INDEX; Schema: public; Owner: admin
+-- TOC entry 4911 (class 1259 OID 39474)
+-- Name: idx_visit_logs_user; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX idx_visit_logs_user ON public.visit_logs USING btree (user_id);
 
 
 --
--- TOC entry 4915 (class 2606 OID 39143)
--- Name: activity_logs activity_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4914 (class 2606 OID 39475)
+-- Name: activity_logs activity_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.activity_logs
@@ -2538,8 +2539,8 @@ ALTER TABLE ONLY public.activity_logs
 
 
 --
--- TOC entry 4921 (class 2606 OID 39249)
--- Name: hotels hotels_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4915 (class 2606 OID 39480)
+-- Name: hotels hotels_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hotels
@@ -2547,8 +2548,8 @@ ALTER TABLE ONLY public.hotels
 
 
 --
--- TOC entry 4919 (class 2606 OID 39227)
--- Name: place_images place_images_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4916 (class 2606 OID 39485)
+-- Name: place_images place_images_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.place_images
@@ -2556,8 +2557,8 @@ ALTER TABLE ONLY public.place_images
 
 
 --
--- TOC entry 4917 (class 2606 OID 39207)
--- Name: places places_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4917 (class 2606 OID 39490)
+-- Name: places places_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.places
@@ -2565,8 +2566,8 @@ ALTER TABLE ONLY public.places
 
 
 --
--- TOC entry 4918 (class 2606 OID 39202)
--- Name: places places_place_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4918 (class 2606 OID 39495)
+-- Name: places places_place_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.places
@@ -2574,8 +2575,8 @@ ALTER TABLE ONLY public.places
 
 
 --
--- TOC entry 4920 (class 2606 OID 39239)
--- Name: restaurants restaurants_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4919 (class 2606 OID 39500)
+-- Name: restaurants restaurants_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.restaurants
@@ -2583,8 +2584,8 @@ ALTER TABLE ONLY public.restaurants
 
 
 --
--- TOC entry 4916 (class 2606 OID 39162)
--- Name: token_refresh token_refresh_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4920 (class 2606 OID 39505)
+-- Name: token_refresh token_refresh_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.token_refresh
@@ -2592,8 +2593,8 @@ ALTER TABLE ONLY public.token_refresh
 
 
 --
--- TOC entry 4922 (class 2606 OID 39260)
--- Name: tourist_attractions tourist_attractions_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4921 (class 2606 OID 39510)
+-- Name: tourist_attractions tourist_attractions_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.tourist_attractions
@@ -2601,8 +2602,8 @@ ALTER TABLE ONLY public.tourist_attractions
 
 
 --
--- TOC entry 4923 (class 2606 OID 39276)
--- Name: user_place_favorites user_place_favorites_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4922 (class 2606 OID 39515)
+-- Name: user_place_favorites user_place_favorites_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_place_favorites
@@ -2610,8 +2611,8 @@ ALTER TABLE ONLY public.user_place_favorites
 
 
 --
--- TOC entry 4924 (class 2606 OID 39271)
--- Name: user_place_favorites user_place_favorites_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4923 (class 2606 OID 39520)
+-- Name: user_place_favorites user_place_favorites_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.user_place_favorites
@@ -2619,8 +2620,8 @@ ALTER TABLE ONLY public.user_place_favorites
 
 
 --
--- TOC entry 4914 (class 2606 OID 39128)
--- Name: users users_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4924 (class 2606 OID 39525)
+-- Name: users users_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
@@ -2628,8 +2629,8 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4925 (class 2606 OID 39304)
--- Name: visit_logs visit_logs_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4925 (class 2606 OID 39530)
+-- Name: visit_logs visit_logs_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.visit_logs
@@ -2637,8 +2638,8 @@ ALTER TABLE ONLY public.visit_logs
 
 
 --
--- TOC entry 4926 (class 2606 OID 39299)
--- Name: visit_logs visit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- TOC entry 4926 (class 2606 OID 39535)
+-- Name: visit_logs visit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.visit_logs
@@ -2648,13 +2649,13 @@ ALTER TABLE ONLY public.visit_logs
 --
 -- TOC entry 5101 (class 0 OID 0)
 -- Dependencies: 6
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: admin
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
 --
 
 REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 
 
--- Completed on 2025-12-29 04:21:35
+-- Completed on 2026-01-03 00:07:31
 
 --
 -- PostgreSQL database dump complete
