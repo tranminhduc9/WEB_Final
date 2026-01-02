@@ -66,14 +66,15 @@ src/frontend/
 │   │   ├── AdminLogPage.tsx
 │   │   ├── AdminAddPlacePage.tsx
 │   │   └── AdminEditPlacePage.tsx
-│   └── client/            # Client pages
-│       ├── Login.tsx
-│       ├── Register.tsx
-│       ├── PlacesPage.tsx
-│       ├── BlogPage.tsx
-│       ├── SearchResultsPage.tsx
-│       ├── UserProfilePage.tsx
-│       └── ...
+│   ├── client/            # Client pages
+│   │   ├── Login.tsx
+│   │   ├── Register.tsx
+│   │   ├── PlacesPage.tsx
+│   │   ├── BlogPage.tsx
+│   │   ├── SearchResultsPage.tsx
+│   │   ├── UserProfilePage.tsx
+│   │   └── ...
+│   └── ErrorPage.tsx      # Error page component (404, 500, etc.)
 │
 ├── routes/                 # Route guards
 │   ├── ProtectedRoute.tsx # Yêu cầu authentication
@@ -183,6 +184,9 @@ npm run lint
 - **Reports** (`/admin/reports`) - Quản lý báo cáo
 - **Logs** (`/admin/log`) - Xem logs hệ thống (audit logs, application logs, visit logs)
 
+#### Error Pages
+- **ErrorPage** - Trang hiển thị lỗi (404, 500, etc.) với errorElement trong React Router
+
 ### Components
 
 #### Header
@@ -223,7 +227,7 @@ npm run lint
 - **adminService** - Admin operations (users, locations, posts, reports, logs management)
 - **uploadService** - Upload files (images, avatars) lên server với folder organization
 
-##  Route Protection
+##  Route Protection & Error Handling
 
 ### ProtectedRoute
 Yêu cầu user phải đăng nhập, nếu chưa sẽ redirect về `/login`
@@ -250,6 +254,21 @@ Chỉ cho phép truy cập khi chưa đăng nhập, nếu đã đăng nhập s�
 <PublicRoute>
   <Login />
 </PublicRoute>
+```
+
+### Error Handling
+- **ErrorPage Component** - Hiển thị lỗi khi có error trong route (404, 500, etc.)
+- **errorElement** - Được cấu hình trong React Router để tự động hiển thị ErrorPage khi có lỗi
+- Hỗ trợ các loại lỗi: Route errors (404, 403, 500), JavaScript errors, Generic errors
+- Hiển thị chi tiết lỗi trong development mode
+- Font chữ đồng nhất với web (Inter)
+
+```tsx
+{
+  path: '/admin',
+  element: <AdminHomePage />,
+  errorElement: <ErrorPage />
+}
 ```
 
 ##  Styling
