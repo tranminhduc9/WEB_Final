@@ -204,6 +204,14 @@ export const adminService = {
     );
   },
 
+  /**
+   * Dismiss/Delete một report
+   * DELETE /admin/reports/{id}
+   */
+  dismissReport: async (id: string): Promise<BaseResponse> => {
+    return axiosClient.delete<never, BaseResponse>(`/admin/reports/${id}`);
+  },
+
   // ===== PLACE MANAGEMENT =====
   /**
    * Lấy danh sách places
