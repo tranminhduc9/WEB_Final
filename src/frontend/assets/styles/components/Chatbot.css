@@ -276,6 +276,77 @@
 }
 
 /* ==================== */
+/* Markdown Styling */
+/* ==================== */
+.chatbot-markdown {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chatbot-markdown p {
+  margin: 0 0 8px 0;
+}
+
+.chatbot-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.chatbot-markdown ul,
+.chatbot-markdown ol {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.chatbot-markdown li {
+  margin-bottom: 2px;
+}
+
+.chatbot-markdown strong {
+  font-weight: 600;
+  color: #222;
+}
+
+.chatbot-markdown em {
+  font-style: italic;
+}
+
+.chatbot-markdown a {
+  color: #F88622;
+  text-decoration: none;
+}
+
+.chatbot-markdown a:hover {
+  text-decoration: underline;
+}
+
+.chatbot-markdown code {
+  background: #f0f0f0;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.chatbot-markdown h1,
+.chatbot-markdown h2,
+.chatbot-markdown h3 {
+  margin: 8px 0 4px 0;
+  font-weight: 600;
+}
+
+.chatbot-markdown h1 {
+  font-size: 16px;
+}
+
+.chatbot-markdown h2 {
+  font-size: 15px;
+}
+
+.chatbot-markdown h3 {
+  font-size: 14px;
+}
+
+/* ==================== */
 /* Input */
 /* ==================== */
 .chatbot-input {

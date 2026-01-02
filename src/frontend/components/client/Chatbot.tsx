@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import { Icons } from '../../config/constants';
 import { chatbotService } from '../../services';
 import type { PlaceCompact } from '../../types/models';
@@ -16,21 +16,90 @@ interface Message {
   suggestedPlaces?: PlaceCompact[];
 }
 
+// Storage key for chat history
+const CHAT_STORAGE_KEY = 'hanoivivu_chat_history';
+const CHAT_EXPIRY_MINUTES = 15;
+
+// Helper to check if chat history is expired
+const isChatExpired = (lastMessageTime: string): boolean => {
+  const lastTime = new Date(lastMessageTime).getTime();
+  const now = Date.now();
+  const diffMinutes = (now - lastTime) / (1000 * 60);
+  return diffMinutes > CHAT_EXPIRY_MINUTES;
+};
+
+// Helper to load chat from localStorage
+const loadChatFromStorage = (): { messages: Message[], conversationId: string | null } | null => {
+  try {
+    const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!stored) return null;
+
+    const data = JSON.parse(stored);
+
+    // Check if expired
+    if (data.lastMessageTime && isChatExpired(data.lastMessageTime)) {
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+      return null;
+    }
+
+    // Restore message timestamps as Date objects
+    const messages = data.messages.map((msg: Message & { timestamp: string }) => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp)
+    }));
+
+    return { messages, conversationId: data.conversationId };
+  } catch {
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    return null;
+  }
+};
+
+// Helper to save chat to localStorage
+const saveChatToStorage = (messages: Message[], conversationId: string | null) => {
+  try {
+    const data = {
+      messages,
+      conversationId,
+      lastMessageTime: new Date().toISOString()
+    };
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Failed to save chat history:', e);
+  }
+};
+
+const defaultMessage: Message = {
+  id: 1,
+  text: 'Xin chào! Tôi là trợ lý du lịch Hà Nội. Bạn cần hỗ trợ gì?',
+  isUser: false,
+  timestamp: new Date(),
+};
+
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: 'Xin chào! Tôi là trợ lý du lịch Hà Nội. Bạn cần hỗ trợ gì?',
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([defaultMessage]);
   const [inputValue, setInputValue] = useState('');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const stored = loadChatFromStorage();
+    if (stored && stored.messages.length > 0) {
+      setMessages(stored.messages);
+      setConversationId(stored.conversationId);
+    }
+  }, []);
+
+  // Save chat history to localStorage when messages change
+  useEffect(() => {
+    if (messages.length > 1) { // Only save if there's more than the default message
+      saveChatToStorage(messages, conversationId);
+    }
+  }, [messages, conversationId]);
 
   // Lấy avatar người dùng từ localStorage
   useEffect(() => {
@@ -100,13 +169,13 @@ const Chatbot: React.FC = () => {
         setConversationId(response.conversation_id);
       }
 
-      // Add bot response
+      // Add bot response with defensive coding
       const botResponse: Message = {
         id: messages.length + 2,
-        text: response.bot_response,
+        text: response.bot_response || 'Xin lỗi, tôi không thể xử lý yêu cầu này.',
         isUser: false,
         timestamp: new Date(),
-        suggestedPlaces: response.suggested_places,
+        suggestedPlaces: Array.isArray(response.suggested_places) ? response.suggested_places : [],
       };
       setMessages(prev => [...prev, botResponse]);
     } catch (error) {
@@ -184,7 +253,13 @@ const Chatbot: React.FC = () => {
 
                 {/* Nội dung tin nhắn */}
                 <div className="chatbot-message__content">
-                  <p>{message.text}</p>
+                  {message.isUser ? (
+                    <p>{message.text}</p>
+                  ) : (
+                    <div className="chatbot-markdown">
+                      <ReactMarkdown>{message.text}</ReactMarkdown>
+                    </div>
+                  )}
 
                   {/* Suggested Places */}
                   {message.suggestedPlaces && message.suggestedPlaces.length > 0 && (
@@ -192,11 +267,15 @@ const Chatbot: React.FC = () => {
                       <p className="chatbot-suggestions__title">Gợi ý địa điểm:</p>
                       <div className="chatbot-suggestions__list">
                         {message.suggestedPlaces.slice(0, 3).map((place) => (
-                          <Link
+                          <a
                             key={place.id}
-                            to={`/location/${place.id}`}
+                            href={`/location/${place.id}`}
                             className="chatbot-suggestion-card"
-                            onClick={() => setIsOpen(false)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsOpen(false);
+                              window.location.href = `/location/${place.id}`;
+                            }}
                           >
                             {place.main_image_url && (
                               <img
@@ -207,13 +286,13 @@ const Chatbot: React.FC = () => {
                             )}
                             <div className="chatbot-suggestion-card__info">
                               <span className="chatbot-suggestion-card__name">{place.name}</span>
-                              {place.rating_average > 0 && (
+                              {(place.rating_average ?? 0) > 0 && (
                                 <span className="chatbot-suggestion-card__rating">
-                                  ⭐ {place.rating_average.toFixed(1)}
+                                  ⭐ {Number(place.rating_average || 0).toFixed(1)}
                                 </span>
                               )}
                             </div>
-                          </Link>
+                          </a>
                         ))}
                       </div>
                     </div>
