@@ -2,7 +2,7 @@
  * Admin Route - Yêu cầu quyền admin để truy cập
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../contexts';
 import { getUserRole } from '../types/auth';
@@ -28,6 +28,11 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({
 }) => {
   const { user, isAuthenticated, isLoading } = useAuthContext();
   const location = useLocation();
+
+  // Scroll to top khi chuyển trang admin
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
 
   // Đang loading
   if (isLoading) {

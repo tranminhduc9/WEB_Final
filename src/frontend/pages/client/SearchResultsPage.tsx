@@ -114,6 +114,8 @@ const SearchResultsPage: React.FC = () => {
   // Fetch data on mount và khi query thay đổi
   useEffect(() => {
     fetchSearchResults();
+    // Scroll to top khi query thay đổi
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [fetchSearchResults]);
 
   useEffect(() => {
