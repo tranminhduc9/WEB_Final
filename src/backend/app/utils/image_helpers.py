@@ -88,14 +88,14 @@ async def save_upload_file(
             filename = f"place_{entity_id}_{index}.{ext}"
             
         elif upload_type == "avatar" and entity_id:
-            # Delete old avatar if exists
-            old_avatars = list(target_dir.glob(f"avatar_{entity_id}_*"))
+            # Delete old avatar if exists (any extension)
+            old_avatars = list(target_dir.glob(f"avatar_{entity_id}.*"))
             for old_avatar in old_avatars:
                 old_avatar.unlink()
             
-            # Avatar with short UUID for uniqueness
-            short_uuid = uuid.uuid4().hex[:8]
-            filename = f"avatar_{entity_id}_{short_uuid}.{ext}"
+            # Simple avatar naming: avatar_{user_id}.{ext}
+            # This matches the reading logic in image_config.py
+            filename = f"avatar_{entity_id}.{ext}"
             
         elif upload_type == "post" and entity_id:
             # Count existing images for this post
