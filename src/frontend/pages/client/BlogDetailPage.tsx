@@ -6,35 +6,13 @@ import { Icons } from '../../config/constants';
 import { postService } from '../../services';
 import { useAuthContext } from '../../contexts';
 import { useScrollToTop } from '../../hooks';
+import { formatTimeAgo } from '../../utils/timeUtils';
 import type { PostDetail, PostCommentInDetail } from '../../types/models';
 import '../../assets/styles/pages/BlogDetailPage.css';
 
 // Placeholder image URL
 const placeholderImage = 'https://images.unsplash.com/photo-1599708153386-62bf3f035e78?w=600&h=400&fit=crop';
 const defaultAvatar = '/duckk.jpg';
-
-// Format time ago helper
-const formatTimeAgo = (dateStr?: string): string => {
-  if (!dateStr) return '';
-
-  // Backend returns UTC time without 'Z' suffix, add it if missing
-  let normalizedDateStr = dateStr;
-  if (!dateStr.endsWith('Z') && !dateStr.includes('+') && !dateStr.includes('-', 10)) {
-    normalizedDateStr = dateStr + 'Z';
-  }
-
-  const date = new Date(normalizedDateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffDays > 0) return `${diffDays} ngày trước`;
-  if (diffHours > 0) return `${diffHours} giờ trước`;
-  if (diffMins > 0) return `${diffMins} phút trước`;
-  return 'Vừa xong';
-};
 
 const BlogDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

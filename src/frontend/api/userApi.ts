@@ -15,7 +15,7 @@ import type {
 const USER_ENDPOINTS = {
   PROFILE: '/users/profile',  // Use /profile for full data including rating_count
   UPDATE_PROFILE: '/users/me',
-  AVATAR: '/upload',
+  AVATAR: '/upload?upload_type=avatar&entity_id=current',
   PREFERENCES: '/users/preferences',
 };
 

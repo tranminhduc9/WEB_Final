@@ -48,15 +48,22 @@ export const postService = {
     /**
      * Lấy danh sách bài viết (Community Feed)
      * GET /posts
-     * Params: page, limit
+     * Params: page, limit, sort
      * 
      * Để lấy bài viết nổi bật cho homepage: getPosts(1, 5)
+     * Để lấy bài viết mới nhất: getPosts(1, 10, 'newest')
+     * Để lấy bài viết nổi bật: getPosts(1, 10, 'popular')
      */
-    getPosts: async (page?: number, limit?: number): Promise<ListResponse<PostDetail>> => {
+    getPosts: async (
+        page?: number,
+        limit?: number,
+        sort?: 'newest' | 'popular'  // Thêm sort
+    ): Promise<ListResponse<PostDetail>> => {
         const queryParams = new URLSearchParams();
 
         if (page) queryParams.append('page', String(page));
         if (limit) queryParams.append('limit', String(limit));
+        if (sort) queryParams.append('sort', sort);  // Thêm sort
 
         const queryString = queryParams.toString();
         const url = queryString ? `/posts?${queryString}` : '/posts';
