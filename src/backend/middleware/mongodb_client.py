@@ -164,7 +164,8 @@ class MongoDBClient:
     # Generic CRUD operations
     async def insert_one(self, collection: str, document: Dict[str, Any]) -> str:
         """
-        Insert document vào collection
+        Insert document vào collection với cả created_at và updated_at.
+        Sử dụng cho: posts_mongo (có cả 2 timestamps trong schema)
 
         Args:
             collection: Tên collection
@@ -179,9 +180,34 @@ class MongoDBClient:
         collection_name = self.config.COLLECTIONS.get(collection, collection)
         coll = self.db[collection_name]
 
-        # Add timestamps
+        # Add timestamps (cho posts_mongo schema có cả created_at và updated_at)
         document["created_at"] = utc_now()
         document["updated_at"] = utc_now()
+
+        result = await coll.insert_one(document)
+        return str(result.inserted_id)
+
+    async def insert_one_created_only(self, collection: str, document: Dict[str, Any]) -> str:
+        """
+        Insert document vào collection chỉ với created_at (không có updated_at).
+        Sử dụng cho: post_likes_mongo, post_comments_mongo, reports_mongo
+        
+        Args:
+            collection: Tên collection
+            document: Document cần insert
+
+        Returns:
+            str: Document ID
+        """
+        if not self.is_connected:
+            raise Exception("MongoDB not connected")
+
+        collection_name = self.config.COLLECTIONS.get(collection, collection)
+        coll = self.db[collection_name]
+
+        # Chỉ thêm created_at per schema (không thêm updated_at)
+        if "created_at" not in document:
+            document["created_at"] = utc_now()
 
         result = await coll.insert_one(document)
         return str(result.inserted_id)
@@ -457,7 +483,7 @@ class MongoDBClient:
                 "user_id": user_id,
                 "created_at": utc_now()
             }
-            await self.insert_one("post_likes", like_data)
+            await self.insert_one_created_only("post_likes", like_data)
             total_likes = await self.count("post_likes", {"post_id": post_id})
             return {"liked": True, "total_likes": total_likes}
 
@@ -477,7 +503,7 @@ class MongoDBClient:
         Returns:
             str: Comment ID
         """
-        return await self.insert_one("post_comments", comment_data)
+        return await self.insert_one_created_only("post_comments", comment_data)
 
     async def create_reply(
         self,
@@ -521,7 +547,7 @@ class MongoDBClient:
             "parent_id": parent_id
         }
 
-        return await self.insert_one("post_comments", reply_data)
+        return await self.insert_one_created_only("post_comments", reply_data)
 
     async def get_root_comments(
         self,
@@ -611,6 +637,15 @@ class MongoDBClient:
     async def save_chatbot_log(self, log_data: Dict[str, Any]) -> str:
         """
         Lưu chatbot conversation log
+        
+        Schema chatbot_logs_mongo:
+        - _id: auto
+        - conversation_id: varchar [not null]
+        - user_id: integer [not null]
+        - user_message: text [not null]
+        - bot_response: text
+        - entities: json
+        - created_at: timestamp
 
         Args:
             log_data: Dữ liệu conversation
@@ -618,20 +653,38 @@ class MongoDBClient:
         Returns:
             str: Log ID
         """
-        return await self.insert_one("chatbot_logs", log_data)
+        if not self.is_connected:
+            raise Exception("MongoDB not connected")
+        
+        collection_name = self.config.COLLECTIONS.get("chatbot_logs", "chatbot_logs_mongo")
+        coll = self.db[collection_name]
+        
+        # Only add created_at per schema (no updated_at)
+        log_data["created_at"] = utc_now()
+        
+        result = await coll.insert_one(log_data)
+        return str(result.inserted_id)
 
-    async def get_chatbot_history(self, user_id: int, limit: int = 20) -> List[Dict[str, Any]]:
+    async def get_chatbot_history(
+        self, 
+        user_id: int, 
+        conversation_id: str = None,
+        limit: int = 20
+    ) -> List[Dict[str, Any]]:
         """
         Lấy lịch sử chatbot của user
 
         Args:
             user_id: ID user
+            conversation_id: ID cuộc hội thoại (optional)
             limit: Số logs tối đa
 
         Returns:
             List: Danh sách conversation logs
         """
         query = {"user_id": user_id}
+        if conversation_id:
+            query["conversation_id"] = conversation_id
         sort = [("created_at", DESCENDING)]
 
         return await self.find_many("chatbot_logs", query, sort=sort, limit=limit)
@@ -647,7 +700,7 @@ class MongoDBClient:
         Returns:
             str: Report ID
         """
-        return await self.insert_one("reports", report_data)
+        return await self.insert_one_created_only("reports", report_data)
 
 
 # Global MongoDB client instance
