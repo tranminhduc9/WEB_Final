@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../../components/admin/AdminHeader';
 import Footer from '../../components/client/Footer';
-import { adminService, placeService } from '../../services';
+import { adminService, placeService, uploadService } from '../../services';
 import type { PlaceCreateRequest } from '../../types/admin';
 import type { District, PlaceType } from '../../types/models';
 import '../../assets/styles/pages/AdminAddPlacePage.css';
@@ -14,6 +14,7 @@ function AdminAddPlacePage() {
     // States
     const [isLoading, setIsLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [districts, setDistricts] = useState<District[]>([]);
     const [placeTypes, setPlaceTypes] = useState<PlaceType[]>([]);
     const [images, setImages] = useState<string[]>([]);
@@ -72,14 +73,24 @@ function AdminAddPlacePage() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    // Handle image upload
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle image upload - Upload to server first, then use server URLs
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-            // In real app, upload to server and get URL
-            // For now, create local URLs
-            const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-            setImages(prev => [...prev, ...newImages]);
+            setIsUploading(true);
+            try {
+                // Upload files to server using generic upload (no entity_id since place doesn't exist yet)
+                const response = await uploadService.uploadFiles(Array.from(files));
+                if (response.urls && response.urls.length > 0) {
+                    // Use server URLs instead of blob URLs
+                    setImages(prev => [...prev, ...response.urls]);
+                }
+            } catch (error) {
+                console.error('Error uploading images:', error);
+                alert('Có lỗi khi tải ảnh lên server');
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 
@@ -282,8 +293,9 @@ function AdminAddPlacePage() {
                                 type="button"
                                 className="admin-add-place-upload-btn"
                                 onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
                             >
-                                Thêm ảnh
+                                {isUploading ? 'Đang tải...' : 'Thêm ảnh'}
                             </button>
                             <input
                                 ref={fileInputRef}

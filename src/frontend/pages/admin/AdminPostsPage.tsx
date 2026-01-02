@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback } from 'react';
 import AdminHeader from '../../components/admin/AdminHeader';
 import Footer from '../../components/client/Footer';
 import { adminService } from '../../services';
+import { formatTimeAgo } from '../../utils/timeUtils';
 import type { PostDetail, Pagination } from '../../types/models';
 import '../../assets/styles/pages/AdminPostsPage.css';
 
@@ -18,20 +19,6 @@ import '../../assets/styles/pages/AdminPostsPage.css';
 const defaultAvatar = 'https://i.pravatar.cc/88';
 const placeholderImage = 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600';
 
-// Helper: Format time ago
-const formatTimeAgo = (dateString?: string): string => {
-    if (!dateString) return 'Vừa xong';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 1) return 'Vừa xong';
-    if (diffHours < 24) return `${diffHours} giờ`;
-    if (diffDays < 7) return `${diffDays} ngày`;
-    return date.toLocaleDateString('vi-VN');
-};
 
 function AdminPostsPage() {
     const [posts, setPosts] = useState<PostDetail[]>([]);
