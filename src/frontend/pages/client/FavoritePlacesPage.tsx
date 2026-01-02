@@ -28,7 +28,6 @@ const FavoritePlacesPage: React.FC = () => {
     const [favorites, setFavorites] = useState<PlaceCompact[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [userName, setUserName] = useState<string>('');
 
     // Redirect to login if viewing own favorites and not authenticated
     useEffect(() => {
@@ -51,14 +50,12 @@ const FavoritePlacesPage: React.FC = () => {
                     if (profile.recent_favorites && profile.recent_favorites.length > 0) {
                         setFavorites(profile.recent_favorites);
                     }
-                    setUserName(profile.full_name || 'Bạn');
                 } else {
                     // Fetch other user's favorites
                     const profile = await userService.getUserProfile(userId!);
                     if (profile.recent_favorites && profile.recent_favorites.length > 0) {
                         setFavorites(profile.recent_favorites);
                     }
-                    setUserName(profile.full_name || 'Người dùng');
                 }
             } catch (error) {
                 console.error('Error fetching favorites:', error);

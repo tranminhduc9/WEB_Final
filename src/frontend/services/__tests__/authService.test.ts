@@ -111,9 +111,10 @@ describe('authService', () => {
                 access_token: 'mock-access-token',
                 refresh_token: 'mock-refresh-token',
                 user: {
-                    id: '1',
+                    id: 1,
                     email: 'test@example.com',
-                    name: 'Test User',
+                    full_name: 'Test User',
+                    role_id: 3,
                     role: 'user',
                 },
             };
@@ -140,9 +141,10 @@ describe('authService', () => {
                 success: true,
                 access_token: 'mock-access-token',
                 user: {
-                    id: '1',
+                    id: 1,
                     email: 'test@example.com',
-                    name: 'Test User',
+                    full_name: 'Test User',
+                    role_id: 3,
                     role: 'user',
                 },
             };

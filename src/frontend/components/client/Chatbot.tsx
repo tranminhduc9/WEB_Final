@@ -201,6 +201,20 @@ const Chatbot: React.FC = () => {
     }
   };
 
+  const handleResetMessages = () => {
+    // Xóa localStorage
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    
+    // Reset messages về default
+    setMessages([defaultMessage]);
+    
+    // Reset conversation ID
+    setConversationId(null);
+    
+    // Scroll to top
+    scrollToBottom();
+  };
+
   return (
     <>
       {/* Floating Button */}
@@ -231,9 +245,19 @@ const Chatbot: React.FC = () => {
               <h3>Trợ lý Hanoivivu</h3>
               <span className="chatbot-header__status">● Online</span>
             </div>
-            <button className="chatbot-header__close" onClick={() => setIsOpen(false)}>
-              <Icons.Close />
-            </button>
+            <div className="chatbot-header__actions">
+              <button 
+                className="chatbot-header__reset" 
+                onClick={handleResetMessages}
+                title="Xóa tất cả tin nhắn"
+                aria-label="Reset chat"
+              >
+                <Icons.Trash />
+              </button>
+              <button className="chatbot-header__close" onClick={() => setIsOpen(false)}>
+                <Icons.Close />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -264,7 +288,7 @@ const Chatbot: React.FC = () => {
                   {/* Suggested Places */}
                   {message.suggestedPlaces && message.suggestedPlaces.length > 0 && (
                     <div className="chatbot-suggestions">
-                      <p className="chatbot-suggestions__title">Gợi ý địa điểm:</p>
+                      <p className="chatbot-suggestions__title">Có thể bạn sẽ thích:</p>
                       <div className="chatbot-suggestions__list">
                         {message.suggestedPlaces.slice(0, 3).map((place) => (
                           <a

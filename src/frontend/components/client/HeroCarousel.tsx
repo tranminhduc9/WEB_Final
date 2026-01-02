@@ -49,6 +49,8 @@ export default function HeroCarousel({
         e.preventDefault();
         if (searchQuery.trim()) {
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            // Scroll to top khi search
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
