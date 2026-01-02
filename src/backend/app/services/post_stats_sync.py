@@ -44,13 +44,18 @@ async def calculate_user_reputation(
         int: reputation_score
     """
     try:
+        logger.info(f"[REPUTATION] Starting calculation for user {user_id}")
+        
         # Đếm số posts của user (đã approved)
         post_count = await mongo_client.count("posts", {
             "author_id": user_id,
             "status": "approved"
         })
         
+        logger.info(f"[REPUTATION] user_id={user_id}: approved posts={post_count}")
+        
         if post_count == 0:
+            logger.info(f"[REPUTATION] user_id={user_id}: no approved posts, score=0")
             return 0
         
         # Lấy tất cả post IDs của user
@@ -70,18 +75,20 @@ async def calculate_user_reputation(
         
         # Đếm tổng comments cho tất cả posts của user
         total_comments = await mongo_client.count("post_comments", {
-            "post_id": {"$in": post_ids}
+            "post_id": post_ids[0] if len(post_ids) == 1 else {"$in": post_ids}
         })
         
         # Tính reputation_score
         reputation_score = round((total_likes + total_comments) / post_count)
         
-        logger.debug(f"[REPUTATION] user_id={user_id}: posts={post_count}, likes={total_likes}, comments={total_comments}, score={reputation_score}")
+        logger.info(f"[REPUTATION] user_id={user_id}: posts={post_count}, likes={total_likes}, comments={total_comments}, score={reputation_score}")
         
         return reputation_score
         
     except Exception as e:
         logger.error(f"[REPUTATION] Error calculating reputation for user {user_id}: {e}")
+        import traceback
+        logger.error(f"[REPUTATION] Traceback: {traceback.format_exc()}")
         return 0
 
 

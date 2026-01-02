@@ -101,17 +101,22 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
     # Get post images - chỉ cần gọi helper function
     post_images = get_post_images(post)
     
-    # Fallback: Đảm bảo ít nhất 2 ảnh nếu có related_place_id
-    if post.get("related_place_id") and len(post_images) < 2:
-        from app.utils.image_helpers import get_all_place_images
-        place_images = get_all_place_images(post.get("related_place_id"), db)
+    # Fallback: Đảm bảo ít nhất 2 ảnh
+    if len(post_images) < 2:
+        if post.get("related_place_id"):
+            # Bù thêm ảnh từ địa điểm nếu có related_place_id
+            from app.utils.image_helpers import get_all_place_images
+            place_images = get_all_place_images(post.get("related_place_id"), db)
+            
+            for place_img in place_images:
+                if place_img not in post_images:
+                    post_images.append(place_img)
+                if len(post_images) >= 2:
+                    break
         
-        # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
-        for place_img in place_images:
-            if place_img not in post_images:
-                post_images.append(place_img)
-            if len(post_images) >= 2:
-                break
+        # Nếu vẫn chưa đủ 2 ảnh, duplicate ảnh đầu tiên
+        if len(post_images) == 1:
+            post_images.append(post_images[0])
     
     return {
         "_id": str(post.get("_id")),
@@ -149,8 +154,8 @@ async def get_posts(
         
         skip = (page - 1) * limit
         
-        # Query posts from MongoDB - sắp xếp theo popular (nhiều like nhất)
-        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort="popular")
+        # Query posts from MongoDB - sắp xếp theo thời gian mới nhất
+        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort="newest")
         
         # Sync stats batch cho tất cả posts
         from app.services.post_stats_sync import sync_posts_stats_batch
@@ -236,22 +241,33 @@ async def create_post(
             "status": "pending"
         }
         
-        # Fallback: Đảm bảo ít nhất 2 ảnh nếu có related_place_id
-        # Nếu user upload ít hơn 2 ảnh, bù thêm từ ảnh của địa điểm
-        if post_data.related_place_id and len(clean_images) < 2:
-            from app.utils.image_helpers import get_all_place_images
-            place_images = get_all_place_images(post_data.related_place_id, db)
+        # Fallback: Đảm bảo ít nhất 2 ảnh
+        # Nếu user upload ít hơn 2 ảnh, bù thêm từ ảnh của địa điểm hoặc placeholder
+        if len(clean_images) < 2:
+            if post_data.related_place_id:
+                from app.utils.image_helpers import get_all_place_images
+                place_images = get_all_place_images(post_data.related_place_id, db)
+                
+                # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
+                for place_img in place_images:
+                    if place_img not in clean_images:
+                        clean_images.append(place_img)
+                    if len(clean_images) >= 2:
+                        break
             
-            # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
-            for place_img in place_images:
-                if place_img not in clean_images:
-                    clean_images.append(place_img)
-                if len(clean_images) >= 2:
+            # Nếu vẫn chưa đủ ảnh, thêm placeholder
+            from config.image_config import get_placeholder_url, ImageFolder
+            while len(clean_images) < 2:
+                placeholder = get_placeholder_url(ImageFolder.POSTS)
+                if placeholder not in clean_images or len(clean_images) == 0:
+                    clean_images.append(placeholder)
+                else:
+                    # Avoid infinite loop - just break if already has placeholder
                     break
             
             post_doc["images"] = clean_images
             if len(clean_images) > len(post_data.images or []):
-                logger.info(f"Post filled with place images: {clean_images}")
+                logger.info(f"Post filled with fallback images: {clean_images}")
         
         # Insert to MongoDB
         post_id = await mongo_client.create_post(post_doc)
