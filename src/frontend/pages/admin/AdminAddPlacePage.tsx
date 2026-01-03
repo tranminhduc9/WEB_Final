@@ -73,19 +73,24 @@ function AdminAddPlacePage() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    // Store files locally for upload after place creation
-    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-
-    // Handle image selection - store locally first, upload after place creation
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle image upload - Upload to server first, then use server URLs
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-            const newFiles = Array.from(files);
-            // Store files for later upload
-            setPendingFiles(prev => [...prev, ...newFiles]);
-            // Create blob URLs for preview
-            const blobUrls = newFiles.map(file => URL.createObjectURL(file));
-            setImages(prev => [...prev, ...blobUrls]);
+            setIsUploading(true);
+            try {
+                // Upload files to server using generic upload (no entity_id since place doesn't exist yet)
+                const response = await uploadService.uploadFiles(Array.from(files));
+                if (response.urls && response.urls.length > 0) {
+                    // Use server URLs instead of blob URLs
+                    setImages(prev => [...prev, ...response.urls]);
+                }
+            } catch (error) {
+                console.error('Error uploading images:', error);
+                alert('Có lỗi khi tải ảnh lên server');
+            } finally {
+                setIsUploading(false);
+            }
         }
     };
 

@@ -50,12 +50,8 @@ const uploadPlaceImages = async (files: File[], placeId?: number): Promise<Uploa
         formData.append('files', file);
     });
 
-    // Use 'temp' for new places (before place is created)
-    // Backend will generate UUID filename: place_{uuid}.{ext}
-    const entityId = placeId || 'temp';
-
     const response = await axiosClient.post<never, UploadResponse>(
-        `/upload?upload_type=place&entity_id=${entityId}`,
+        `/upload?upload_type=place&entity_id=${placeId}`,
         formData,
         {
             headers: {
@@ -95,19 +91,18 @@ const uploadAvatar = async (file: File, userId?: number | string): Promise<Uploa
 /**
  * Upload ảnh bài viết
  * @param files - Danh sách file ảnh
- * @param placeId - ID của place liên quan (required for proper filename format)
+ * @param postId - ID của post (optional, có thể upload trước khi tạo post)
  */
-const uploadPostImages = async (files: File[], placeId?: number): Promise<UploadResponse> => {
+const uploadPostImages = async (files: File[], postId?: string): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach(file => {
         formData.append('files', file);
     });
 
-    // Always use upload_type=post, with place_id if provided
-    // Backend will create filename: {user_id}_{place_id}_{index}.{ext}
-    const endpoint = placeId
-        ? `/upload?upload_type=post&place_id=${placeId}`
-        : '/upload?upload_type=post';
+    // Nếu có postId thì gắn entity_id, nếu không thì dùng generic
+    const endpoint = postId
+        ? `/upload?upload_type=post&entity_id=${postId}`
+        : '/upload?upload_type=generic';
 
     const response = await axiosClient.post<never, UploadResponse>(
         endpoint,
