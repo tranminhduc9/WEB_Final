@@ -132,7 +132,7 @@ async def get_user_profile(
                 })
 
         
-        # Get recent posts from MongoDB
+        # Get recent posts from MongoDB with full data
         recent_posts = []
         try:
             user_posts = await mongo_client.find_many(
@@ -142,9 +142,33 @@ async def get_user_profile(
                 limit=5
             )
             for post in user_posts:
+                # Normalize images with fallback to place images
+                images = normalize_image_list(post.get("images", []))
+                if post.get("related_place_id") and len(images) < 2:
+                    from app.utils.image_helpers import get_all_place_images
+                    place_images = get_all_place_images(post.get("related_place_id"), db)
+                    for place_img in place_images:
+                        if place_img not in images:
+                            images.append(place_img)
+                        if len(images) >= 2:
+                            break
+                
                 recent_posts.append({
                     "_id": str(post.get("_id")),
+                    "author": {
+                        "id": user.id,
+                        "full_name": user.full_name,
+                        "avatar_url": get_avatar_url(user.avatar_url, user.id, user.full_name),
+                        "role_id": user.role_id
+                    },
                     "title": post.get("title"),
+                    "content": post.get("content", ""),
+                    "images": images,
+                    "related_place_id": post.get("related_place_id"),
+                    "related_place": get_place_compact(post.get("related_place_id"), db) if post.get("related_place_id") else None,
+                    "likes_count": post.get("likes_count", 0),
+                    "comments_count": post.get("comments_count", 0),
+                    "rating": post.get("rating", 0),
                     "created_at": to_iso_string(post.get("created_at"))
                 })
         except Exception as e:
@@ -480,6 +504,7 @@ async def get_profile_alias(
                     "related_place": get_place_compact(post.get("related_place_id"), db) if post.get("related_place_id") else None,
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
+                    "rating": post.get("rating", 0),
                     "created_at": to_iso_string(post.get("created_at"))
                 })
         except Exception as e:
@@ -641,11 +666,12 @@ async def get_user_by_id(
                 })
         
         # Get recent posts from MongoDB with image normalization
+        # Note: author_id may be stored as string (from JWT) or int, so query both
         recent_posts = []
         try:
             user_posts = await mongo_client.find_many(
                 "posts", 
-                {"author_id": user_id, "status": "approved"},
+                {"$or": [{"author_id": user_id}, {"author_id": str(user_id)}], "status": "approved"},
                 sort=[("created_at", -1)],
                 limit=5
             )
@@ -679,6 +705,7 @@ async def get_user_by_id(
                     "related_place": get_place_compact(post.get("related_place_id"), db) if post.get("related_place_id") else None,
                     "likes_count": post.get("likes_count", 0),
                     "comments_count": post.get("comments_count", 0),
+                    "rating": post.get("rating", 0),
                     "created_at": to_iso_string(post.get("created_at"))
                 })
         except Exception as e:
