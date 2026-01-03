@@ -213,4 +213,11 @@ def build_image_url_from_db(db_path: str) -> str:
     # Clean path - remove leading slash if present
     clean_path = db_path.lstrip('/')
     
+    # Fix duplicate path: if db_path already contains "static/uploads/", remove it
+    # This handles legacy data that was saved with full path
+    if clean_path.startswith('static/uploads/'):
+        clean_path = clean_path[len('static/uploads/'):]
+    elif clean_path.startswith('/static/uploads/'):
+        clean_path = clean_path[len('/static/uploads/'):]
+    
     return f"{base_url}/{clean_path}"

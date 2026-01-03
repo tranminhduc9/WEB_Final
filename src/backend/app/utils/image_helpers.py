@@ -166,8 +166,14 @@ def extract_relative_path_from_url(url: str) -> str:
     
     url = str(url).strip()
     
+    # Handle paths that already have static/uploads/ prefix
+    if url.startswith('static/uploads/'):
+        url = url[len('static/uploads/'):]
+    elif url.startswith('/static/uploads/'):
+        url = url[len('/static/uploads/'):]
+    
     # Already a relative path
-    if not url.startswith('http') and '/' in url and not url.startswith('/static'):
+    if not url.startswith('http') and '/' in url:
         # Check if it's a valid relative path format (folder/filename)
         parts = url.split('/')
         if len(parts) >= 2 and parts[0] in ['posts', 'places', 'avatars', 'misc']:
