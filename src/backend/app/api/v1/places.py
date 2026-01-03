@@ -94,7 +94,15 @@ def place_row_to_compact(row, db: Session = None) -> Dict[str, Any]:
     
     # Get district_name from row (requires LEFT JOIN in query)
     district_name = getattr(row, 'district_name', None) or f"Quận {row.district_id}"
-    address = getattr(row, 'address_detail', None) or f"Quận {district_name}, Hà Nội"
+    # Build address - avoid duplicate "Quận" prefix
+    if not getattr(row, 'address_detail', None):
+        # Check if district_name already has "Quận" prefix
+        if district_name.startswith("Quận "):
+            address = f"{district_name}, Hà Nội"
+        else:
+            address = f"Quận {district_name}, Hà Nội"
+    else:
+        address = row.address_detail
     
     # Safely get rating_count using getattr (may not exist in all query results)
     rating_count = getattr(row, 'rating_count', 0) or 0
@@ -150,7 +158,14 @@ def place_row_to_horizontal(row, db: Session = None, user_lat: float = None, use
     
     # Get district_name from row (requires LEFT JOIN in query)
     district_name = getattr(row, 'district_name', None) or f"Quận {row.district_id}"
-    address = getattr(row, 'address_detail', None) or f"Quận {district_name}, Hà Nội"
+    # Build address - avoid duplicate "Quận" prefix
+    if not getattr(row, 'address_detail', None):
+        if district_name.startswith("Quận "):
+            address = f"{district_name}, Hà Nội"
+        else:
+            address = f"Quận {district_name}, Hà Nội"
+    else:
+        address = row.address_detail
     
     # Safely get rating_count using getattr
     rating_count = getattr(row, 'rating_count', 0) or 0
@@ -643,7 +658,16 @@ async def get_place_detail(
         ).count()
         
         # Build response data theo Swagger PlaceDetailResponse
-        address = row.address_detail or (f"Quận {row.district_name}, Hà Nội" if row.district_name else "Hà Nội")
+        # Avoid duplicate "Quận" prefix
+        if row.address_detail:
+            address = row.address_detail
+        elif row.district_name:
+            if row.district_name.startswith("Quận "):
+                address = f"{row.district_name}, Hà Nội"
+            else:
+                address = f"Quận {row.district_name}, Hà Nội"
+        else:
+            address = "Hà Nội"
         
         # details object cho thông tin chi tiết theo Swagger
         details = {}

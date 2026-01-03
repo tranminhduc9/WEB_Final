@@ -55,7 +55,7 @@ class MiddlewareConfig:
 
     # CORS - Include all localhost variants (IPv4, IPv6, localhost alias)
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,http://[::1]:3000,http://[::1]:5173").split(",")
-    CORS_METHODS = os.getenv("CORS_METHODS", "GET,POST,PUT,DELETE,OPTIONS").split(",")
+    CORS_METHODS = os.getenv("CORS_METHODS", "GET,POST,PUT,PATCH,DELETE,OPTIONS").split(",")
     CORS_HEADERS = os.getenv("CORS_HEADERS", "*").split(",")
     CORS_CREDENTIALS = os.getenv("CORS_CREDENTIALS", "true").lower() == "true"
     CORS_MAX_AGE = int(os.getenv("CORS_MAX_AGE", "86400"))

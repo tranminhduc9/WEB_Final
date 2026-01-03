@@ -5,8 +5,11 @@ Utils package - Shared utilities for the application
 from .image_helpers import (
     get_main_image_url,
     get_all_place_images,
+    get_all_place_images_relative,
     normalize_image_url,
     normalize_image_list,
+    normalize_urls_to_relative_paths,
+    extract_relative_path_from_url,
     get_avatar_url,
     get_post_images,
     format_place_compact_images
@@ -31,8 +34,11 @@ __all__ = [
     # Image helpers
     'get_main_image_url',
     'get_all_place_images',
+    'get_all_place_images_relative',
     'normalize_image_url',
     'normalize_image_list',
+    'normalize_urls_to_relative_paths',
+    'extract_relative_path_from_url',
     'get_avatar_url',
     'get_post_images',
     'format_place_compact_images',

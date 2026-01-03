@@ -1,5 +1,9 @@
 /**
  * Upload Service - Xử lý upload file lên server
+ * 
+ * Backend API: POST /upload?upload_type={type}&entity_id={id}
+ * - upload_type: 'generic' | 'place' | 'avatar' | 'post'
+ * - entity_id: ID của entity (required cho typed uploads)
  */
 
 import axiosClient from '../api/axiosClient';
@@ -22,67 +26,98 @@ const uploadFiles = async (files: File[], folder?: string): Promise<UploadRespon
         formData.append('folder', folder);
     }
 
-    const response = await axiosClient.post<never, UploadResponse>('/upload', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+    const response = await axiosClient.post<never, UploadResponse>(
+        '/upload?upload_type=generic',
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    );
 
     return response;
 };
 
 /**
  * Upload ảnh địa điểm
+ * @param files - Danh sách file ảnh
+ * @param placeId - ID của place (optional, use 'temp' for new places before creation)
  */
-const uploadPlaceImages = async (files: File[], placeId: number): Promise<UploadResponse> => {
+const uploadPlaceImages = async (files: File[], placeId?: number): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach(file => {
         formData.append('files', file);
     });
-    formData.append('place_id', placeId.toString());
 
-    const response = await axiosClient.post<never, UploadResponse>('/upload/place-images', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+    // Use 'temp' for new places (before place is created)
+    // Backend will generate UUID filename: place_{uuid}.{ext}
+    const entityId = placeId || 'temp';
+
+    const response = await axiosClient.post<never, UploadResponse>(
+        `/upload?upload_type=place&entity_id=${entityId}`,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    );
 
     return response;
 };
 
 /**
  * Upload avatar người dùng
+ * @param file - File ảnh avatar
+ * @param userId - ID của user (optional, backend sẽ lấy từ token nếu không truyền)
  */
-const uploadAvatar = async (file: File): Promise<UploadResponse> => {
+const uploadAvatar = async (file: File, userId?: number | string): Promise<UploadResponse> => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('files', file);  // Backend expects 'files' field
 
-    const response = await axiosClient.post<never, UploadResponse>('/upload/avatar', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+    // Sử dụng 'current' nếu không có userId (backend sẽ lấy từ token)
+    const entityId = userId || 'current';
+
+    const response = await axiosClient.post<never, UploadResponse>(
+        `/upload?upload_type=avatar&entity_id=${entityId}`,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    );
 
     return response;
 };
 
 /**
  * Upload ảnh bài viết
+ * @param files - Danh sách file ảnh
+ * @param placeId - ID của place liên quan (required for proper filename format)
  */
-const uploadPostImages = async (files: File[], postId?: number): Promise<UploadResponse> => {
+const uploadPostImages = async (files: File[], placeId?: number): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach(file => {
         formData.append('files', file);
     });
-    if (postId) {
-        formData.append('post_id', postId.toString());
-    }
 
-    const response = await axiosClient.post<never, UploadResponse>('/upload/post-images', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+    // Always use upload_type=post, with place_id if provided
+    // Backend will create filename: {user_id}_{place_id}_{index}.{ext}
+    const endpoint = placeId
+        ? `/upload?upload_type=post&place_id=${placeId}`
+        : '/upload?upload_type=post';
+
+    const response = await axiosClient.post<never, UploadResponse>(
+        endpoint,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    );
 
     return response;
 };

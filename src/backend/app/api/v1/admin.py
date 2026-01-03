@@ -471,12 +471,16 @@ async def create_admin_post(
     try:
         await get_mongodb()
         
+        # Convert full URLs to relative paths for database storage
+        from app.utils.image_helpers import normalize_urls_to_relative_paths
+        clean_images = normalize_urls_to_relative_paths(post_data.images or [])
+        
         post_doc = {
             "type": "post",
             "author_id": current_user.get("user_id"),
             "title": post_data.title,
             "content": post_data.content,
-            "images": post_data.images or [],
+            "images": clean_images,
             "tags": post_data.tags or [],
             "related_place_id": post_data.related_place_id,
             "rating": post_data.rating,
@@ -1038,8 +1042,13 @@ async def get_admin_places(
             # Get main image
             main_image_url = get_main_image_url(place.id, db)
             
-            # Build address
-            address = place.address_detail or f"Quận {district_name}, Hà Nội"
+            # Build address - avoid duplicate "Quận" prefix
+            if place.address_detail:
+                address = place.address_detail
+            elif district_name.startswith("Quận "):
+                address = f"{district_name}, Hà Nội"
+            else:
+                address = f"Quận {district_name}, Hà Nội"
             
             place_list.append({
                 "id": place.id,
@@ -1118,8 +1127,62 @@ async def create_place(
         db.add(place)
         db.flush()  # Get ID
         
-        # Add images
+        # Add images - rename temp files to proper format
+        from pathlib import Path as FilePath
+        import shutil
+        import re
+        from config.image_config import get_uploads_base_url
+        
+        src_dir = FilePath(__file__).resolve().parent.parent.parent.parent  # app/api/v1 -> app -> src/backend -> src
+        uploads_dir = src_dir / "static" / "uploads" / "places"
+        base_url = get_uploads_base_url()
+        
+        misc_dir = src_dir / "static" / "uploads" / "misc"
+        
+        renamed_urls = []
         for i, url in enumerate(place_data.images or []):
+            # Extract filename from URL
+            # URL format: http://.../.../place_{uuid}.jpg or /static/uploads/places/place_{uuid}.jpg
+            filename = url.split('/')[-1] if '/' in url else url
+            
+            # Check if this is a temp file (place_{uuid}.ext) or generic UUID file
+            # UUID format: place_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.ext
+            # or just: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.ext (from misc folder)
+            is_temp_place = re.match(r'^place_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\..+$', filename)
+            is_misc_uuid = re.match(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\..+$', filename)
+            
+            if is_temp_place or is_misc_uuid:
+                # This is a temp file, rename it
+                ext = filename.rsplit('.', 1)[1] if '.' in filename else 'jpg'
+                new_filename = f"place_{place.id}_{i}.{ext}"
+                
+                # Check places folder first, then misc folder
+                old_path = uploads_dir / filename
+                if not old_path.exists():
+                    old_path = misc_dir / filename
+                
+                new_path = uploads_dir / new_filename
+                
+                if old_path.exists():
+                    try:
+                        shutil.move(str(old_path), str(new_path))
+                        logger.info(f"Renamed {filename} -> {new_filename}")
+                        # Update URL to new filename - new format: folder/filename
+                        new_url = f"places/{new_filename}"
+                        renamed_urls.append(new_url)
+                    except Exception as rename_error:
+                        logger.warning(f"Could not rename {filename}: {rename_error}")
+                        renamed_urls.append(url)  # Keep original URL
+                else:
+                    # File doesn't exist locally, might be cloud URL - keep as is
+                    logger.warning(f"File not found: {filename} in places or misc folder")
+                    renamed_urls.append(url)
+            else:
+                # Not a temp file, keep original URL
+                renamed_urls.append(url)
+        
+        # Add images with renamed URLs
+        for i, url in enumerate(renamed_urls):
             img = PlaceImage(
                 place_id=place.id,
                 image_url=url,

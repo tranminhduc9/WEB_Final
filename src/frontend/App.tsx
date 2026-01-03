@@ -5,23 +5,9 @@ import LocationCard from './components/common/LocationCard';
 import Footer from './components/client/Footer'
 import PostCard from './components/client/PostCard'
 import { placeService, postService } from './services';
+import { formatTimeAgo } from './utils/timeUtils';
 import type { PlaceCompact, PostDetail } from './types/models';
 import './App.css'
-
-
-// Helper: Format time ago
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 60) return `${diffMins} phút trước`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} giờ trước`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} ngày trước`;
-}
 
 export default function App() {
   const [places, setPlaces] = useState<PlaceCompact[]>([]);
@@ -47,11 +33,12 @@ export default function App() {
     fetchPlaces();
   }, []);
 
-  // Fetch posts from API
+  // Fetch posts from API - Featured posts sorted by popularity (likes + comments)
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await postService.getPosts(1, 6);
+        // Use sort='popular' for featured posts (sorted by likes + comments)
+        const response = await postService.getPosts(1, 6, 'popular');
         if (response.success && response.data) {
           setPosts(response.data);
         }

@@ -63,6 +63,20 @@ def get_uploads_base_url() -> str:
     """
     # Get from environment, with default for local development
     base_url = os.getenv("UPLOADS_BASE_URL", "http://127.0.0.1:8080/static/uploads")
+    
+    # Sanitize: Handle case where .env has duplicate value like UPLOADS_BASE_URL=UPLOADS_BASE_URL=http://...
+    # This can happen if user accidentally types it wrong
+    if base_url and not base_url.startswith('http'):
+        # Try to extract the actual URL from malformed value
+        if 'http://' in base_url:
+            base_url = 'http://' + base_url.split('http://')[-1]
+        elif 'https://' in base_url:
+            base_url = 'https://' + base_url.split('https://')[-1]
+        else:
+            # Fallback to default
+            logger.warning(f"Invalid UPLOADS_BASE_URL value: {base_url}, using default")
+            base_url = "http://127.0.0.1:8080/static/uploads"
+    
     return base_url.rstrip('/')
 
 
@@ -178,18 +192,14 @@ def build_image_url_from_db(db_path: str) -> str:
     """
     Build full URL from database-stored path.
     
-    The database may store relative paths like:
-    - /static/uploads/places/place_1_0.jpg
-    - places/place_1_0.jpg
-    - place_1_0.jpg (just filename)
-    
-    This function converts them to full URLs using UPLOADS_BASE_URL.
+    Database stores path as: folder/filename (e.g., "avatars/avatar_52.png")
+    This function combines UPLOADS_BASE_URL + path to create full URL.
     
     Args:
-        db_path: Path stored in database
+        db_path: Path stored in database (format: folder/filename)
     
     Returns:
-        Full URL
+        Full URL (e.g., "http://127.0.0.1:8080/static/uploads/avatars/avatar_52.png")
     """
     if not db_path:
         return get_placeholder_url()
@@ -200,17 +210,7 @@ def build_image_url_from_db(db_path: str) -> str:
     
     base_url = get_uploads_base_url()
     
-    # Remove any leading prefixes to get clean path
-    clean_path = db_path
-    
-    # Strip common prefixes
-    prefixes_to_remove = ['/static/uploads/', '/uploads/', 'static/uploads/', 'uploads/']
-    for prefix in prefixes_to_remove:
-        if clean_path.startswith(prefix):
-            clean_path = clean_path[len(prefix):]
-            break
-    
-    # Remove leading slash if present
-    clean_path = clean_path.lstrip('/')
+    # Clean path - remove leading slash if present
+    clean_path = db_path.lstrip('/')
     
     return f"{base_url}/{clean_path}"

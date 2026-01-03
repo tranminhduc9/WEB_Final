@@ -7,24 +7,9 @@ import PostCard from '../../components/client/PostCard';
 import { Icons } from '../../config/constants';
 import { useAuthContext } from '../../contexts';
 import { userService, authService } from '../../services';
+import { formatTimeAgo } from '../../utils/timeUtils';
 import type { UserDetailResponse, PostDetail, PlaceCompact } from '../../types/models';
 import '../../assets/styles/pages/UserProfilePage.css';
-
-// Format time ago helper
-const formatTimeAgo = (dateStr?: string): string => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffDays > 0) return `${diffDays} ngày trước`;
-  if (diffHours > 0) return `${diffHours} giờ trước`;
-  if (diffMins > 0) return `${diffMins} phút trước`;
-  return 'Vừa xong';
-};
 
 
 const UserProfilePage: React.FC = () => {

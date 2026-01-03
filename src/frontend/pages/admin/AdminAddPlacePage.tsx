@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../../components/admin/AdminHeader';
 import Footer from '../../components/client/Footer';
-import { adminService, placeService } from '../../services';
+import { adminService, placeService, uploadService } from '../../services';
 import type { PlaceCreateRequest } from '../../types/admin';
 import type { District, PlaceType } from '../../types/models';
 import '../../assets/styles/pages/AdminAddPlacePage.css';
@@ -14,6 +14,7 @@ function AdminAddPlacePage() {
     // States
     const [isLoading, setIsLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [districts, setDistricts] = useState<District[]>([]);
     const [placeTypes, setPlaceTypes] = useState<PlaceType[]>([]);
     const [images, setImages] = useState<string[]>([]);
@@ -72,18 +73,23 @@ function AdminAddPlacePage() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    // Handle image upload
+    // Store files locally for upload after place creation
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
+    // Handle image selection - store locally first, upload after place creation
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-            // In real app, upload to server and get URL
-            // For now, create local URLs
-            const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-            setImages(prev => [...prev, ...newImages]);
+            const newFiles = Array.from(files);
+            // Store files for later upload
+            setPendingFiles(prev => [...prev, ...newFiles]);
+            // Create blob URLs for preview
+            const blobUrls = newFiles.map(file => URL.createObjectURL(file));
+            setImages(prev => [...prev, ...blobUrls]);
         }
     };
 
-    // Handle form submit
+    // Handle form submit - create place first, then upload images with place_id
     const handleSubmit = async () => {
         if (!formData.name.trim()) {
             alert('Vui lòng nhập tên địa điểm');
@@ -92,12 +98,42 @@ function AdminAddPlacePage() {
 
         setIsCreating(true);
         try {
+            // First, create the place without images
             const response = await adminService.createPlace({
                 ...formData,
-                images: images,
-            });
+                images: [], // Empty initially
+            }) as { success: boolean; data?: { place_id: number } };
 
-            if (response.success) {
+            if (response.success && response.data?.place_id) {
+                const placeId = response.data.place_id;
+
+                // Now upload images with the actual place_id
+                if (pendingFiles.length > 0) {
+                    setIsUploading(true);
+                    try {
+                        const uploadResponse = await uploadService.uploadPlaceImages(pendingFiles, placeId);
+                        if (uploadResponse.urls && uploadResponse.urls.length > 0) {
+                            // Update place with image URLs
+                            await adminService.updatePlace(placeId, {
+                                ...formData,
+                                images: uploadResponse.urls,
+                            });
+                        }
+                    } catch (uploadError) {
+                        console.error('Error uploading images:', uploadError);
+                        // Place created but images failed - still navigate
+                    } finally {
+                        setIsUploading(false);
+                    }
+                }
+
+                // Revoke blob URLs to free memory
+                images.forEach(url => {
+                    if (url.startsWith('blob:')) {
+                        URL.revokeObjectURL(url);
+                    }
+                });
+
                 alert('Đã thêm địa điểm thành công!');
                 navigate('/admin/locations');
             } else {
@@ -282,8 +318,9 @@ function AdminAddPlacePage() {
                                 type="button"
                                 className="admin-add-place-upload-btn"
                                 onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
                             >
-                                Thêm ảnh
+                                {isUploading ? 'Đang tải...' : 'Thêm ảnh'}
                             </button>
                             <input
                                 ref={fileInputRef}
@@ -302,7 +339,15 @@ function AdminAddPlacePage() {
                                             <button
                                                 type="button"
                                                 className="admin-add-place-image-remove"
-                                                onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                                                onClick={() => {
+                                                    // Revoke blob URL to free memory
+                                                    if (img.startsWith('blob:')) {
+                                                        URL.revokeObjectURL(img);
+                                                    }
+                                                    // Remove from both images and pendingFiles
+                                                    setImages(prev => prev.filter((_, i) => i !== index));
+                                                    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+                                                }}
                                             >
                                                 ×
                                             </button>

@@ -10,26 +10,12 @@ import Footer from '../../components/client/Footer';
 import BlogCard from '../../components/common/BlogCard';
 import { useAuthContext } from '../../contexts';
 import { userService } from '../../services';
+import { formatTimeAgo } from '../../utils/timeUtils';
 import type { PostDetail } from '../../types/models';
 import '../../assets/styles/pages/UserPostsPage.css';
 
 // Items per page
 const ITEMS_PER_PAGE = 3;
-
-// Format time ago helper
-const formatTimeAgo = (dateStr?: string): string => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 60) return `${diffMins} phút`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} giờ`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} ngày`;
-};
 
 const UserPostsPage: React.FC = () => {
     const navigate = useNavigate();

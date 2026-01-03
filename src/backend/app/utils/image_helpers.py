@@ -82,10 +82,14 @@ async def save_upload_file(
         
         # Generate filename based on upload type
         if upload_type == "place" and entity_id:
-            # Count existing images for this place
-            existing = list(target_dir.glob(f"place_{entity_id}_*.{ext}"))
-            index = len(existing)
-            filename = f"place_{entity_id}_{index}.{ext}"
+            # If entity_id is 'temp' (before place creation), use UUID for unique filename
+            if entity_id == "temp":
+                filename = f"place_{uuid.uuid4()}.{ext}"
+            else:
+                # Count existing images for this place
+                existing = list(target_dir.glob(f"place_{entity_id}_*.{ext}"))
+                index = len(existing)
+                filename = f"place_{entity_id}_{index}.{ext}"
             
         elif upload_type == "avatar" and entity_id:
             # Delete old avatar if exists (any extension)
@@ -98,10 +102,18 @@ async def save_upload_file(
             filename = f"avatar_{entity_id}.{ext}"
             
         elif upload_type == "post" and entity_id:
-            # Count existing images for this post
-            existing = list(target_dir.glob(f"post_{entity_id}_*.{ext}"))
-            index = len(existing)
-            filename = f"post_{entity_id}_{index}.{ext}"
+            # Post naming convention: post_{user_id}_{place_id}_{index}.{ext}
+            # entity_id should be in format "user_id_place_id" (e.g., "52_115")
+            # or "temp" for backward compatibility (will use UUID)
+            if entity_id == "temp" or "_" not in entity_id:
+                # Fallback to UUID with post prefix for temp or invalid format
+                filename = f"post_{uuid.uuid4()}.{ext}"
+            else:
+                # Format: post_{user_id}_{place_id}_{index}
+                # entity_id = "52_115" -> filename = "post_52_115_0.jpg"
+                existing = list(target_dir.glob(f"post_{entity_id}_*.{ext}"))
+                index = len(existing)
+                filename = f"post_{entity_id}_{index}.{ext}"
             
         else:
             # Generic upload - use UUID
@@ -115,13 +127,13 @@ async def save_upload_file(
         with open(filepath, 'wb') as f:
             f.write(content)
         
-        # Build paths to match database format
-        # Database stores: /static/uploads/places/place_1_0.jpg
-        # NOT just: places/place_1_0.jpg
-        relative_path = f"/static/uploads/{folder}/{filename}"  # For database
-        full_url = get_uploads_base_url() + "/" + folder + "/" + filename  # For API response
+        # Build paths for return
+        # Database stores ONLY: folder/filename (e.g., "avatars/avatar_52.png")
+        # build_image_url_from_db() will combine with UPLOADS_BASE_URL when reading
+        relative_path = f"{folder}/{filename}"  # For database - simplified format
+        full_url = f"{get_uploads_base_url()}/{folder}/{filename}"  # For API response
         
-        logger.info(f"Uploaded {upload_type} file: {relative_path}")
+        logger.info(f"Uploaded {upload_type} file: {relative_path} -> {full_url}")
         
         return {
             "relative_path": relative_path,
@@ -134,6 +146,72 @@ async def save_upload_file(
         raise e
 
 
+def extract_relative_path_from_url(url: str) -> str:
+    """
+    Extract relative path from full URL for database storage.
+    
+    Converts:
+    - "http://domain/static/uploads/posts/file.jpg" -> "posts/file.jpg"
+    - "UPLOADS_BASE_URL=http://domain/static/uploads/posts/file.jpg" -> "posts/file.jpg"
+    - "posts/file.jpg" -> "posts/file.jpg" (already relative)
+    
+    Args:
+        url: Full URL or relative path
+        
+    Returns:
+        Relative path (e.g., "posts/file.jpg")
+    """
+    if not url:
+        return ""
+    
+    url = str(url).strip()
+    
+    # Already a relative path
+    if not url.startswith('http') and '/' in url and not url.startswith('/static'):
+        # Check if it's a valid relative path format (folder/filename)
+        parts = url.split('/')
+        if len(parts) >= 2 and parts[0] in ['posts', 'places', 'avatars', 'misc']:
+            return url
+    
+    # Extract relative path from full URL
+    # Handle various URL formats
+    patterns = [
+        '/static/uploads/',  # Local: http://domain/static/uploads/posts/file.jpg
+        '/uploads/',         # Some configs: http://domain/uploads/posts/file.jpg
+    ]
+    
+    for pattern in patterns:
+        if pattern in url:
+            idx = url.find(pattern)
+            return url[idx + len(pattern):]
+    
+    # Fallback: try to extract folder/filename from the end
+    # e.g., from any URL, get the last 2 path segments
+    if '/' in url:
+        parts = url.rstrip('/').split('/')
+        if len(parts) >= 2:
+            folder = parts[-2]
+            filename = parts[-1]
+            if folder in ['posts', 'places', 'avatars', 'misc']:
+                return f"{folder}/{filename}"
+    
+    # Can't extract - return as is
+    return url
+
+
+def normalize_urls_to_relative_paths(urls: list) -> list:
+    """
+    Convert a list of URLs to relative paths for database storage.
+    
+    Args:
+        urls: List of full URLs or relative paths
+        
+    Returns:
+        List of relative paths
+    """
+    if not urls:
+        return []
+    return [extract_relative_path_from_url(url) for url in urls if url]
 
 
 async def save_place_image(file: UploadFile, place_id: int) -> dict:
@@ -255,6 +333,59 @@ def get_all_place_images(place_id: int, db: Session) -> List[str]:
     # Fallback to main image if no images found
     if not images:
         images.append(get_main_image_url(place_id, db))
+    
+    return images
+
+
+def get_all_place_images_relative(place_id: int, db: Session) -> List[str]:
+    """
+    Lấy tất cả ảnh của một địa điểm dưới dạng relative paths.
+    Dùng khi cần lưu vào database (MongoDB cho posts).
+    
+    Args:
+        place_id: ID của địa điểm
+        db: Database session
+        
+    Returns:
+        List of relative paths (e.g., "places/place_1_0.jpg")
+    """
+    from config.database import PlaceImage
+    
+    images = []
+    
+    image_records = db.query(PlaceImage).filter(
+        PlaceImage.place_id == place_id
+    ).order_by(PlaceImage.is_main.desc(), PlaceImage.id.asc()).all()
+    
+    for img in image_records:
+        if img.image_url:
+            # Extract relative path if stored as relative, otherwise use as is
+            url = img.image_url
+            # If it's already relative (e.g., "places/file.jpg"), use as is
+            if not url.startswith('http') and '/' in url:
+                parts = url.split('/')
+                if parts[0] in ['places', 'posts', 'avatars', 'misc']:
+                    images.append(url)
+                    continue
+            # Otherwise, extract relative path from URL or db path
+            images.append(extract_relative_path_from_url(url))
+    
+    # Fallback: try to find on disk
+    if not images:
+        current_file_path = Path(__file__).resolve()
+        src_dir = current_file_path.parent.parent.parent.parent
+        uploads_dir = src_dir / "static" / "uploads" / "places"
+        
+        for ext in ['jpg', 'jpeg', 'png', 'webp']:
+            local_file = f"place_{place_id}_0.{ext}"
+            local_path = uploads_dir / local_file
+            if local_path.exists():
+                images.append(f"places/{local_file}")
+                break
+        
+        if not images:
+            # Use default relative path
+            images.append(f"places/place_{place_id}_0.jpg")
     
     return images
 

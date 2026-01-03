@@ -232,6 +232,11 @@ async def create_post(
         clean_tags = sanitize_tags(post_data.tags or [])
         clean_images = sanitize_image_urls(post_data.images or [])
         
+        # Convert full URLs to relative paths for database storage
+        # Frontend sends full URLs from upload response, but we store relative paths
+        from app.utils.image_helpers import normalize_urls_to_relative_paths
+        clean_images = normalize_urls_to_relative_paths(clean_images)
+        
         # Log security event if XSS attempt detected
         if detect_xss_attempt(post_data.content) or detect_xss_attempt(post_data.title):
             client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
@@ -254,22 +259,24 @@ async def create_post(
         
         # Fallback: Đảm bảo ít nhất 2 ảnh
         # Nếu user upload ít hơn 2 ảnh, bù thêm từ ảnh của địa điểm hoặc placeholder
+        # Sử dụng relative paths vì chúng ta lưu vào MongoDB
         if len(clean_images) < 2:
             if post_data.related_place_id:
-                from app.utils.image_helpers import get_all_place_images
-                place_images = get_all_place_images(post_data.related_place_id, db)
+                from app.utils.image_helpers import get_all_place_images_relative
+                place_images = get_all_place_images_relative(post_data.related_place_id, db)
                 
-                # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
+                # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh (dạng relative path)
                 for place_img in place_images:
                     if place_img not in clean_images:
                         clean_images.append(place_img)
                     if len(clean_images) >= 2:
                         break
             
-            # Nếu vẫn chưa đủ ảnh, thêm placeholder
-            from config.image_config import get_placeholder_url, ImageFolder
+            # Nếu vẫn chưa đủ ảnh, thêm placeholder relative path
+            from config.image_config import ImageFolder
             while len(clean_images) < 2:
-                placeholder = get_placeholder_url(ImageFolder.POSTS)
+                # Use relative path for placeholder
+                placeholder = f"posts/placeholder.jpg"
                 if placeholder not in clean_images or len(clean_images) == 0:
                     clean_images.append(placeholder)
                 else:
