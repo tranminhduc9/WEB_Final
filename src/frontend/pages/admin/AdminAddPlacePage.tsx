@@ -117,6 +117,7 @@ function AdminAddPlacePage() {
                     setIsUploading(true);
                     try {
                         const uploadResponse = await uploadService.uploadPlaceImages(pendingFiles, placeId);
+
                         if (uploadResponse.urls && uploadResponse.urls.length > 0) {
                             // Update place with image URLs
                             await adminService.updatePlace(placeId, {
@@ -126,7 +127,7 @@ function AdminAddPlacePage() {
                         }
                     } catch (uploadError) {
                         console.error('Error uploading images:', uploadError);
-                        // Place created but images failed - still navigate
+                        alert(`Lỗi upload ảnh: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}. Địa điểm đã tạo nhưng chưa có ảnh.`);
                     } finally {
                         setIsUploading(false);
                     }
