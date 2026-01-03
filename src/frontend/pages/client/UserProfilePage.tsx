@@ -10,9 +10,12 @@ import { userService, authService } from '../../services';
 import { formatTimeAgo } from '../../utils/timeUtils';
 import type { UserDetailResponse, PostDetail, PlaceCompact } from '../../types/models';
 import '../../assets/styles/pages/UserProfilePage.css';
+import { useScrollToTop } from '../../hooks/useScrollToTop';
 
 
 const UserProfilePage: React.FC = () => {
+  // Scroll to top when page loads
+  useScrollToTop();
   const { id } = useParams<{ id: string }>();
   const { user: currentUser, refreshUser } = useAuthContext();
 
