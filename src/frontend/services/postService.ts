@@ -106,17 +106,23 @@ export const postService = {
 
     /**
      * Upload ảnh cho bài viết
-     * POST /upload?upload_type=post&entity_id=temp
+     * POST /upload?upload_type=post&place_id={placeId}
      * Returns: { success, urls, relative_paths, filenames, errors }
      */
-    uploadPostImages: async (files: File[]): Promise<UploadResponse> => {
+    uploadPostImages: async (files: File[], placeId?: number): Promise<UploadResponse> => {
         const formData = new FormData();
         files.forEach((file) => {
             formData.append('files', file);
         });
 
+        // Always use upload_type=post, with place_id if provided
+        // Backend creates filename: {user_id}_{place_id}_{index}.{ext}
+        const endpoint = placeId
+            ? `/upload?upload_type=post&place_id=${placeId}`
+            : '/upload?upload_type=post';
+
         const response = await axiosClient.post<never, UploadResponse>(
-            '/upload?upload_type=post&entity_id=temp',
+            endpoint,
             formData,
             {
                 headers: {

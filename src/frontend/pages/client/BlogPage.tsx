@@ -21,11 +21,12 @@ const BlogPage: React.FC = () => {
 
   const itemsPerPage = 10;
 
-  // Fetch posts
+  // Fetch posts - Explore/Discover posts sorted by newest (created_at)
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await postService.getPosts(currentPage, itemsPerPage);
+      // Use sort='newest' for explore posts (sorted by time)
+      const response = await postService.getPosts(currentPage, itemsPerPage, 'newest');
       if (response.data && response.data.length > 0) {
         setPosts(response.data);
         if (response.pagination) {
@@ -57,9 +58,12 @@ const BlogPage: React.FC = () => {
       // Upload images first if any
       if (data.images && data.images.length > 0) {
         try {
-          const uploadResponse = await postService.uploadPostImages(data.images);
-          if (uploadResponse.success && uploadResponse.urls) {
-            imageUrls = uploadResponse.urls;
+          // Pass related_place_id for proper filename format: {user_id}_{place_id}_{index}
+          const uploadResponse = await postService.uploadPostImages(data.images, data.related_place_id);
+          if (uploadResponse.success) {
+            // Use relative_paths for database storage (e.g., "posts/file.jpg")
+            // Backend will convert to full URLs when reading
+            imageUrls = uploadResponse.relative_paths || uploadResponse.urls || [];
           }
         } catch (uploadError) {
           console.error('Error uploading images:', uploadError);
@@ -67,13 +71,13 @@ const BlogPage: React.FC = () => {
         }
       }
 
-      // Create post with uploaded image URLs
+      // Create post with uploaded image paths (relative paths)
       await postService.createPost({
         title: data.content.slice(0, 50) || 'Bài viết mới',
         content: data.content,
         rating: data.rating || undefined,
         related_place_id: data.related_place_id,
-        images: imageUrls  // Sử dụng URLs đã upload
+        images: imageUrls  // Sử dụng relative_paths đã upload
       });
 
       setIsModalOpen(false);

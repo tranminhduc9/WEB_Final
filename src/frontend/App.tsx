@@ -33,11 +33,12 @@ export default function App() {
     fetchPlaces();
   }, []);
 
-  // Fetch posts from API
+  // Fetch posts from API - Featured posts sorted by popularity (likes + comments)
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await postService.getPosts(1, 6);
+        // Use sort='popular' for featured posts (sorted by likes + comments)
+        const response = await postService.getPosts(1, 6, 'popular');
         if (response.success && response.data) {
           setPosts(response.data);
         }

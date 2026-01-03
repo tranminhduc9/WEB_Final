@@ -104,7 +104,13 @@ async def get_user_profile(
                 # Get district name
                 district = db.query(District).filter(District.id == place.district_id).first()
                 district_name = district.name if district else f"Quận {place.district_id}"
-                address = place.address_detail or f"Quận {district_name}, Hà Nội"
+                # Build address - avoid duplicate "Quận" prefix
+                if place.address_detail:
+                    address = place.address_detail
+                elif district_name.startswith("Quận "):
+                    address = f"{district_name}, Hà Nội"
+                else:
+                    address = f"Quận {district_name}, Hà Nội"
                 
                 # Use synced rating from MongoDB if available
                 rating_data = synced_ratings.get(place.id, {})
@@ -429,7 +435,7 @@ async def get_profile_alias(
                     "name": place.name,
                     "district_id": place.district_id,
                     "district_name": district_name,
-                    "address": place.address_detail or f"Quận {district_name}, Hà Nội",
+                    "address": place.address_detail if place.address_detail else (f"{district_name}, Hà Nội" if district_name.startswith("Quận ") else f"Quận {district_name}, Hà Nội"),
                     "place_type_id": place.place_type_id,
                     "rating_average": rating_avg,
                     "rating_count": rating_count,
@@ -625,7 +631,7 @@ async def get_user_by_id(
                     "name": place.name,
                     "district_id": place.district_id,
                     "district_name": district_name,
-                    "address": place.address_detail or f"Quận {district_name}, Hà Nội",
+                    "address": place.address_detail if place.address_detail else (f"{district_name}, Hà Nội" if district_name.startswith("Quận ") else f"Quận {district_name}, Hà Nội"),
                     "place_type_id": place.place_type_id,
                     "rating_average": rating_avg,
                     "rating_count": rating_count,
@@ -755,7 +761,7 @@ async def upload_avatar(
         logger.info(f"  - url (returned to frontend): {result['url']}")
         logger.info(f"  - filename: {result['filename']}")
         
-        # Save relative path to database (e.g., "/static/uploads/avatars/avatar_1_abc123.jpg")
+        # Save relative path to database (new format: "avatars/avatar_52.png")
         user.avatar_url = result["relative_path"]
         db.commit()
         

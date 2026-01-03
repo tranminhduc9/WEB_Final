@@ -308,6 +308,34 @@ class MongoDBClient:
         result = await coll.update_one(query, {"$set": update})
         return result.modified_count > 0
 
+    async def update_one_silent(
+        self,
+        collection: str,
+        query: Dict[str, Any],
+        update: Dict[str, Any]
+    ) -> bool:
+        """
+        Update một document mà KHÔNG thay đổi updated_at.
+        Sử dụng cho data migration, fix data, v.v.
+
+        Args:
+            collection: Tên collection
+            query: Query conditions
+            update: Update data
+
+        Returns:
+            bool: True nếu update thành công
+        """
+        if not self.is_connected:
+            raise Exception("MongoDB not connected")
+
+        collection_name = self.config.COLLECTIONS.get(collection, collection)
+        coll = self.db[collection_name]
+
+        # No updated_at modification
+        result = await coll.update_one(query, {"$set": update})
+        return result.modified_count > 0
+
     async def delete_one(self, collection: str, query: Dict[str, Any]) -> bool:
         """
         Xóa một document

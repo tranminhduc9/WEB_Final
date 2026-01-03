@@ -41,8 +41,10 @@ const uploadFiles = async (files: File[], folder?: string): Promise<UploadRespon
 
 /**
  * Upload ảnh địa điểm
+ * @param files - Danh sách file ảnh
+ * @param placeId - ID của place (optional, use 'temp' for new places before creation)
  */
-const uploadPlaceImages = async (files: File[], placeId: number): Promise<UploadResponse> => {
+const uploadPlaceImages = async (files: File[], placeId?: number): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach(file => {
         formData.append('files', file);
@@ -68,7 +70,7 @@ const uploadPlaceImages = async (files: File[], placeId: number): Promise<Upload
  */
 const uploadAvatar = async (file: File, userId?: number | string): Promise<UploadResponse> => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('files', file);  // Backend expects 'files' field
 
     // Sử dụng 'current' nếu không có userId (backend sẽ lấy từ token)
     const entityId = userId || 'current';

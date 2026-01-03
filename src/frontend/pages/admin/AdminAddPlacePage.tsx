@@ -94,7 +94,7 @@ function AdminAddPlacePage() {
         }
     };
 
-    // Handle form submit
+    // Handle form submit - create place first, then upload images with place_id
     const handleSubmit = async () => {
         if (!formData.name.trim()) {
             alert('Vui lòng nhập tên địa điểm');
@@ -103,12 +103,42 @@ function AdminAddPlacePage() {
 
         setIsCreating(true);
         try {
+            // First, create the place without images
             const response = await adminService.createPlace({
                 ...formData,
-                images: images,
-            });
+                images: [], // Empty initially
+            }) as { success: boolean; data?: { place_id: number } };
 
-            if (response.success) {
+            if (response.success && response.data?.place_id) {
+                const placeId = response.data.place_id;
+
+                // Now upload images with the actual place_id
+                if (pendingFiles.length > 0) {
+                    setIsUploading(true);
+                    try {
+                        const uploadResponse = await uploadService.uploadPlaceImages(pendingFiles, placeId);
+                        if (uploadResponse.urls && uploadResponse.urls.length > 0) {
+                            // Update place with image URLs
+                            await adminService.updatePlace(placeId, {
+                                ...formData,
+                                images: uploadResponse.urls,
+                            });
+                        }
+                    } catch (uploadError) {
+                        console.error('Error uploading images:', uploadError);
+                        // Place created but images failed - still navigate
+                    } finally {
+                        setIsUploading(false);
+                    }
+                }
+
+                // Revoke blob URLs to free memory
+                images.forEach(url => {
+                    if (url.startsWith('blob:')) {
+                        URL.revokeObjectURL(url);
+                    }
+                });
+
                 alert('Đã thêm địa điểm thành công!');
                 navigate('/admin/locations');
             } else {
@@ -314,7 +344,15 @@ function AdminAddPlacePage() {
                                             <button
                                                 type="button"
                                                 className="admin-add-place-image-remove"
-                                                onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                                                onClick={() => {
+                                                    // Revoke blob URL to free memory
+                                                    if (img.startsWith('blob:')) {
+                                                        URL.revokeObjectURL(img);
+                                                    }
+                                                    // Remove from both images and pendingFiles
+                                                    setImages(prev => prev.filter((_, i) => i !== index));
+                                                    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+                                                }}
                                             >
                                                 ×
                                             </button>
