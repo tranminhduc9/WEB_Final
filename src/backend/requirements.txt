@@ -35,5 +35,6 @@ aiofiles>=23.2.1
 # Security - Content Sanitization
 bleach>=6.0.0
 
-# Email
+# Email - SendGrid
+sendgrid>=6.10.0
 aiosmtplib>=3.0.0
