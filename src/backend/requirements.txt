@@ -38,3 +38,9 @@ bleach>=6.0.0
 # Email - SendGrid
 sendgrid>=6.10.0
 aiosmtplib>=3.0.0
+
+# AWS Deployment
+boto3>=1.34.0
+redis>=5.0.0
+gunicorn>=21.0.0
+
