@@ -230,24 +230,35 @@ app.include_router(admin_router, prefix="/api/v1")
 
 # ==================== STATIC FILES ====================
 # Mount static/uploads directory để serve ảnh
-# Database lưu: /static/uploads/places/place_1_0.jpg
-# URL: http://127.0.0.1:8080/static/uploads/places/place_1_0.jpg
+# 
+# Logic:
+# - GHI ảnh: Luôn lưu vào src/static/uploads/ (local folder)
+# - ĐỌC ảnh: Dùng UPLOADS_BASE_URL từ .env để build URL
+#   + Local: UPLOADS_BASE_URL=http://127.0.0.1:8080/static/uploads
+#   + Cloud: UPLOADS_BASE_URL=https://bucket.s3.region.amazonaws.com hoặc CloudFront URL
+#
+# Database lưu relative path: /static/uploads/places/place_1_0.jpg
+# build_image_url_from_db() sẽ tự động combine với UPLOADS_BASE_URL
 
-# Use absolute path to ensure it works regardless of working directory
-uploads_path = Path(__file__).resolve().parent.parent.parent / "static" / "uploads"
-uploads_base_url = os.getenv("UPLOADS_BASE_URL", "http://127.0.0.1:8080/static/uploads")
+# Always mount local static files directory for local development
+# For production with S3, files are uploaded to S3 but UPLOADS_BASE_URL points to S3/CloudFront
+src_dir = Path(__file__).resolve().parent.parent.parent  # app/main.py -> app -> src/backend -> src
+uploads_path = src_dir / "static" / "uploads"
 
-# ALWAYS create uploads folder and subfolders if not exist
-# This ensures static mount works on first run
+# Create uploads folder and subfolders if not exist
 uploads_path.mkdir(parents=True, exist_ok=True)
 (uploads_path / "places").mkdir(exist_ok=True)
 (uploads_path / "avatars").mkdir(exist_ok=True)
 (uploads_path / "posts").mkdir(exist_ok=True)
+(uploads_path / "misc").mkdir(exist_ok=True)
 
-# Mount static uploads
+# Mount static uploads - always mount for local serving
+# When USE_S3=true, UPLOADS_BASE_URL will point to S3/CloudFront instead of localhost
 app.mount("/static/uploads", StaticFiles(directory=str(uploads_path)), name="static_uploads")
+
+uploads_base_url = os.getenv("UPLOADS_BASE_URL", "http://127.0.0.1:8080/static/uploads")
 logger.info(f"[Static Files] Mounted /static/uploads from: {uploads_path}")
-logger.info(f"[Static Files] Base URL: {uploads_base_url}")
+logger.info(f"[Static Files] UPLOADS_BASE_URL: {uploads_base_url}")
 
 
 

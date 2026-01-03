@@ -471,12 +471,16 @@ async def create_admin_post(
     try:
         await get_mongodb()
         
+        # Convert full URLs to relative paths for database storage
+        from app.utils.image_helpers import normalize_urls_to_relative_paths
+        clean_images = normalize_urls_to_relative_paths(post_data.images or [])
+        
         post_doc = {
             "type": "post",
             "author_id": current_user.get("user_id"),
             "title": post_data.title,
             "content": post_data.content,
-            "images": post_data.images or [],
+            "images": clean_images,
             "tags": post_data.tags or [],
             "related_place_id": post_data.related_place_id,
             "rating": post_data.rating,
@@ -698,6 +702,13 @@ async def update_post_status(
             elif new_status == "rejected":
                 # Post bị reject -> recalculate rating (loại bỏ rating của post này)
                 rating_synced = await on_post_rejected_or_deleted(post, db, mongo_client)
+        
+        # Cập nhật reputation_score của author khi post được approve/reject
+        author_id = post.get("author_id")
+        if author_id:
+            from app.services.post_stats_sync import update_user_reputation
+            await update_user_reputation(author_id, mongo_client)
+            logger.info(f"Updated reputation for author {author_id} after post {post_id} status change to {new_status}")
         
         message = f"Đã cập nhật status thành {new_status}"
         if rating_synced:
@@ -924,6 +935,58 @@ async def get_reports(
         )
 
 
+@router.delete("/reports/{report_id}", summary="Dismiss Report")
+async def dismiss_report(
+    request: Request,
+    report_id: str = Path(...),
+    current_user: Dict[str, Any] = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Bỏ qua (xóa) một báo cáo"""
+    try:
+        await get_mongodb()
+        from bson import ObjectId
+        from bson.errors import InvalidId
+        
+        # Handle both ObjectId and string _id
+        report_query = None
+        try:
+            report_query = {"_id": ObjectId(report_id)}
+        except InvalidId:
+            report_query = {"_id": report_id}
+        
+        # Check if report exists
+        report = await mongo_client.find_one("reports", report_query)
+        if not report:
+            return error_response(
+                message="Báo cáo không tồn tại",
+                error_code="NOT_FOUND",
+                status_code=404
+            )
+        
+        # Delete the report
+        success = await mongo_client.delete_one("reports", report_query)
+        
+        if not success:
+            return error_response(
+                message="Lỗi xóa báo cáo",
+                error_code="DELETE_FAILED",
+                status_code=500
+            )
+        
+        logger.info(f"Admin {current_user.get('user_id')} dismissed report {report_id}")
+        
+        return success_response(message="Đã bỏ qua báo cáo")
+        
+    except Exception as e:
+        logger.error(f"Dismiss report error: {str(e)}")
+        return error_response(
+            message="Lỗi xóa báo cáo",
+            error_code="INTERNAL_ERROR",
+            status_code=500
+        )
+
+
 # ==================== PLACE MANAGEMENT ====================
 
 @router.get("/places", summary="Manage Places")
@@ -979,8 +1042,13 @@ async def get_admin_places(
             # Get main image
             main_image_url = get_main_image_url(place.id, db)
             
-            # Build address
-            address = place.address_detail or f"Quận {district_name}, Hà Nội"
+            # Build address - avoid duplicate "Quận" prefix
+            if place.address_detail:
+                address = place.address_detail
+            elif district_name.startswith("Quận "):
+                address = f"{district_name}, Hà Nội"
+            else:
+                address = f"Quận {district_name}, Hà Nội"
             
             place_list.append({
                 "id": place.id,
@@ -1059,8 +1127,62 @@ async def create_place(
         db.add(place)
         db.flush()  # Get ID
         
-        # Add images
+        # Add images - rename temp files to proper format
+        from pathlib import Path as FilePath
+        import shutil
+        import re
+        from config.image_config import get_uploads_base_url
+        
+        src_dir = FilePath(__file__).resolve().parent.parent.parent.parent  # app/api/v1 -> app -> src/backend -> src
+        uploads_dir = src_dir / "static" / "uploads" / "places"
+        base_url = get_uploads_base_url()
+        
+        misc_dir = src_dir / "static" / "uploads" / "misc"
+        
+        renamed_urls = []
         for i, url in enumerate(place_data.images or []):
+            # Extract filename from URL
+            # URL format: http://.../.../place_{uuid}.jpg or /static/uploads/places/place_{uuid}.jpg
+            filename = url.split('/')[-1] if '/' in url else url
+            
+            # Check if this is a temp file (place_{uuid}.ext) or generic UUID file
+            # UUID format: place_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.ext
+            # or just: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.ext (from misc folder)
+            is_temp_place = re.match(r'^place_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\..+$', filename)
+            is_misc_uuid = re.match(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\..+$', filename)
+            
+            if is_temp_place or is_misc_uuid:
+                # This is a temp file, rename it
+                ext = filename.rsplit('.', 1)[1] if '.' in filename else 'jpg'
+                new_filename = f"place_{place.id}_{i}.{ext}"
+                
+                # Check places folder first, then misc folder
+                old_path = uploads_dir / filename
+                if not old_path.exists():
+                    old_path = misc_dir / filename
+                
+                new_path = uploads_dir / new_filename
+                
+                if old_path.exists():
+                    try:
+                        shutil.move(str(old_path), str(new_path))
+                        logger.info(f"Renamed {filename} -> {new_filename}")
+                        # Update URL to new filename - new format: folder/filename
+                        new_url = f"places/{new_filename}"
+                        renamed_urls.append(new_url)
+                    except Exception as rename_error:
+                        logger.warning(f"Could not rename {filename}: {rename_error}")
+                        renamed_urls.append(url)  # Keep original URL
+                else:
+                    # File doesn't exist locally, might be cloud URL - keep as is
+                    logger.warning(f"File not found: {filename} in places or misc folder")
+                    renamed_urls.append(url)
+            else:
+                # Not a temp file, keep original URL
+                renamed_urls.append(url)
+        
+        # Add images with renamed URLs
+        for i, url in enumerate(renamed_urls):
             img = PlaceImage(
                 place_id=place.id,
                 image_url=url,

@@ -101,17 +101,22 @@ async def format_post_response(post: Dict, db: Session, current_user_id: int = N
     # Get post images - chỉ cần gọi helper function
     post_images = get_post_images(post)
     
-    # Fallback: Đảm bảo ít nhất 2 ảnh nếu có related_place_id
-    if post.get("related_place_id") and len(post_images) < 2:
-        from app.utils.image_helpers import get_all_place_images
-        place_images = get_all_place_images(post.get("related_place_id"), db)
+    # Fallback: Đảm bảo ít nhất 2 ảnh
+    if len(post_images) < 2:
+        if post.get("related_place_id"):
+            # Bù thêm ảnh từ địa điểm nếu có related_place_id
+            from app.utils.image_helpers import get_all_place_images
+            place_images = get_all_place_images(post.get("related_place_id"), db)
+            
+            for place_img in place_images:
+                if place_img not in post_images:
+                    post_images.append(place_img)
+                if len(post_images) >= 2:
+                    break
         
-        # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
-        for place_img in place_images:
-            if place_img not in post_images:
-                post_images.append(place_img)
-            if len(post_images) >= 2:
-                break
+        # Nếu vẫn chưa đủ 2 ảnh, duplicate ảnh đầu tiên
+        if len(post_images) == 1:
+            post_images.append(post_images[0])
     
     return {
         "_id": str(post.get("_id")),
@@ -137,20 +142,31 @@ async def get_posts(
     request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
+    sort: str = Query("newest", description="Sort order: 'newest' (mới nhất) hoặc 'popular' (nổi bật theo likes+comments)"),
     current_user: Optional[Dict[str, Any]] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
     Lấy danh sách bài viết (feed)
+    
     Chỉ lấy bài viết đã approved
+    
+    Sort options:
+    - newest: Sắp xếp theo thời gian mới nhất (Khám phá bài viết)
+    - popular: Sắp xếp theo likes + comments (Bài viết nổi bật)
     """
     try:
         await get_mongodb()
         
         skip = (page - 1) * limit
         
-        # Query posts from MongoDB - sắp xếp theo popular (nhiều like nhất)
-        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort="popular")
+        # Validate sort parameter
+        valid_sorts = ["newest", "popular"]
+        if sort not in valid_sorts:
+            sort = "newest"
+        
+        # Query posts from MongoDB with specified sort
+        posts = await mongo_client.get_posts(limit=limit, skip=skip, sort=sort)
         
         # Sync stats batch cho tất cả posts
         from app.services.post_stats_sync import sync_posts_stats_batch
@@ -216,6 +232,11 @@ async def create_post(
         clean_tags = sanitize_tags(post_data.tags or [])
         clean_images = sanitize_image_urls(post_data.images or [])
         
+        # Convert full URLs to relative paths for database storage
+        # Frontend sends full URLs from upload response, but we store relative paths
+        from app.utils.image_helpers import normalize_urls_to_relative_paths
+        clean_images = normalize_urls_to_relative_paths(clean_images)
+        
         # Log security event if XSS attempt detected
         if detect_xss_attempt(post_data.content) or detect_xss_attempt(post_data.title):
             client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
@@ -236,22 +257,35 @@ async def create_post(
             "status": "pending"
         }
         
-        # Fallback: Đảm bảo ít nhất 2 ảnh nếu có related_place_id
-        # Nếu user upload ít hơn 2 ảnh, bù thêm từ ảnh của địa điểm
-        if post_data.related_place_id and len(clean_images) < 2:
-            from app.utils.image_helpers import get_all_place_images
-            place_images = get_all_place_images(post_data.related_place_id, db)
+        # Fallback: Đảm bảo ít nhất 2 ảnh
+        # Nếu user upload ít hơn 2 ảnh, bù thêm từ ảnh của địa điểm hoặc placeholder
+        # Sử dụng relative paths vì chúng ta lưu vào MongoDB
+        if len(clean_images) < 2:
+            if post_data.related_place_id:
+                from app.utils.image_helpers import get_all_place_images_relative
+                place_images = get_all_place_images_relative(post_data.related_place_id, db)
+                
+                # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh (dạng relative path)
+                for place_img in place_images:
+                    if place_img not in clean_images:
+                        clean_images.append(place_img)
+                    if len(clean_images) >= 2:
+                        break
             
-            # Bù thêm ảnh từ địa điểm cho đủ 2 ảnh
-            for place_img in place_images:
-                if place_img not in clean_images:
-                    clean_images.append(place_img)
-                if len(clean_images) >= 2:
+            # Nếu vẫn chưa đủ ảnh, thêm placeholder relative path
+            from config.image_config import ImageFolder
+            while len(clean_images) < 2:
+                # Use relative path for placeholder
+                placeholder = f"posts/placeholder.jpg"
+                if placeholder not in clean_images or len(clean_images) == 0:
+                    clean_images.append(placeholder)
+                else:
+                    # Avoid infinite loop - just break if already has placeholder
                     break
             
             post_doc["images"] = clean_images
             if len(clean_images) > len(post_data.images or []):
-                logger.info(f"Post filled with place images: {clean_images}")
+                logger.info(f"Post filled with fallback images: {clean_images}")
         
         # Insert to MongoDB
         post_id = await mongo_client.create_post(post_doc)

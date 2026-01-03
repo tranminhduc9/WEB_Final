@@ -234,6 +234,29 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </div>
         )}
 
+        {/* Image Preview Section */}
+        {images.length > 0 && (
+          <div className="create-post__image-preview">
+            {images.map((file, index) => (
+              <div key={index} className="create-post__image-preview-item">
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`Preview ${index + 1}`}
+                />
+                <button
+                  className="create-post__image-remove"
+                  onClick={() => {
+                    setImages(prev => prev.filter((_, i) => i !== index));
+                  }}
+                  title="Xóa ảnh"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Content textarea */}
         <div className="create-post__content">
           <textarea

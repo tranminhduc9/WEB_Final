@@ -11,6 +11,7 @@ Các hàm chính:
 - on_like_toggled: Handler khi like được toggle
 - on_comment_added: Handler khi comment được thêm
 - on_comment_deleted: Handler khi comment bị xóa
+- update_user_reputation: Cập nhật reputation_score của user
 
 Author: System
 Date: 2024-12-31
@@ -22,6 +23,156 @@ from bson import ObjectId
 from bson.errors import InvalidId
 
 logger = logging.getLogger(__name__)
+
+
+# ==================== USER REPUTATION SCORE ====================
+
+async def calculate_user_reputation(
+    user_id: int,
+    mongo_client
+) -> int:
+    """
+    Tính toán reputation_score cho một user từ MongoDB collections.
+    
+    Formula: reputation_score = round((totalLikes + totalComments) / postCount)
+    
+    Args:
+        user_id: ID của user (integer)
+        mongo_client: MongoDB client instance
+        
+    Returns:
+        int: reputation_score
+    """
+    try:
+        logger.info(f"[REPUTATION] Starting calculation for user {user_id}")
+        
+        # Đếm số posts của user (đã approved)
+        post_count = await mongo_client.count("posts", {
+            "author_id": user_id,
+            "status": "approved"
+        })
+        
+        logger.info(f"[REPUTATION] user_id={user_id}: approved posts={post_count}")
+        
+        if post_count == 0:
+            logger.info(f"[REPUTATION] user_id={user_id}: no approved posts, score=0")
+            return 0
+        
+        # Lấy tất cả post IDs của user
+        user_posts = await mongo_client.find_many("posts", {
+            "author_id": user_id,
+            "status": "approved"
+        })
+        post_ids = [str(post.get("_id")) for post in user_posts]
+        
+        if not post_ids:
+            return 0
+        
+        # Đếm tổng likes cho tất cả posts của user
+        total_likes = await mongo_client.count("post_likes", {
+            "post_id": {"$in": post_ids}
+        })
+        
+        # Đếm tổng comments cho tất cả posts của user
+        total_comments = await mongo_client.count("post_comments", {
+            "post_id": post_ids[0] if len(post_ids) == 1 else {"$in": post_ids}
+        })
+        
+        # Tính reputation_score
+        reputation_score = round((total_likes + total_comments) / post_count)
+        
+        logger.info(f"[REPUTATION] user_id={user_id}: posts={post_count}, likes={total_likes}, comments={total_comments}, score={reputation_score}")
+        
+        return reputation_score
+        
+    except Exception as e:
+        logger.error(f"[REPUTATION] Error calculating reputation for user {user_id}: {e}")
+        import traceback
+        logger.error(f"[REPUTATION] Traceback: {traceback.format_exc()}")
+        return 0
+
+
+async def update_user_reputation(
+    user_id: int,
+    mongo_client,
+    db_session=None
+) -> bool:
+    """
+    Cập nhật reputation_score của user vào PostgreSQL.
+    
+    Args:
+        user_id: ID của user
+        mongo_client: MongoDB client instance
+        db_session: Optional SQLAlchemy session (sẽ tạo mới nếu không có)
+        
+    Returns:
+        bool: True nếu cập nhật thành công
+    """
+    try:
+        # Tính reputation_score mới
+        new_score = await calculate_user_reputation(user_id, mongo_client)
+        
+        # Import ở đây để tránh circular import
+        from config.database import SessionLocal, User
+        
+        # Tạo session nếu chưa có
+        should_close = False
+        if db_session is None:
+            db_session = SessionLocal()
+            should_close = True
+        
+        try:
+            # Cập nhật user trong PostgreSQL
+            user = db_session.query(User).filter(User.id == user_id).first()
+            if user:
+                old_score = user.reputation_score
+                user.reputation_score = new_score
+                db_session.commit()
+                logger.info(f"[REPUTATION] Updated user {user_id}: {old_score} -> {new_score}")
+                return True
+            else:
+                logger.warning(f"[REPUTATION] User {user_id} not found in PostgreSQL")
+                return False
+                
+        finally:
+            if should_close:
+                db_session.close()
+                
+    except Exception as e:
+        logger.error(f"[REPUTATION] Error updating reputation for user {user_id}: {e}")
+        return False
+
+
+async def get_post_author_id(post_id: str, mongo_client) -> int:
+    """
+    Lấy author_id của một post.
+    
+    Args:
+        post_id: ID của post
+        mongo_client: MongoDB client instance
+        
+    Returns:
+        int: author_id hoặc None nếu không tìm thấy
+    """
+    try:
+        # Tìm post - handle both ObjectId and string _id
+        post = None
+        try:
+            post = await mongo_client.find_one("posts", {"_id": ObjectId(post_id)})
+        except InvalidId:
+            pass
+        
+        if not post:
+            post = await mongo_client.find_one("posts", {"_id": post_id})
+        
+        if post:
+            return post.get("author_id")
+        
+        return None
+        
+    except Exception as e:
+        logger.error(f"[REPUTATION] Error getting author_id for post {post_id}: {e}")
+        return None
 
 
 async def calculate_post_stats(
@@ -218,6 +369,12 @@ async def on_like_toggled(
         })
         
         logger.info(f"[POST_STATS] Updated likes_count for post {post_id}: {total_likes}")
+        
+        # Cập nhật reputation_score của author
+        author_id = post.get("author_id")
+        if author_id:
+            await update_user_reputation(author_id, mongo_client)
+        
         return True
         
     except Exception as e:
@@ -255,6 +412,12 @@ async def on_comment_added(
         })
         
         logger.info(f"[POST_STATS] Updated comments_count for post {post_id}: {comments_count}")
+        
+        # Cập nhật reputation_score của author
+        author_id = post.get("author_id")
+        if author_id:
+            await update_user_reputation(author_id, mongo_client)
+        
         return True
         
     except Exception as e:
@@ -292,6 +455,12 @@ async def on_comment_deleted(
         })
         
         logger.info(f"[POST_STATS] Updated comments_count after delete for post {post_id}: {comments_count}")
+        
+        # Cập nhật reputation_score của author
+        author_id = post.get("author_id")
+        if author_id:
+            await update_user_reputation(author_id, mongo_client)
+        
         return True
         
     except Exception as e:

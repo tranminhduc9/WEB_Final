@@ -8,24 +8,10 @@ import { Icons } from '../../config/constants';
 import { placeService } from '../../services';
 import { useAuthContext } from '../../contexts';
 import { useScrollToTop } from '../../hooks';
+import { formatTimeAgo } from '../../utils/timeUtils';
 import type { PlaceDetail, PlaceCompact } from '../../types/models';
 import '../../assets/styles/pages/LocationInfoPage.css';
 
-
-// Helper: Format time ago
-const formatTimeAgo = (dateString?: string): string => {
-    if (!dateString) return 'Vừa xong';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 60) return `${diffMins} phút trước`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} ngày trước`;
-};
 
 // Helper: Format reviews count
 const formatReviewCount = (count?: number): string => {

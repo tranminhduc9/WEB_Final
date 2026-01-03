@@ -10,7 +10,6 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -1530,7 +1529,7 @@ INSERT INTO public.restaurants VALUES (80, 'Street food', 50000.00);
 -- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.roles VALUES (1, 'postgres');
+INSERT INTO public.roles VALUES (1, 'admin');
 INSERT INTO public.roles VALUES (2, 'moderator');
 INSERT INTO public.roles VALUES (3, 'user');
 
@@ -1804,67 +1803,67 @@ INSERT INTO public.user_place_favorites VALUES (50, 93, '2025-12-25 11:50:50.202
 
 
 --
--- TOC entry 5091 (class 0 OID 39403)
--- Dependencies: 237
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+-- TOC entry 5075 (class 0 OID 39114)
+-- Dependencies: 221
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-INSERT INTO public.users VALUES (24, 'Vũ Văn Vinh', 'user24@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (25, 'Phan Thanh Em', 'user25@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_25.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (26, 'Võ Thị Bình', 'user26@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (27, 'Hoàng Thanh Giang', 'user27@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_2.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (28, 'Phan Thị Sơn', 'user28@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_3.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (29, 'Võ Minh Em', 'user29@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_4.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (30, 'Nguyễn Thị Yến', 'user30@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_5.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (31, 'Phan Đức Lan', 'user31@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (32, 'Huỳnh Thành Hà', 'user32@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (33, 'Lê Thanh Hà', 'user33@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_8.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (34, 'Trần Thanh Giang', 'user34@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (34, 'Trần Thanh Giang', 'user34@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (35, 'Võ Mạnh Phúc', 'user35@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_10.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (36, 'Phạm Văn Oanh', 'user36@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_11.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (37, 'Trần Văn Hiếu', 'user37@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_12.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (38, 'Vũ Thành Lan', 'user38@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_13.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (39, 'Vũ Thị Em', 'user39@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_14.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (1, 'Lê Đức Lan', 'user1@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.png', NULL, 0, true, NULL, NULL, 1, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (40, 'Phạm Minh Bình', 'user40@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (41, 'Đỗ Minh Ngọc', 'user41@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_16.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (42, 'Đỗ Minh Yến', 'user42@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (43, 'Phạm Mạnh Hà', 'user43@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (44, 'Phạm Minh Giang', 'user44@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_19.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (45, 'Phạm Ngọc Minh', 'user45@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_20.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (46, 'Phạm Đức Ngọc', 'user46@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (1, 'Lê Đức Lan', 'user1@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.jpg', NULL, 0, true, NULL, NULL, 1, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (2, 'Nguyễn Thị Giang', 'user2@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_2.png', NULL, 0, true, NULL, NULL, 1, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (3, 'Phan Đức An', 'user3@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_3.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (4, 'Đặng Thanh Chi', 'user4@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_4.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (5, 'Võ Hữu Quang', 'user5@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_5.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (6, 'Vũ Văn Phúc', 'user6@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (7, 'Lê Đức Thảo', 'user7@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (6, 'Vũ Văn Phúc', 'user6@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (7, 'Lê Đức Thảo', 'user7@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (8, 'Huỳnh Mạnh Giang', 'user8@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_8.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (9, 'Bùi Văn Yến', 'user9@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (9, 'Bùi Văn Yến', 'user9@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_9.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (10, 'Trần Ngọc Em', 'user10@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_10.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (11, 'Phạm Thanh Thảo', 'user11@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_11.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (12, 'Trần Minh Oanh', 'user12@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_12.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (13, 'Phan Minh Minh', 'user13@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_13.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (14, 'Vũ Minh Lan', 'user14@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_14.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (15, 'Võ Đức Khánh', 'user15@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (15, 'Võ Đức Khánh', 'user15@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (16, 'Bùi Minh Phúc', 'user16@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_16.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (17, 'Bùi Đức Chi', 'user17@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (18, 'Phạm Ngọc Giang', 'user18@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (17, 'Bùi Đức Chi', 'user17@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (18, 'Phạm Ngọc Giang', 'user18@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (19, 'Trần Thành Dũng', 'user19@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_19.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (20, 'Đỗ Hữu Yến', 'user20@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_20.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (21, 'Trần Văn Thảo', 'user21@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (22, 'Huỳnh Thị Sơn', 'user22@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (21, 'Trần Văn Thảo', 'user21@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (22, 'Huỳnh Thị Sơn', 'user22@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (23, 'Huỳnh Hữu Thảo', 'user23@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_23.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (40, 'Phạm Minh Bình', 'user40@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_15.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (41, 'Đỗ Minh Ngọc', 'user41@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_16.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (42, 'Đỗ Minh Yến', 'user42@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_17.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (43, 'Phạm Mạnh Hà', 'user43@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_18.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (44, 'Phạm Minh Giang', 'user44@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_19.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (45, 'Phạm Ngọc Minh', 'user45@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_20.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (46, 'Phạm Đức Ngọc', 'user46@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_21.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (47, 'Phan Ngọc Giang', 'user47@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (24, 'Vũ Văn Vinh', 'user24@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (25, 'Phan Thanh Em', 'user25@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_25.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (26, 'Võ Thị Bình', 'user26@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_1.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (27, 'Hoàng Thanh Giang', 'user27@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_2.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (28, 'Phan Thị Sơn', 'user28@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_3.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (29, 'Võ Minh Em', 'user29@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_4.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (30, 'Nguyễn Thị Yến', 'user30@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_5.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (31, 'Phan Đức Lan', 'user31@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_6.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (32, 'Huỳnh Thành Hà', 'user32@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_7.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (47, 'Phan Ngọc Giang', 'user47@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_22.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (48, 'Trần Đức Sơn', 'user48@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_23.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
-INSERT INTO public.users VALUES (49, 'Đặng Ngọc Hiếu', 'user49@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.jpg', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
+INSERT INTO public.users VALUES (49, 'Đặng Ngọc Hiếu', 'user49@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_24.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 INSERT INTO public.users VALUES (50, 'Nguyễn Hữu Ngọc', 'user50@example.com', '$2b$12$Kix.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x./.x', 'static/uploads/avatars/avatar_25.png', NULL, 0, true, NULL, NULL, 3, NULL, '2025-12-25 11:50:50.202358', '2025-12-25 11:50:50.202358');
 
 
 --
--- TOC entry 5093 (class 0 OID 39413)
--- Dependencies: 239
--- Data for Name: visit_logs; Type: TABLE DATA; Schema: public; Owner: postgres
+-- TOC entry 5094 (class 0 OID 39290)
+-- Dependencies: 240
+-- Data for Name: visit_logs; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
 INSERT INTO public.visit_logs VALUES (1, 1, 65, NULL, '/places/detail', '192.168.1.65', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', '2025-12-25 11:50:50.202358');

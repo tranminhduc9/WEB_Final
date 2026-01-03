@@ -87,8 +87,22 @@ function AdminReportsPage() {
     };
 
     // Handle mark as reviewed (dismiss)
-    const handleMarkReviewed = (reportId: string) => {
-        setResolvedIds(prev => new Set([...prev, reportId]));
+    const handleMarkReviewed = async (reportId: string) => {
+        setActionLoading(reportId);
+        try {
+            const response = await adminService.dismissReport(reportId);
+            if (response.success) {
+                setResolvedIds(prev => new Set([...prev, reportId]));
+                alert('Đã bỏ qua báo cáo thành công!');
+            } else {
+                alert('Không thể bỏ qua báo cáo');
+            }
+        } catch (error) {
+            console.error('Error dismissing report:', error);
+            alert('Có lỗi xảy ra khi bỏ qua báo cáo');
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     // Check if report is resolved
