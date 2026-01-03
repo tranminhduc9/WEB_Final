@@ -34,7 +34,10 @@ async def save_upload_file(
     entity_id: Optional[str] = None
 ) -> dict:
     """
-    Save uploaded file to the configured uploads directory.
+    Save uploaded file to local storage or AWS S3 based on configuration.
+    
+    When USE_S3=true in .env, files are uploaded to AWS S3.
+    When USE_S3=false, files are saved to local storage (src/static/uploads/).
     
     Returns both relative path (for database storage) and full URL (for API response).
     This matches the pattern used by build_image_url_from_db() for reading images.
@@ -51,89 +54,119 @@ async def save_upload_file(
             - url: Full URL for API response (e.g., "http://.../uploads/places/place_1_0.jpg")
             - filename: Just the filename
     """
+    from config.image_config import is_s3_enabled
+    
+    # Auto-determine folder based on upload_type
+    type_to_folder = {
+        "place": "places",
+        "avatar": "avatars", 
+        "post": "posts"
+    }
+    if upload_type in type_to_folder:
+        folder = type_to_folder[upload_type]
+    
+    # Get file extension
+    ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
+    
+    # Generate filename based on upload type
+    if upload_type == "place" and entity_id:
+        if entity_id == "temp":
+            filename = f"place_{uuid.uuid4()}.{ext}"
+        else:
+            filename = f"place_{entity_id}_{uuid.uuid4().hex[:8]}.{ext}"
+            
+    elif upload_type == "avatar" and entity_id:
+        filename = f"avatar_{entity_id}.{ext}"
+            
+    elif upload_type == "post" and entity_id:
+        if entity_id == "temp" or "_" not in entity_id:
+            filename = f"post_{uuid.uuid4()}.{ext}"
+        else:
+            filename = f"post_{entity_id}_{uuid.uuid4().hex[:8]}.{ext}"
+            
+    else:
+        filename = f"{uuid.uuid4()}.{ext}"
+    
+    # Read file content
+    content = await file.read()
+    
+    # Check if S3 is enabled
+    s3_enabled = is_s3_enabled()
+    logger.info(f"[IMAGE_HELPERS] USE_S3 enabled: {s3_enabled}")
+    logger.info(f"[IMAGE_HELPERS] Upload type: {upload_type}, folder: {folder}, filename: {filename}")
+    logger.info(f"[IMAGE_HELPERS] Content size: {len(content)} bytes")
+    
+    if s3_enabled:
+        try:
+            from middleware.s3_uploader import get_s3_uploader
+            
+            logger.info("[IMAGE_HELPERS] Getting S3 uploader...")
+            s3_uploader = get_s3_uploader()
+            
+            if s3_uploader is None:
+                logger.error("[IMAGE_HELPERS] S3 uploader is None!")
+                raise Exception("S3 uploader not initialized. Check AWS credentials.")
+            
+            logger.info(f"[IMAGE_HELPERS] S3 uploader obtained, bucket: {s3_uploader.bucket}")
+            
+            # Delete old avatar from S3 if uploading new one
+            if upload_type == "avatar" and entity_id:
+                for old_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
+                    await s3_uploader.delete_file("avatars", f"avatar_{entity_id}.{old_ext}")
+            
+            # Upload to S3
+            logger.info(f"[IMAGE_HELPERS] Calling s3_uploader.upload_image...")
+            result = await s3_uploader.upload_image(content, filename, folder)
+            
+            logger.info(f"[IMAGE_HELPERS] S3 upload SUCCESS: {result['relative_path']} -> {result['url']}")
+            
+            return {
+                "relative_path": result["relative_path"],
+                "url": result["url"],
+                "filename": result["filename"]
+            }
+            
+        except Exception as e:
+            import traceback
+            logger.error(f"[IMAGE_HELPERS] S3 upload failed: {str(e)}")
+            logger.error(f"[IMAGE_HELPERS] Traceback: {traceback.format_exc()}")
+            logger.info("[IMAGE_HELPERS] Falling back to local storage...")
+            # Fall through to local storage as backup
+    
+    # Local storage logic
     try:
-        # Determine uploads directory path using ABSOLUTE path
-        # This ensures it works regardless of where the script is run from
-        # Convert __file__ to absolute path first, then navigate to src/static/uploads
         current_file = Path(__file__).resolve()
-        # src/backend/app/utils/image_helpers.py -> src/backend/app/utils
-        # -> src/backend/app -> src/backend -> src -> src/static -> src/static/uploads
-        src_dir = current_file.parent.parent.parent.parent  # Go up to src/backend -> src
+        src_dir = current_file.parent.parent.parent.parent
         base_upload_dir = src_dir / "static" / "uploads"
         
-        # Auto-determine folder based on upload_type
-        # This ensures images are saved to the correct subfolder even if folder param is wrong
-        type_to_folder = {
-            "place": "places",
-            "avatar": "avatars", 
-            "post": "posts"
-        }
-        if upload_type in type_to_folder:
-            folder = type_to_folder[upload_type]
-        
-        # Create subfolder
         target_dir = base_upload_dir / folder
         target_dir.mkdir(parents=True, exist_ok=True)
         
-        # Get file extension
-        ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'jpg'
-
-
-        
-        # Generate filename based on upload type
-        if upload_type == "place" and entity_id:
-            # If entity_id is 'temp' (before place creation), use UUID for unique filename
-            if entity_id == "temp":
-                filename = f"place_{uuid.uuid4()}.{ext}"
-            else:
-                # Count existing images for this place
-                existing = list(target_dir.glob(f"place_{entity_id}_*.{ext}"))
-                index = len(existing)
-                filename = f"place_{entity_id}_{index}.{ext}"
-            
-        elif upload_type == "avatar" and entity_id:
-            # Delete old avatar if exists (any extension)
+        # For local storage with avatar, delete old files
+        if upload_type == "avatar" and entity_id:
             old_avatars = list(target_dir.glob(f"avatar_{entity_id}.*"))
             for old_avatar in old_avatars:
                 old_avatar.unlink()
-            
-            # Simple avatar naming: avatar_{user_id}.{ext}
-            # This matches the reading logic in image_config.py
-            filename = f"avatar_{entity_id}.{ext}"
-            
-        elif upload_type == "post" and entity_id:
-            # Post naming convention: post_{user_id}_{place_id}_{index}.{ext}
-            # entity_id should be in format "user_id_place_id" (e.g., "52_115")
-            # or "temp" for backward compatibility (will use UUID)
-            if entity_id == "temp" or "_" not in entity_id:
-                # Fallback to UUID with post prefix for temp or invalid format
-                filename = f"post_{uuid.uuid4()}.{ext}"
-            else:
-                # Format: post_{user_id}_{place_id}_{index}
-                # entity_id = "52_115" -> filename = "post_52_115_0.jpg"
-                existing = list(target_dir.glob(f"post_{entity_id}_*.{ext}"))
-                index = len(existing)
-                filename = f"post_{entity_id}_{index}.{ext}"
-            
-        else:
-            # Generic upload - use UUID
-            filename = f"{uuid.uuid4()}.{ext}"
+        
+        # For local storage, regenerate filename with index for places/posts
+        if upload_type == "place" and entity_id and entity_id != "temp":
+            existing = list(target_dir.glob(f"place_{entity_id}_*.{ext}"))
+            index = len(existing)
+            filename = f"place_{entity_id}_{index}.{ext}"
+        elif upload_type == "post" and entity_id and entity_id != "temp" and "_" in entity_id:
+            existing = list(target_dir.glob(f"post_{entity_id}_*.{ext}"))
+            index = len(existing)
+            filename = f"post_{entity_id}_{index}.{ext}"
         
         filepath = target_dir / filename
         
-        # Save file
-        # Note: Using await file.read() is safer for async contexts
-        content = await file.read()
         with open(filepath, 'wb') as f:
             f.write(content)
         
-        # Build paths for return
-        # Database stores ONLY: folder/filename (e.g., "avatars/avatar_52.png")
-        # build_image_url_from_db() will combine with UPLOADS_BASE_URL when reading
-        relative_path = f"{folder}/{filename}"  # For database - simplified format
-        full_url = f"{get_uploads_base_url()}/{folder}/{filename}"  # For API response
+        relative_path = f"{folder}/{filename}"
+        full_url = f"{get_uploads_base_url()}/{folder}/{filename}"
         
-        logger.info(f"Uploaded {upload_type} file: {relative_path} -> {full_url}")
+        logger.info(f"Uploaded {upload_type} file locally: {relative_path} -> {full_url}")
         
         return {
             "relative_path": relative_path,

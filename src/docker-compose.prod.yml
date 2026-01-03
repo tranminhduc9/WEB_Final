@@ -1,0 +1,138 @@
+# ==============================================
+# PRODUCTION DOCKER COMPOSE - AWS DEPLOYMENT
+# ==============================================
+# Services: Frontend (Nginx) + Backend (FastAPI)
+# Database: AWS RDS (external)
+# Storage: AWS S3 (external)
+# ==============================================
+
+services:
+  # ==============================================
+  # SERVICE 1: Frontend (React/Vite + Nginx)
+  # ==============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Backend API URL - relative path for nginx proxy (works with ngrok)
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+    container_name: travel_frontend_prod
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    networks:
+      - travel_network_prod
+
+    depends_on:
+      - backend
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # ==============================================
+  # SERVICE 2: Backend (FastAPI + Gunicorn)
+  # ==============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: travel_backend_prod
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      # Environment
+      ENVIRONMENT: production
+      DEBUG: "false"
+
+      # Database - AWS RDS
+      DATABASE_URL: ${DATABASE_URL}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-20}
+
+      # MongoDB
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-hanoi_travel_mongo}
+
+      # Redis (optional)
+      REDIS_URL: ${REDIS_URL:-redis://localhost:6379/0}
+
+      # S3 Configuration (AWS S3 for image uploads)
+      USE_S3: ${USE_S3:-true}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-hanoivivu-img-01}
+      AWS_S3_REGION: ${AWS_S3_REGION:-ap-southeast-2}
+      UPLOADS_BASE_URL: ${UPLOADS_BASE_URL:-https://hanoivivu-img-01.s3.ap-southeast-2.amazonaws.com/static/uploads}
+
+      # JWT & Security
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600}
+      REFRESH_TOKEN_EXPIRATION: ${REFRESH_TOKEN_EXPIRATION:-604800}
+      SESSION_SECRET: ${SESSION_SECRET}
+
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80}
+      CORS_CREDENTIALS: "true"
+
+      # Frontend URL
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+
+      # Server
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8080"
+
+      # Email (SendGrid)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@hanoi-travel.com}
+      FROM_NAME: ${FROM_NAME:-Hanoi Travel}
+
+      # AI Chatbot (Adaptive RAG with LangGraph)
+      CHATBOT_ENABLED: ${CHATBOT_ENABLED:-true}
+      CHATBOT_API_KEY: ${CHATBOT_API_KEY}
+      CHATBOT_MODEL: ${CHATBOT_MODEL:-gemini-2.5-flash}
+      CHATBOT_TEMPERATURE: ${CHATBOT_TEMPERATURE:-0.7}
+      CHATBOT_MAX_TOKENS: ${CHATBOT_MAX_TOKENS:-2048}
+      CHATBOT_TIMEOUT: ${CHATBOT_TIMEOUT:-30.0}
+
+      # Hunter.io Email Validation
+      HUNTER_IO_API_KEY: ${HUNTER_IO_API_KEY}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+    networks:
+      - travel_network_prod
+
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+# ==============================================
+# NETWORKS
+# ==============================================
+networks:
+  travel_network_prod:
+    driver: bridge
+    name: travel_network_production

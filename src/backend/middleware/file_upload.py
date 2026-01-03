@@ -295,3 +295,26 @@ class LocalFileUploader:
 
 # Global uploader instance
 uploader = LocalFileUploader()
+
+
+def get_uploader():
+    """
+    Factory function to get the appropriate uploader based on configuration.
+    
+    Returns S3FileUploader if USE_S3=true, otherwise LocalFileUploader.
+    
+    Returns:
+        S3FileUploader or LocalFileUploader instance
+    """
+    from config.image_config import is_s3_enabled
+    
+    if is_s3_enabled():
+        try:
+            from middleware.s3_uploader import get_s3_uploader
+            s3_uploader = get_s3_uploader()
+            if s3_uploader is not None:
+                return s3_uploader
+        except ImportError:
+            pass
+    
+    return uploader
