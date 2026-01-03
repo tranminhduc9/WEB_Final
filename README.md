@@ -2,7 +2,7 @@
 
 ---
 
-## 🎯 Mục Đích
+## Mục Đích
 
 **HanoiViVu** là nền tảng du lịch thông minh, kết nối du khách với những trải nghiệm đặc sắc nhất tại Hà Nội. Chúng tôi mang đến giải pháp toàn diện giúp người dùng:
 
@@ -21,7 +21,7 @@
 
 ---
 
-## 💡 Ý Tưởng & Tầm Nhìn
+## Ý Tưởng & Tầm Nhìn
 
 ### Tầm Nhìn
 
@@ -29,13 +29,13 @@
 
 ### Giá Trị Cốt Lõi
 
-🌟 **Tin Cậy** - Thông tin được kiểm chứng, đánh giá từ người dùng thực
+ **Tin Cậy** - Thông tin được kiểm chứng, đánh giá từ người dùng thực
 
-🚀 **Tiện Lợi** - Tìm kiếm nhanh chóng, giao diện thân thiện
+ **Tiện Lợi** - Tìm kiếm nhanh chóng, giao diện thân thiện
 
-🤝 **Kết Nối** - Xây dựng cộng đồng yêu du lịch Hà Nội
+ **Kết Nối** - Xây dựng cộng đồng yêu du lịch Hà Nội
 
-🤖 **Thông Minh** - Tích hợp AI để cá nhân hóa trải nghiệm
+ **Thông Minh** - Tích hợp AI để cá nhân hóa trải nghiệm
 
 ### Đối Tượng Người Dùng
 
@@ -46,54 +46,54 @@
 
 ---
 
-## 🏛️ Chủ Đề: Du Lịch Thủ Đô Nghìn Năm Văn Hiến
+##  Chủ Đề: Du Lịch Thủ Đô Nghìn Năm Văn Hiến
 
 Hà Nội - nơi giao thoa giữa truyền thống và hiện đại, nơi mỗi góc phố đều kể một câu chuyện. HanoiViVu được xây dựng để tôn vinh và quảng bá vẻ đẹp đa dạng của thành phố:
 
-### 🏛️ Di Tích Lịch Sử
+###  Di Tích Lịch Sử
 Văn Miếu, Hoàng Thành Thăng Long, Nhà tù Hỏa Lò, Lăng Chủ tịch Hồ Chí Minh...
 
-### 🍜 Ẩm Thực Đường Phố
+###  Ẩm Thực Đường Phố
 Phở, Bún chả, Bánh mì, Cà phê trứng - những tinh hoa ẩm thực được giới thiệu chi tiết
 
-### 🏨 Lưu Trú Đa Dạng
+###  Lưu Trú Đa Dạng
 Từ khách sạn 5 sao đến homestay vintage phố cổ, đáp ứng mọi nhu cầu và ngân sách
 
-### 🌳 Không Gian Xanh
+###  Không Gian Xanh
 Hồ Gươm, Hồ Tây, Công viên Thống Nhất - những lá phổi xanh giữa lòng thành phố
 
 ---
 
-## ✨ Tính Năng Nổi Bật
+##  Tính Năng Nổi Bật
 
-### 🔍 Tìm Kiếm Thông Minh
+###  Tìm Kiếm Thông Minh
 - Lọc theo quận/huyện, loại hình địa điểm
 - Gợi ý địa điểm lân cận dựa trên vị trí
 - Autocomplete giúp tìm kiếm nhanh chóng
 
-### 📝 Blog Du Lịch
+###  Blog Du Lịch
 - Chia sẻ trải nghiệm với hình ảnh sinh động
 - Tương tác qua like, comment, reply
 - Đánh giá địa điểm kèm rating sao
 
-### 🤖 AI Chatbot Tư Vấn
+###  AI Chatbot Tư Vấn
 - Hỏi đáp về địa điểm, ẩm thực, lịch trình
 - Gợi ý cá nhân hóa dựa trên nhu cầu
 - Hoạt động 24/7, phản hồi tức thì
 
-### ❤️ Cá Nhân Hóa
+###  Cá Nhân Hóa
 - Lưu địa điểm yêu thích
 - Theo dõi bài viết quan tâm
 - Quản lý hồ sơ cá nhân
 
-### 🛡️ Quản Trị Chuyên Nghiệp
+###  Quản Trị Chuyên Nghiệp
 - Dashboard thống kê thời gian thực
 - Kiểm duyệt nội dung bài viết
 - Quản lý người dùng và báo cáo
 
 ---
 
-## 🛠️ Công Nghệ Sử Dụng
+##  Công Nghệ Sử Dụng
 
 | Thành phần | Công nghệ |
 |------------|-----------|
@@ -106,7 +106,7 @@ Hồ Gươm, Hồ Tây, Công viên Thống Nhất - những lá phổi xanh gi�
 
 ---
 
-## 🚀 Bắt Đầu Sử Dụng
+##  Bắt Đầu Sử Dụng
 
 ### Yêu Cầu Hệ Thống
 - Node.js 18+
@@ -115,6 +115,6 @@ Hồ Gươm, Hồ Tây, Công viên Thống Nhất - những lá phổi xanh gi�
 
 ### Cài Đặt Nhanh
 
-📖 Xem thêm: [Hướng dẫn cài đặt chi tiết](src/LOCAL_DEPLOYMENT_GUIDE.md)
+ Xem thêm: [Hướng dẫn cài đặt chi tiết](docs/HOW_TO_RUN.md)
 
 
