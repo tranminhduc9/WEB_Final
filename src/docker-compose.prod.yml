@@ -41,12 +41,12 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     container_name: travel_backend_prod
     restart: unless-stopped
 
     ports:
-      - "8000:8000"
+      - "8080:8080"
 
     environment:
       # Environment
@@ -65,10 +65,13 @@ services:
       # Redis (optional)
       REDIS_URL: ${REDIS_URL:-redis://localhost:6379/0}
 
-      # S3 Configuration
-      S3_BUCKET: ${S3_BUCKET:-travel-img-drive}
-      S3_REGION: ${S3_REGION:-ap-southeast-1}
-      UPLOADS_BASE_URL: ${UPLOADS_BASE_URL:-https://travel-img-drive.s3.ap-southeast-1.amazonaws.com/uploads}
+      # S3 Configuration (AWS S3 for image uploads)
+      USE_S3: ${USE_S3:-true}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-hanoivivu-img-01}
+      AWS_S3_REGION: ${AWS_S3_REGION:-ap-southeast-2}
+      UPLOADS_BASE_URL: ${UPLOADS_BASE_URL:-https://hanoivivu-img-01.s3.ap-southeast-2.amazonaws.com/static/uploads}
 
       # JWT & Security
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
@@ -86,7 +89,7 @@ services:
 
       # Server
       BACKEND_HOST: "0.0.0.0"
-      BACKEND_PORT: "8000"
+      BACKEND_PORT: "8080"
 
       # Email (SendGrid)
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}
@@ -95,8 +98,11 @@ services:
 
       # AI Chatbot (Adaptive RAG with LangGraph)
       CHATBOT_ENABLED: ${CHATBOT_ENABLED:-true}
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
-      CHATBOT_LLM_MODEL: ${CHATBOT_LLM_MODEL:-gemini-2.5-flash}
+      CHATBOT_API_KEY: ${CHATBOT_API_KEY}
+      CHATBOT_MODEL: ${CHATBOT_MODEL:-gemini-2.5-flash}
+      CHATBOT_TEMPERATURE: ${CHATBOT_TEMPERATURE:-0.7}
+      CHATBOT_MAX_TOKENS: ${CHATBOT_MAX_TOKENS:-2048}
+      CHATBOT_TIMEOUT: ${CHATBOT_TIMEOUT:-30.0}
 
       # Hunter.io Email Validation
       HUNTER_IO_API_KEY: ${HUNTER_IO_API_KEY}
@@ -108,7 +114,7 @@ services:
       - travel_network_prod
 
     healthcheck:
-      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1" ]
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3

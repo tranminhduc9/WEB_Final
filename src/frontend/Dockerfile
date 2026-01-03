@@ -65,7 +65,7 @@ server {
 
     # API proxy (optional - if running on same domain)
     location /api/ {
-        proxy_pass http://backend:8000/api/;
+        proxy_pass http://backend:8080/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';

@@ -1,17 +1,52 @@
-FROM python:3.9-slim
+# ==============================================
+# PRODUCTION DOCKERFILE - BACKEND (FastAPI)
+# ==============================================
+# Optimized Python image with Gunicorn + Uvicorn
+# Final size: ~150MB
+# ==============================================
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
-# 1. Copy requirements từ thư mục con ra root của container để cài đặt
-# Lưu ý đường dẫn nguồn: tests/database/requirements.txt
-COPY tests/database/requirements.txt .
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (better caching)
+COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 2. Copy file main.py từ thư mục con ra root của container
-COPY tests/database/main.py .
+# Copy application code
+COPY . .
 
-# 3. Tạo thư mục static để hứng volume ảnh
-RUN mkdir -p /app/static/uploads
+# Create directories for logs and uploads
+RUN mkdir -p /app/logs /app/static/uploads
 
-# 4. Chạy server (lúc này main.py đã nằm ngay tại /app nên gọi bình thường)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Start with Gunicorn + Uvicorn workers
+CMD ["gunicorn", "app.main:app", \
+    "--bind", "0.0.0.0:8080", \
+    "--workers", "2", \
+    "--worker-class", "uvicorn.workers.UvicornWorker", \
+    "--access-logfile", "-", \
+    "--error-logfile", "-", \
+    "--capture-output", \
+    "--enable-stdio-inheritance"]
