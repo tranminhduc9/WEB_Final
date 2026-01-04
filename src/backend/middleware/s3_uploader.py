@@ -112,7 +112,7 @@ class S3FileUploader:
         file_content: bytes,
         filename: str,
         folder: str,
-        max_size: int = 10 * 1024 * 1024  # 10MB
+        max_size: int = 5 * 1024 * 1024  # 5MB
     ) -> Dict[str, Any]:
         """
         Upload image lên S3
