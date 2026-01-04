@@ -12,10 +12,9 @@ Frontend application cho hệ thống du lịch Hà Nội, được xây dựng 
 - **React Markdown 10.1.0** - Render markdown content
 - **Vitest 3.2.4** - Testing framework
 
-> [!NOTE]
-> [Nguồn: package.json]
 
-## 📁 Cấu trúc thư mục
+
+## Cấu trúc thư mục
 
 ```
 src/frontend/
@@ -118,6 +117,7 @@ src/frontend/
 ├── test/                   # Test utilities
 │   └── setup.ts           # Test setup
 │
+├── index.html              # Entry HTML file
 ├── App.tsx                 # Root component (Homepage)
 ├── App.css                 # Homepage styles
 ├── main.tsx                # Entry point với router
@@ -125,8 +125,7 @@ src/frontend/
 └── vite.config.ts          # Vite configuration
 ```
 
-> [!NOTE]
-> [Nguồn: Folder listing từ src/frontend/]
+
 
 ## Cách chạy
 
@@ -172,8 +171,7 @@ npm run test:run
 npm run lint
 ```
 
-> [!NOTE]
-> [Nguồn: package.json scripts]
+
 
 ## Tính năng chính
 
@@ -188,8 +186,6 @@ npm run lint
 - **JWT token management** - Access token + refresh token trong localStorage
 - **Auto-logout** - Khi token hết hạn
 
-> [!NOTE]
-> [Nguồn: authService.ts, main.tsx]
 
 ### Pages
 
@@ -215,8 +211,6 @@ npm run lint
 | `/posts/user` | UserPostsPage | Bài viết của mình | ✅ Protected |
 | `/posts/user/:userId` | UserPostsPage | Xem posts người khác | ❌ |
 
-> [!NOTE]
-> [Nguồn: main.tsx]
 
 #### Admin Pages
 
@@ -233,7 +227,6 @@ npm run lint
 
 > [!NOTE]
 > Tất cả admin routes yêu cầu quyền admin (AdminRoute)
-> [Nguồn: main.tsx]
 
 ### Components
 
@@ -253,13 +246,9 @@ npm run lint
 - **LocationCard.tsx** - Card hiển thị địa điểm vertical
 - **BlogCard.tsx** - Card hiển thị bài viết
 
-> [!NOTE]
-> [Nguồn: components/admin/, components/client/, components/common/]
-
 ### Services
 
 #### authService
-[Nguồn: authService.ts]
 
 | Function | API Endpoint | Mô tả |
 |----------|--------------|-------|
@@ -278,7 +267,6 @@ npm run lint
 | `verifyEmail(token)` | GET /auth/verify-email | Xác thực email |
 
 #### userService
-[Nguồn: userService.ts]
 
 | Function | Mô tả |
 |----------|-------|
@@ -289,7 +277,6 @@ npm run lint
 | `deleteAvatar()` | Xóa avatar |
 
 #### placeService
-[Nguồn: placeService.ts]
 
 | Function | API Endpoint | Mô tả |
 |----------|--------------|-------|
@@ -305,7 +292,6 @@ npm run lint
 | `getFavoritePlaces()` | GET /users/me/favorites/places | DS yêu thích |
 
 #### postService
-[Nguồn: postService.ts]
 
 | Function | API Endpoint | Mô tả |
 |----------|--------------|-------|
@@ -326,7 +312,6 @@ npm run lint
 > `getPosts` hỗ trợ tham số `sort: 'newest' | 'popular'`
 
 #### uploadService
-[Nguồn: uploadService.ts]
 
 | Function | API Endpoint | Mô tả |
 |----------|--------------|-------|
@@ -339,7 +324,6 @@ npm run lint
 > Backend API format: `POST /upload?upload_type={type}&entity_id={id}`
 
 #### adminService
-[Nguồn: adminService.ts]
 
 | Function | API Endpoint | Mô tả |
 |----------|--------------|-------|
@@ -369,7 +353,6 @@ npm run lint
 ### Utils
 
 #### timeUtils
-[Nguồn: timeUtils.ts]
 
 | Function | Mô tả |
 |----------|-------|
@@ -418,8 +401,6 @@ Chỉ cho phép truy cập khi chưa đăng nhập, đã đăng nhập sẽ redi
 - **errorElement** - Cấu hình trong React Router
 - Chi tiết lỗi hiển thị trong development mode
 
-> [!NOTE]
-> [Nguồn: routes/ProtectedRoute.tsx, routes/AdminRoute.tsx, routes/PublicRoute.tsx, pages/ErrorPage.tsx]
 
 ## Styling
 
@@ -429,7 +410,7 @@ Chỉ cho phép truy cập khi chưa đăng nhập, đã đăng nhập sẽ redi
 - Page styles trong `assets/styles/pages/`
 - Responsive với media queries
 
-## 📱 Responsive Design
+## Responsive Design
 
 - **Desktop**: Full layout
 - **Tablet** (≤1024px): Adjusted spacing
@@ -458,49 +439,19 @@ VITE_API_URL=http://127.0.0.1:8080/api/v1
 - Default: `http://127.0.0.1:8080/api/v1`
 - Không commit `.env` vào git
 
-## 🔗 API Integration
+## API Integration
 
 - Base URL: `http://127.0.0.1:8080/api/v1`
 - Authentication: JWT (access_token + refresh_token)
 - Axios interceptors cho token refresh và error handling
 
-## 📝 Code Style
+## Code Style
 
 - TypeScript strict mode
 - ESLint configuration
 - Functional components với hooks
 - Custom hooks cho reusable logic
 
----
-
-## Các thay đổi đã thực hiện (Change Log)
-
-| Mục | Trạng thái cũ | Trạng thái mới | Nguồn |
-|-----|---------------|----------------|-------|
-| api/ folder | Thiếu index.ts | Thêm index.ts | Folder listing |
-| services/ folder | Thiếu index.ts, __tests__ | Thêm cả hai | Folder listing |
-| types/ folder | Thiếu index.ts | Thêm index.ts | Folder listing |
-| hooks/ folder | Thiếu index.ts | Thêm index.ts | Folder listing |
-| contexts/ folder | Không thay đổi | Verified | Folder listing |
-| Client pages | Không đầy đủ danh sách | Liệt kê đủ 13 files | pages/client/ |
-| Routes | Thiếu `/forgot-password`, `/reset-password` | Thêm đầy đủ | main.tsx |
-| postService | Chỉ ghi "CRUD operations" | Chi tiết 13 functions | postService.ts |
-| uploadService | Mô tả chung chung | Chi tiết endpoint format | uploadService.ts |
-| adminService | Chỉ ghi "admin operations" | Chi tiết 22 functions | adminService.ts |
-| placeService | Chỉ ghi "search, get" | Chi tiết 10 functions | placeService.ts |
-| authService | Thiếu một số functions | Chi tiết 13 functions | authService.ts |
-| userService | Thiếu chi tiết | Chi tiết 5 functions | userService.ts |
-| timeUtils | Đã có mô tả cơ bản | Thêm behavior details | timeUtils.ts |
-| Package versions | Sai một số version | Cập nhật đúng | package.json |
-
----
-
-## Tài liệu thêm
-
-- [React Documentation](https://react.dev)
-- [TypeScript Documentation](https://www.typescriptlang.org)
-- [Vite Documentation](https://vite.dev)
-- [React Router Documentation](https://reactrouter.com)
 
 ## Contributors
 
