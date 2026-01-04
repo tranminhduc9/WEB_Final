@@ -25,7 +25,7 @@ router = APIRouter(prefix="/upload", tags=["Upload"])
 # ==================== CONFIGURATION ====================
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 
 def allowed_file(filename: str) -> bool:
